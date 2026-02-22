@@ -1,0 +1,30 @@
+name: Daily LLM Data Pipeline
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 00:00 UTC = 08:00 CST
+  workflow_dispatch:        # Allow manual trigger
+
+jobs:
+  run-pipeline:
+    name: Fetch & Upsert model_snapshots
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests urllib3
+
+      - name: Run data pipeline
+        env:
+          AA_API_KEY:               ${{ secrets.AA_API_KEY }}
+          SUPABASE_URL:             ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python scripts/pipeline.py

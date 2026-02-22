@@ -1,134 +1,381 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Search, 
-  ThumbsUp, 
-  MessageCircle, 
-  Share2, 
-  MoreHorizontal, 
+import {
+  Search,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  Share2,
+  MoreHorizontal,
   Star,
   Plus,
-  Filter,
-  ArrowUpRight,
+  Zap,
   X,
   Send,
-  CheckCircle2
+  CheckCircle2,
+  LogIn,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
-import { MODELS } from '../constants';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+import type { ModelSnapshot } from '../types';
 
-const INITIAL_REVIEWS = [
-  {
-    id: '1',
-    user: '架构师老王',
-    avatar: 'https://picsum.photos/seed/user1/100/100',
-    level: 'LV.4',
-    time: '2小时前',
-    model: 'DeepSeek-V3',
-    rating: 4.5,
-    content: '在最近的生产环境测试中，DeepSeek-V3 展现出了惊人的性价比。对于日常的代码辅助和基础逻辑处理，它几乎能达到 GPT-4 的 90% 以上水平，但在处理超过 32k 的长文本时，逻辑的一致性会有所下降。特别是在处理 Python 复杂嵌套逻辑时，表现非常出色。强烈推荐作为小型企业的首选基础模型。',
-    scores: { value: 5.0, code: 4.5, logic: 4.2, stability: 3.8 },
-    pros: ['API 响应极快', '开源可私有化', '推理成本极低'],
-    cons: ['长文本偶发幻觉', '中文语义理解略逊于 GPT-4o'],
-    likes: 128,
-    isLiked: false,
-    replies: [
-      { id: 'r1', user: 'AI开发者', content: '确实，DeepSeek在代码生成上非常稳。', time: '1小时前' },
-      { id: 'r2', user: '全栈工程师', content: '请问长文本幻觉具体表现在哪里？', time: '30分钟前' }
-    ]
-  }
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface DbPost {
+  id: string;
+  user_id: string;
+  model_id: string;
+  rating_overall: number;
+  rating_quality: number | null;
+  rating_price: number | null;
+  rating_latency: number | null;
+  rating_throughput: number | null;
+  rating_stability: number | null;
+  provider_name: string | null;
+  pros: string | null;
+  cons: string | null;
+  comment: string | null;
+  status: string;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+    level: number;
+  } | null;
+}
+
+interface DbReply {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
+}
+
+interface UIPost {
+  id: string;
+  user: string;
+  avatar: string;
+  level: string;
+  time: string;
+  modelId: string;
+  modelName: string;
+  ratingOverall: number;
+  ratingQuality: number | null;
+  ratingPrice: number | null;
+  ratingLatency: number | null;
+  ratingThroughput: number | null;
+  ratingStability: number | null;
+  providerName: string | null;
+  pros: string | null;
+  cons: string | null;
+  comment: string | null;
+  upCount: number;
+  downCount: number;
+  myReaction: 'up' | 'down' | null;
+  replies: DbReply[];
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+  return `${Math.floor(diff / 86400)}天前`;
+}
+
+const PROVIDERS = [
+  'OpenAI', 'Anthropic', 'Google', 'Meta', 'Mistral',
+  'DeepSeek', 'Alibaba', 'Baidu', 'ByteDance', 'Zhipu',
+  'Moonshot', 'MiniMax', 'Tencent', '01AI', 'SiliconFlow',
+  'OpenRouter', 'Together AI', 'Other',
 ];
 
+const SORT_OPTIONS = ['最新发布', '最多点赞', '最高评分'] as const;
+type SortOption = typeof SORT_OPTIONS[number];
+
+// ---------------------------------------------------------------------------
+// Star rating component
+// ---------------------------------------------------------------------------
+
+const StarSelector = ({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) => (
+  <div className="flex gap-1">
+    {[1, 2, 3, 4, 5].map((i) => (
+      <button
+        key={i}
+        type="button"
+        onClick={() => onChange(i)}
+        className="focus:outline-none transition-transform hover:scale-110"
+      >
+        <Star
+          className={`w-5 h-5 ${i <= value ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`}
+        />
+      </button>
+    ))}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export const Community = () => {
-  const [reviews, setReviews] = useState(INITIAL_REVIEWS);
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<UIPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
-  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
-  const [newComment, setNewComment] = useState('');
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
+  const [newReply, setNewReply] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [postError, setPostError] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('最新发布');
+  const [modelOptions, setModelOptions] = useState<ModelSnapshot[]>([]);
 
-  // Post Review Form State
-  const [postForm, setPostForm] = useState<{
-    model: string;
-    rating: number;
-    content: string;
-    scores: Record<string, number>;
-  }>({
-    model: MODELS[0].name,
-    rating: 5,
-    content: '',
-    scores: { value: 5, code: 5, logic: 5, stability: 5 }
+  // Post form state
+  const [postForm, setPostForm] = useState({
+    model_id: '',
+    rating_overall: 5,
+    rating_quality: 5,
+    rating_price: 5,
+    rating_latency: 5,
+    rating_throughput: 5,
+    rating_stability: 5,
+    provider_name: '',
+    pros: '',
+    cons: '',
+    comment: '',
   });
 
-  const handleLike = (id: string) => {
-    setReviews(prev => prev.map(review => {
-      if (review.id === id) {
-        return {
-          ...review,
-          likes: review.isLiked ? review.likes - 1 : review.likes + 1,
-          isLiked: !review.isLiked
-        };
-      }
-      return review;
-    }));
+  // Load model options for the selector
+  useEffect(() => {
+    supabase
+      .from('model_snapshots')
+      .select('aa_slug, aa_name, aa_model_creator_name')
+      .eq('has_aa', true)
+      .eq('has_or', true)
+      .order('aa_name')
+      .then(({ data }) => {
+        if (data) {
+          setModelOptions(data as ModelSnapshot[]);
+          if (data.length > 0) {
+            setPostForm((prev) => ({ ...prev, model_id: data[0].aa_slug }));
+          }
+        }
+      });
+  }, []);
+
+  // Fetch posts
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+
+    let query = supabase
+      .from('model_review_posts')
+      .select('*, profiles!model_review_posts_user_id_fkey(username, avatar_url, level)')
+      .eq('status', 'published');
+
+    if (sortBy === '最新发布') query = query.order('created_at', { ascending: false });
+    else if (sortBy === '最高评分') query = query.order('rating_overall', { ascending: false });
+
+    const { data: postsData, error } = await query;
+    if (error) {
+      console.error('获取评价失败:', error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch reactions
+    let myReactions: Record<string, 'up' | 'down'> = {};
+    const { data: allReactions } = await supabase
+      .from('review_post_reactions')
+      .select('post_id, reaction, user_id');
+
+    // Count per post
+    const upCounts: Record<string, number> = {};
+    const downCounts: Record<string, number> = {};
+    for (const r of allReactions ?? []) {
+      if (r.reaction === 'up') upCounts[r.post_id] = (upCounts[r.post_id] ?? 0) + 1;
+      else downCounts[r.post_id] = (downCounts[r.post_id] ?? 0) + 1;
+      if (user && r.user_id === user.id) myReactions[r.post_id] = r.reaction as 'up' | 'down';
+    }
+
+    // Build UI posts
+    const dbPosts = (postsData ?? []) as DbPost[];
+    let mapped: UIPost[] = dbPosts.map((p) => {
+      // Try to find model name from options (may not be loaded yet)
+      const matchedModel = modelOptions.find((m) => m.aa_slug === p.model_id);
+      return {
+        id: p.id,
+        user: p.profiles?.username ?? '匿名用户',
+        avatar: p.profiles?.avatar_url ?? `https://picsum.photos/seed/${p.user_id}/100/100`,
+        level: `LV.${p.profiles?.level ?? 1}`,
+        time: timeAgo(p.created_at),
+        modelId: p.model_id,
+        modelName: matchedModel?.aa_name ?? p.model_id,
+        ratingOverall: p.rating_overall,
+        ratingQuality: p.rating_quality,
+        ratingPrice: p.rating_price,
+        ratingLatency: p.rating_latency,
+        ratingThroughput: p.rating_throughput,
+        ratingStability: p.rating_stability,
+        providerName: p.provider_name,
+        pros: p.pros,
+        cons: p.cons,
+        comment: p.comment,
+        upCount: upCounts[p.id] ?? 0,
+        downCount: downCounts[p.id] ?? 0,
+        myReaction: myReactions[p.id] ?? null,
+        replies: [],
+      };
+    });
+
+    // Sort by most liked
+    if (sortBy === '最多点赞') {
+      mapped = mapped.sort((a, b) => b.upCount - a.upCount);
+    }
+
+    setPosts(mapped);
+    setLoading(false);
+  }, [user, sortBy, modelOptions]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  // React (up/down)
+  const handleReact = async (postId: string, reaction: 'up' | 'down') => {
+    if (!user) return;
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+    const currentReaction = post.myReaction;
+
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        let up = p.upCount;
+        let down = p.downCount;
+        let myR: 'up' | 'down' | null = reaction;
+
+        if (currentReaction === reaction) {
+          // toggle off
+          if (reaction === 'up') up--;
+          else down--;
+          myR = null;
+        } else {
+          if (currentReaction === 'up') up--;
+          if (currentReaction === 'down') down--;
+          if (reaction === 'up') up++;
+          else down++;
+        }
+        return { ...p, upCount: up, downCount: down, myReaction: myR };
+      })
+    );
+
+    if (currentReaction === reaction) {
+      // Remove reaction
+      await supabase
+        .from('review_post_reactions')
+        .delete()
+        .match({ post_id: postId, user_id: user.id });
+    } else {
+      // Upsert reaction
+      await supabase
+        .from('review_post_reactions')
+        .upsert(
+          { post_id: postId, user_id: user.id, reaction },
+          { onConflict: 'post_id,user_id' }
+        );
+    }
+  };
+
+  // Submit reply
+  const handleSubmitReply = async (postId: string) => {
+    if (!user || !newReply.trim()) return;
+    const { error } = await supabase.from('review_post_replies').insert({
+      post_id: postId,
+      user_id: user.id,
+      content: newReply.trim().slice(0, 300),
+    });
+    if (!error) {
+      setNewReply('');
+      setActiveReplyId(null);
+      // Refresh to get the new reply
+      fetchPosts();
+    }
+  };
+
+  // Post review
+  const handlePostReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSubmitting(true);
+    setPostError('');
+
+    const { error } = await supabase.from('model_review_posts').upsert(
+      {
+        user_id: user.id,
+        model_id: postForm.model_id,
+        rating_overall: postForm.rating_overall,
+        rating_quality: postForm.rating_quality,
+        rating_price: postForm.rating_price,
+        rating_latency: postForm.rating_latency,
+        rating_throughput: postForm.rating_throughput,
+        rating_stability: postForm.rating_stability,
+        provider_name: postForm.provider_name || null,
+        pros: postForm.pros.trim().slice(0, 200) || null,
+        cons: postForm.cons.trim().slice(0, 200) || null,
+        comment: postForm.comment.trim().slice(0, 800) || null,
+        status: 'published',
+      },
+      { onConflict: 'user_id,model_id' }
+    );
+
+    setSubmitting(false);
+    if (error) {
+      setPostError(`发布失败：${error.message}`);
+      return;
+    }
+    setIsPostModalOpen(false);
+    setPostError('');
+    fetchPosts();
   };
 
   const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
     setShowShareToast(true);
     setTimeout(() => setShowShareToast(false), 2000);
   };
 
-  const handlePostReview = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newReview = {
-      id: Date.now().toString(),
-      user: '当前用户',
-      avatar: 'https://picsum.photos/seed/me/100/100',
-      level: 'LV.1',
-      time: '刚刚',
-      model: postForm.model,
-      rating: postForm.rating,
-      content: postForm.content,
-      scores: postForm.scores,
-      pros: ['新发布'],
-      cons: [],
-      likes: 0,
-      isLiked: false,
-      replies: []
-    };
-    setReviews([newReview, ...reviews]);
-    setIsPostModalOpen(false);
-    setPostForm({
-      model: MODELS[0].name,
-      rating: 5,
-      content: '',
-      scores: { value: 5, code: 5, logic: 5, stability: 5 }
-    });
-  };
-
-  const handleAddComment = (reviewId: string) => {
-    if (!newComment.trim()) return;
-    setReviews(prev => prev.map(review => {
-      if (review.id === reviewId) {
-        return {
-          ...review,
-          replies: [...review.replies, {
-            id: Date.now().toString(),
-            user: '当前用户',
-            content: newComment,
-            time: '刚刚'
-          }]
-        };
-      }
-      return review;
-    }));
-    setNewComment('');
-  };
+  const ratingDims = [
+    { key: 'rating_quality', label: '质量' },
+    { key: 'rating_price', label: '性价比' },
+    { key: 'rating_latency', label: '延迟' },
+    { key: 'rating_throughput', label: '吞吐量' },
+    { key: 'rating_stability', label: '稳定性' },
+  ] as const;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
       {/* Share Toast */}
       <AnimatePresence>
         {showShareToast && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
@@ -144,14 +391,14 @@ export const Community = () => {
       <AnimatePresence>
         {isPostModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsPostModalOpen(false)}
+              onClick={() => { setIsPostModalOpen(false); setPostError(''); }}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -159,79 +406,143 @@ export const Community = () => {
             >
               <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <h2 className="text-xl font-bold">发表模型点评</h2>
-                <button onClick={() => setIsPostModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <button
+                  onClick={() => { setIsPostModalOpen(false); setPostError(''); }}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={handlePostReview} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+
+              <form onSubmit={handlePostReview} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                {postError && (
+                  <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl text-sm font-medium">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    {postError}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Model selector */}
                   <section>
                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">选择模型</label>
-                    <select 
-                      value={postForm.model}
-                      onChange={(e) => setPostForm({...postForm, model: e.target.value})}
+                    <select
+                      value={postForm.model_id}
+                      onChange={(e) => setPostForm({ ...postForm, model_id: e.target.value })}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 ring-primary/20"
+                      required
                     >
-                      {MODELS.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                      {modelOptions.map((m) => (
+                        <option key={m.aa_slug} value={m.aa_slug}>
+                          {m.aa_name}
+                        </option>
+                      ))}
                     </select>
                   </section>
+
+                  {/* Provider selector */}
                   <section>
-                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">总体评分</label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <button 
-                          key={i} 
-                          type="button"
-                          onClick={() => setPostForm({...postForm, rating: i})}
-                          className="focus:outline-none"
-                        >
-                          <Star className={`w-6 h-6 ${i <= postForm.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
-                        </button>
+                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
+                    <select
+                      value={postForm.provider_name}
+                      onChange={(e) => setPostForm({ ...postForm, provider_name: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 ring-primary/20"
+                    >
+                      <option value="">未指定</option>
+                      {PROVIDERS.map((p) => (
+                        <option key={p} value={p}>{p}</option>
                       ))}
-                    </div>
+                    </select>
                   </section>
                 </div>
 
+                {/* Overall rating */}
                 <section>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">详细评价</label>
-                  <textarea 
-                    required
-                    value={postForm.content}
-                    onChange={(e) => setPostForm({...postForm, content: e.target.value})}
-                    placeholder="分享您的使用心得、优缺点以及适用场景..."
-                    className="w-full h-32 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 ring-primary/20 resize-none"
-                  />
-                </section>
-
-                <section>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-4">维度打分</label>
-                  <div className="grid grid-cols-2 gap-6">
-                    {Object.entries(postForm.scores).map(([key, val]) => {
-                      const scoreVal = val as number;
-                      return (
-                        <div key={key} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{key === 'value' ? '性价比' : key === 'code' ? '代码能力' : key === 'logic' ? '逻辑推理' : '稳定性'}</span>
-                            <span className="text-xs font-black text-primary">{scoreVal.toFixed(1)}</span>
-                          </div>
-                          <input 
-                            type="range" min="1" max="5" step="0.1" 
-                            value={scoreVal}
-                            onChange={(e) => setPostForm({
-                              ...postForm, 
-                              scores: {...postForm.scores, [key]: parseFloat(e.target.value)}
-                            })}
-                            className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary"
-                          />
-                        </div>
-                      );
-                    })}
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
+                    总体评分（必填）
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl font-black text-primary font-display">{postForm.rating_overall}</span>
+                    <StarSelector
+                      value={postForm.rating_overall}
+                      onChange={(v) => setPostForm({ ...postForm, rating_overall: v })}
+                    />
                   </div>
                 </section>
 
-                <div className="pt-4">
-                  <button type="submit" className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">
-                    发布点评
+                {/* Dimension ratings */}
+                <section>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
+                    维度评分（可选）
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+                    {ratingDims.map(({ key, label }) => (
+                      <div key={key} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{label}</span>
+                          <span className="text-xs font-black text-primary">{postForm[key]}</span>
+                        </div>
+                        <StarSelector
+                          value={postForm[key] as number}
+                          onChange={(v) => setPostForm({ ...postForm, [key]: v })}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Pros/Cons */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <section>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-500 mb-2 flex items-center gap-1">
+                      <Plus className="w-4 h-4" /> 优点（≤200字）
+                    </label>
+                    <textarea
+                      value={postForm.pros}
+                      onChange={(e) => setPostForm({ ...postForm, pros: e.target.value.slice(0, 200) })}
+                      placeholder="值得推荐的地方..."
+                      className="w-full h-28 px-4 py-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl text-sm focus:ring-2 ring-emerald-500/20 resize-none placeholder:text-emerald-300 dark:placeholder:text-emerald-700"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.pros.length}/200</p>
+                  </section>
+                  <section>
+                    <label className="block text-xs font-black uppercase tracking-widest text-rose-500 mb-2">
+                      — 缺点（≤200字）
+                    </label>
+                    <textarea
+                      value={postForm.cons}
+                      onChange={(e) => setPostForm({ ...postForm, cons: e.target.value.slice(0, 200) })}
+                      placeholder="待改进地方..."
+                      className="w-full h-28 px-4 py-3 bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30 rounded-xl text-sm focus:ring-2 ring-rose-500/20 resize-none placeholder:text-rose-300 dark:placeholder:text-rose-700"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.cons.length}/200</p>
+                  </section>
+                </div>
+
+                {/* Comment */}
+                <section>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                    详细评价（≤800字，可选）
+                  </label>
+                  <textarea
+                    value={postForm.comment}
+                    onChange={(e) => setPostForm({ ...postForm, comment: e.target.value.slice(0, 800) })}
+                    placeholder="分享您的使用体验..."
+                    className="w-full h-32 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 ring-primary/20 resize-none"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.comment.length}/800</p>
+                </section>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting || !postForm.model_id}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {submitting
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> 发布中...</>
+                      : '发布点评（同一模型再次提交将更新）'
+                    }
                   </button>
                 </div>
               </form>
@@ -244,33 +555,48 @@ export const Community = () => {
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
         <div className="relative w-full md:w-2/3">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="搜索模型评测、使用心得或开发者讨论..." 
+          <input
+            type="text"
+            placeholder="搜索模型评测、使用心得或开发者讨论..."
             className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-2 ring-primary/20 transition-all text-sm"
           />
         </div>
-        <button 
-          onClick={() => setIsPostModalOpen(true)}
-          className="w-full md:w-auto px-8 py-3.5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" /> 发表点评
-        </button>
+        {user ? (
+          <button
+            onClick={() => setIsPostModalOpen(true)}
+            className="w-full md:w-auto px-8 py-3.5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" /> 发表点评
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            className="w-full md:w-auto px-8 py-3.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
+          >
+            <LogIn className="w-5 h-5" /> 登录后发评
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar Filters */}
+        {/* Sidebar */}
         <aside className="lg:col-span-1 space-y-10">
           <section>
             <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
               <Star className="w-4 h-4 text-primary" /> 排序方式
             </h3>
             <div className="space-y-2">
-              {['最新发布', '最多点赞', '最高评分', '争议最大'].map((item, i) => (
-                <button key={item} className={`w-full text-left px-5 py-3 rounded-2xl text-sm font-black transition-all uppercase tracking-tight ${
-                  i === 0 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'
-                }`}>
-                  {item}
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setSortBy(opt)}
+                  className={`w-full text-left px-5 py-3 rounded-2xl text-sm font-black transition-all uppercase tracking-tight ${
+                    sortBy === opt
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+                  }`}
+                >
+                  {opt}
                 </button>
               ))}
             </div>
@@ -278,169 +604,208 @@ export const Community = () => {
 
           <section>
             <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" /> 模型筛选
+              <Zap className="w-4 h-4 text-primary" /> 数据来源
             </h3>
-            <div className="space-y-4 mb-6">
-              {['DeepSeek 系列', '通义千问 Qwen', '智谱 GLM', 'OpenAI GPT'].map((item) => (
-                <label key={item} className="flex items-center gap-4 cursor-pointer group p-1">
-                  <input type="checkbox" className="w-5 h-5 rounded-lg border-slate-300 dark:border-slate-700 text-primary focus:ring-primary" onChange={() => {}} />
-                  <span className="text-sm font-bold text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">{item}</span>
-                </label>
-              ))}
-            </div>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="搜索更多模型..." 
-                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs focus:ring-4 ring-primary/10 transition-all font-bold"
-              />
-            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              评价数据由用户真实提交，每位用户对同一模型仅保留最新评价（UPSERT）。
+            </p>
           </section>
         </aside>
 
         {/* Reviews Feed */}
         <div className="lg:col-span-3 space-y-6">
-          {reviews.map((review) => (
-            <motion.div 
-              key={review.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-10 shadow-xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all"
-            >
-              <div className="flex justify-between items-start mb-8">
-                <div className="flex items-center gap-5">
-                  <img src={review.avatar} alt={review.user} className="w-14 h-14 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm" />
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-black text-slate-900 dark:text-white">{review.user}</span>
-                      <span className="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-black rounded-lg uppercase tracking-tighter">{review.level}</span>
-                    </div>
-                    <p className="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-widest">{review.time} · 评测了 <span className="text-primary">{review.model}</span></p>
-                  </div>
-                </div>
-                <button className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 mb-6">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Star key={i} className={`w-5 h-5 ${i <= Math.floor(review.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
-                  ))}
-                </div>
-                <span className="text-sm font-black text-slate-900 dark:text-white ml-2 font-display">{review.rating.toFixed(1)}</span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8 bg-slate-50/50 dark:bg-slate-800/30 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">性价比</p>
-                  <p className="text-base font-black text-slate-900 dark:text-white font-display">{review.scores.value.toFixed(1)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">代码能力</p>
-                  <p className="text-base font-black text-slate-900 dark:text-white font-display">{review.scores.code.toFixed(1)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">逻辑推理</p>
-                  <p className="text-base font-black text-slate-900 dark:text-white font-display">{review.scores.logic.toFixed(1)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">稳定性</p>
-                  <p className="text-base font-black text-slate-900 dark:text-white font-display">{review.scores.stability.toFixed(1)}</p>
-                </div>
-              </div>
-
-              <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6 font-medium">
-                {review.content}
-              </p>
-
-              <div className="flex flex-wrap gap-3 mb-8">
-                {review.pros.map(pro => (
-                  <span key={pro} className="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full border border-emerald-100 dark:border-emerald-800 uppercase tracking-tight">
-                    + {pro}
-                  </span>
-                ))}
-                {review.cons.map(con => (
-                  <span key={con} className="px-4 py-1.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-[10px] font-black rounded-full border border-rose-100 dark:border-rose-800 uppercase tracking-tight">
-                    - {con}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between pt-8 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex gap-8">
-                  <button 
-                    onClick={() => handleLike(review.id)}
-                    className={`flex items-center gap-2.5 text-xs font-black transition-all ${review.isLiked ? 'text-primary' : 'text-slate-400 hover:text-primary'}`}
-                  >
-                    <ThumbsUp className={`w-4 h-4 ${review.isLiked ? 'fill-primary' : ''}`} /> {review.likes}
-                  </button>
-                  <button 
-                    onClick={() => setActiveCommentId(activeCommentId === review.id ? null : review.id)}
-                    className={`flex items-center gap-2.5 text-xs font-black transition-all ${activeCommentId === review.id ? 'text-primary' : 'text-slate-400 hover:text-primary'}`}
-                  >
-                    <MessageCircle className="w-4 h-4" /> {review.replies.length}
-                  </button>
-                </div>
-                <button 
-                  onClick={handleShare}
-                  className="flex items-center gap-2.5 text-xs font-black text-slate-400 hover:text-primary transition-all"
-                >
-                  <Share2 className="w-4 h-4" /> 分享
-                </button>
-              </div>
-
-              {/* Comments Section */}
-              <AnimatePresence>
-                {activeCommentId === review.id && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800 space-y-6">
-                      {review.replies.map(reply => (
-                        <div key={reply.id} className="flex gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center text-sm font-black text-slate-400">
-                            {reply.user[0]}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <span className="text-sm font-black text-slate-900 dark:text-white">{reply.user}</span>
-                              <span className="text-[10px] font-bold text-slate-400">{reply.time}</span>
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{reply.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                      <div className="flex gap-4 mt-8">
-                        <input 
-                          type="text" 
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          placeholder="写下您的评论..."
-                          className="flex-1 px-6 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-4 ring-primary/10 font-medium"
-                          onKeyDown={(e) => e.key === 'Enter' && handleAddComment(review.id)}
-                        />
-                        <button 
-                          onClick={() => handleAddComment(review.id)}
-                          className="p-3 bg-primary text-white rounded-2xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-                        >
-                          <Send className="w-5 h-5" />
-                        </button>
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-24 text-slate-400">
+              <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="font-bold">暂无评价，成为第一个发表点评的人吧！</p>
+            </div>
+          ) : (
+            posts.map((post) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-10 shadow-xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all"
+              >
+                {/* Header */}
+                <div className="flex justify-between items-start mb-8">
+                  <div className="flex items-center gap-5">
+                    <img
+                      src={post.avatar}
+                      alt={post.user}
+                      className="w-14 h-14 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"
+                    />
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-black text-slate-900 dark:text-white">{post.user}</span>
+                        <span className="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-black rounded-lg uppercase tracking-tighter">
+                          {post.level}
+                        </span>
+                        {post.providerName && (
+                          <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-black rounded-lg">
+                            via {post.providerName}
+                          </span>
+                        )}
                       </div>
+                      <p className="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-widest">
+                        {post.time} · 评测了{' '}
+                        <Link to={`/model/${post.modelId}`} className="text-primary hover:underline">
+                          {post.modelName}
+                        </Link>
+                      </p>
                     </div>
-                  </motion.div>
+                  </div>
+                  <button className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Overall rating */}
+                <div className="flex items-center gap-2 mb-6">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${i <= post.ratingOverall ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`}
+                    />
+                  ))}
+                  <span className="text-sm font-black text-slate-900 dark:text-white ml-2 font-display">
+                    {post.ratingOverall}.0
+                  </span>
+                </div>
+
+                {/* Dimension ratings */}
+                {(post.ratingQuality || post.ratingPrice || post.ratingLatency || post.ratingThroughput || post.ratingStability) && (
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 mb-8 bg-slate-50/50 dark:bg-slate-800/30 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                    {[
+                      { label: '质量', val: post.ratingQuality },
+                      { label: '性价比', val: post.ratingPrice },
+                      { label: '延迟', val: post.ratingLatency },
+                      { label: '吞吐', val: post.ratingThroughput },
+                      { label: '稳定性', val: post.ratingStability },
+                    ].filter(({ val }) => val != null).map(({ label, val }) => (
+                      <div key={label}>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+                        <div className="flex items-center gap-1">
+                          <span className="text-base font-black text-slate-900 dark:text-white font-display">{val}</span>
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
+
+                {/* Comment */}
+                {post.comment && (
+                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6 font-medium">
+                    {post.comment}
+                  </p>
+                )}
+
+                {/* Pros / Cons */}
+                {(post.pros || post.cons) && (
+                  <div className="flex flex-wrap gap-3 mb-8">
+                    {post.pros && (
+                      <span className="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-black rounded-full border border-emerald-100 dark:border-emerald-800">
+                        + {post.pros}
+                      </span>
+                    )}
+                    {post.cons && (
+                      <span className="px-4 py-1.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-[11px] font-black rounded-full border border-rose-100 dark:border-rose-800">
+                        − {post.cons}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-8 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex gap-6">
+                    {/* Up */}
+                    <button
+                      onClick={() => handleReact(post.id, 'up')}
+                      disabled={!user}
+                      className={`flex items-center gap-2 text-xs font-black transition-all disabled:cursor-not-allowed ${
+                        post.myReaction === 'up' ? 'text-emerald-500' : 'text-slate-400 hover:text-emerald-500'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-4 h-4 ${post.myReaction === 'up' ? 'fill-emerald-500' : ''}`} />
+                      {post.upCount}
+                    </button>
+                    {/* Down */}
+                    <button
+                      onClick={() => handleReact(post.id, 'down')}
+                      disabled={!user}
+                      className={`flex items-center gap-2 text-xs font-black transition-all disabled:cursor-not-allowed ${
+                        post.myReaction === 'down' ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'
+                      }`}
+                    >
+                      <ThumbsDown className={`w-4 h-4 ${post.myReaction === 'down' ? 'fill-rose-500' : ''}`} />
+                      {post.downCount}
+                    </button>
+                    {/* Reply */}
+                    <button
+                      onClick={() => setActiveReplyId(activeReplyId === post.id ? null : post.id)}
+                      className={`flex items-center gap-2 text-xs font-black transition-all ${
+                        activeReplyId === post.id ? 'text-primary' : 'text-slate-400 hover:text-primary'
+                      }`}
+                    >
+                      <MessageCircle className="w-4 h-4" /> 回复
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-primary transition-all"
+                  >
+                    <Share2 className="w-4 h-4" /> 分享
+                  </button>
+                </div>
+
+                {/* Reply area */}
+                <AnimatePresence>
+                  {activeReplyId === post.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                        {user ? (
+                          <div className="flex gap-4">
+                            <input
+                              type="text"
+                              value={newReply}
+                              onChange={(e) => setNewReply(e.target.value.slice(0, 300))}
+                              placeholder="写下您的回复（≤300字）..."
+                              className="flex-1 px-6 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-4 ring-primary/10 font-medium"
+                              onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply(post.id)}
+                            />
+                            <button
+                              onClick={() => handleSubmitReply(post.id)}
+                              disabled={!newReply.trim()}
+                              className="p-3 bg-primary text-white rounded-2xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                            >
+                              <Send className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Link to="/login" className="flex items-center gap-2 text-sm text-primary font-bold hover:underline">
+                            <LogIn className="w-4 h-4" /> 登录后参与讨论
+                          </Link>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 };
-
