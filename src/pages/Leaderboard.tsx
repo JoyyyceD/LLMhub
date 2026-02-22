@@ -35,28 +35,28 @@ export const Leaderboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Top Tabs */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <button className="px-6 py-2 text-sm font-bold text-slate-500">全球模型</button>
-          <button className="px-6 py-2 text-sm font-bold bg-slate-50 dark:bg-slate-700 text-primary rounded-lg shadow-sm">国内优化</button>
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex p-1.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <button className="px-8 py-2.5 text-sm font-black text-slate-400 hover:text-slate-600 transition-colors">全球模型</button>
+          <button className="px-8 py-2.5 text-sm font-black bg-slate-100 dark:bg-slate-700 text-primary rounded-xl shadow-sm">国内优化</button>
         </div>
-        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
           当前视图: <span className="text-primary">中国内地市场优化版</span>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
         {STATS.map((stat) => (
-          <div key={stat.label} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start gap-4">
-            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-              <stat.icon className="w-6 h-6 text-slate-400" />
+          <div key={stat.label} className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none flex items-start gap-6 group hover:scale-[1.02] transition-all">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl group-hover:bg-primary/5 transition-colors">
+              <stat.icon className="w-8 h-8 text-slate-300 group-hover:text-primary transition-colors" />
             </div>
             <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-slate-900 dark:text-white font-display">{stat.value}</span>
-                {stat.change && <span className="text-xs font-bold text-emerald-500">{stat.change}</span>}
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">{stat.label}</p>
+              <div className="flex items-baseline gap-3">
+                <span className="text-4xl font-black text-slate-900 dark:text-white font-display tracking-tighter">{stat.value}</span>
+                {stat.change && <span className="text-xs font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">{stat.change}</span>}
                 {stat.sub && <span className="text-xs font-bold text-slate-400">{stat.sub}</span>}
               </div>
             </div>
@@ -65,23 +65,23 @@ export const Leaderboard = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8 overflow-hidden">
-        <div className="px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
+      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none mb-10 overflow-hidden">
+        <div className="px-8 py-6 flex flex-wrap items-center justify-between gap-6">
+          <div className="flex items-center gap-3 overflow-x-auto pb-1 custom-scrollbar">
             {['全部类别', '通用能力', '极速响应', '高性价比'].map((tag, i) => (
-              <button key={tag} className={`px-5 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
-                i === 0 ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              <button key={tag} className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all uppercase tracking-widest ${
+                i === 0 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}>
                 {tag}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:border-primary transition-all">
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:border-primary hover:text-primary transition-all">
               <Filter className="w-4 h-4" /> 高级筛选
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:border-primary transition-all">
-              <Download className="w-4 h-4" /> 导出数据 (CSV)
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:border-primary hover:text-primary transition-all">
+              <Download className="w-4 h-4" /> 导出数据
             </button>
           </div>
         </div>
@@ -90,45 +90,45 @@ export const Leaderboard = () => {
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
-              <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/50 dark:bg-slate-800/50 border-y border-slate-100 dark:border-slate-800">
-                <th className="px-6 py-4">模型名称</th>
-                <th className="px-6 py-4">核心厂商</th>
-                <th className="px-6 py-4">发布日期</th>
-                <th className="px-6 py-4 text-center">首字延迟 (ms)</th>
-                <th className="px-6 py-4 text-center">吞吐速度 (tps)</th>
-                <th className="px-6 py-4 text-center">输入价格 (¥/1M)</th>
-                <th className="px-6 py-4 text-center">输出价格 (¥/1M)</th>
-                <th className="px-6 py-4 text-center">智力总分</th>
-                <th className="px-6 py-4 text-center">MMLU</th>
-                <th className="px-6 py-4 text-center">操作</th>
+              <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/30 dark:bg-slate-800/30 border-y border-slate-100 dark:border-slate-800">
+                <th className="px-8 py-5">模型名称</th>
+                <th className="px-8 py-5">核心厂商</th>
+                <th className="px-8 py-5">发布日期</th>
+                <th className="px-8 py-5 text-center">首字延迟 (ms)</th>
+                <th className="px-8 py-5 text-center">吞吐速度 (tps)</th>
+                <th className="px-8 py-5 text-center">输入价格 (¥/1M)</th>
+                <th className="px-8 py-5 text-center">输出价格 (¥/1M)</th>
+                <th className="px-8 py-5 text-center">智力总分</th>
+                <th className="px-8 py-5 text-center">MMLU</th>
+                <th className="px-8 py-5 text-center">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
               {TABLE_DATA.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-black text-white ${row.color}`}>
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-black text-white shadow-lg ${row.color}`}>
                         {row.id.toUpperCase()}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{row.name}</span>
-                        <span className="text-[10px] font-bold text-slate-400">{row.sub}</span>
+                        <span className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{row.name}</span>
+                        <span className="text-[10px] font-bold text-slate-400 tracking-tight">{row.sub}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-sm font-medium text-slate-600 dark:text-slate-400">{row.vendor}</td>
-                  <td className="px-6 py-5 text-sm font-medium text-slate-500">{row.date}</td>
-                  <td className="px-6 py-5 text-center text-sm font-bold text-primary font-display">{row.ttft}</td>
-                  <td className="px-6 py-5 text-center text-sm font-bold text-primary font-display">{row.tps}</td>
-                  <td className="px-6 py-5 text-center text-sm font-bold text-emerald-600 font-display">{row.input}</td>
-                  <td className="px-6 py-5 text-center text-sm font-bold text-emerald-600 font-display">{row.output}</td>
-                  <td className="px-6 py-5 text-center">
+                  <td className="px-8 py-6 text-sm font-bold text-slate-600 dark:text-slate-400">{row.vendor}</td>
+                  <td className="px-8 py-6 text-sm font-bold text-slate-400">{row.date}</td>
+                  <td className="px-8 py-6 text-center text-sm font-black text-primary font-display">{row.ttft}</td>
+                  <td className="px-8 py-6 text-center text-sm font-black text-primary font-display">{row.tps}</td>
+                  <td className="px-8 py-6 text-center text-sm font-black text-emerald-600 font-display">{row.input}</td>
+                  <td className="px-8 py-6 text-center text-sm font-black text-emerald-600 font-display">{row.output}</td>
+                  <td className="px-8 py-6 text-center">
                     <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 font-display">{row.score}</span>
                   </td>
-                  <td className="px-6 py-5 text-center text-sm font-bold text-slate-600 dark:text-slate-300 font-display">{row.mmlu}</td>
-                  <td className="px-6 py-5 text-center">
-                    <button className="p-2 text-slate-400 hover:text-primary transition-colors">
+                  <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">{row.mmlu}</td>
+                  <td className="px-8 py-6 text-center">
+                    <button className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all">
                       <ArrowUpRight className="w-4 h-4" />
                     </button>
                   </td>
@@ -139,16 +139,16 @@ export const Leaderboard = () => {
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">显示前 10 个模型 (共 56 个国内优化模型)</p>
-          <div className="flex items-center gap-1">
-            <button className="p-2 rounded-lg text-slate-300" disabled><ChevronLeft className="w-4 h-4" /></button>
-            <button className="w-8 h-8 rounded-lg bg-primary text-white font-bold text-sm">1</button>
-            <button className="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm">2</button>
-            <button className="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm">3</button>
-            <span className="text-slate-400 mx-1">...</span>
-            <button className="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm">6</button>
-            <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"><ChevronRight className="w-4 h-4" /></button>
+        <div className="px-8 py-6 bg-slate-50/30 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">显示前 10 个模型 (共 56 个国内优化模型)</p>
+          <div className="flex items-center gap-2">
+            <button className="p-2.5 rounded-xl text-slate-300" disabled><ChevronLeft className="w-4 h-4" /></button>
+            <button className="w-10 h-10 rounded-xl bg-primary text-white font-black text-sm shadow-lg shadow-primary/20">1</button>
+            <button className="w-10 h-10 rounded-xl hover:bg-white dark:hover:bg-slate-700 font-black text-sm text-slate-500 transition-all">2</button>
+            <button className="w-10 h-10 rounded-xl hover:bg-white dark:hover:bg-slate-700 font-black text-sm text-slate-500 transition-all">3</button>
+            <span className="text-slate-400 mx-1 font-black">...</span>
+            <button className="w-10 h-10 rounded-xl hover:bg-white dark:hover:bg-slate-700 font-black text-sm text-slate-500 transition-all">6</button>
+            <button className="p-2.5 rounded-xl hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition-all"><ChevronRight className="w-4 h-4" /></button>
           </div>
         </div>
       </div>

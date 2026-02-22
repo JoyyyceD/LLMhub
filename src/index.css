@@ -7,18 +7,20 @@
   
   --color-primary: #137fec;
   --color-indigo-accent: #4f46e5;
-  --color-background-light: #f8fafc;
+  --color-background-light: #f1f5f9;
   --color-background-dark: #0f172a;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 }
 
 @layer base {
   body {
     @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100;
-    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
-    background-size: 24px 24px;
+    background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-attachment: fixed;
   }
   .dark body {
     background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);

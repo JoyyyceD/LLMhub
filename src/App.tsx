@@ -11,6 +11,10 @@ import { Leaderboard } from './pages/Leaderboard';
 import { ModelDetail } from './pages/ModelDetail';
 import { Community } from './pages/Community';
 import { Comparison } from './pages/Comparison';
+import { About } from './pages/About';
+import { Resources } from './pages/Resources';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 
 export default function App() {
   return (
@@ -22,7 +26,10 @@ export default function App() {
           <Route path="/compare" element={<Comparison />} />
           <Route path="/model/:id" element={<ModelDetail />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/about" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </Layout>
     </Router>

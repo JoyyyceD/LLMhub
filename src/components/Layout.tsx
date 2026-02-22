@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { Rocket, Search, Moon, Sun, Menu, X, Brain } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -20,57 +21,65 @@ export const Header = () => {
   const navLinks = [
     { name: '模型选择', path: '/' },
     { name: '性能榜单', path: '/leaderboard' },
-    { name: '性能对比', path: '/compare' },
     { name: '社区', path: '/community' },
     { name: '关于我们', path: '/about' },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center gap-10">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="bg-primary p-1.5 rounded-lg text-white">
+        <div className="flex justify-between h-20 items-center">
+          <div className="flex items-center gap-12">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="bg-primary p-2 rounded-xl text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                 <Rocket className="w-6 h-6" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">LLM 智能筛选</span>
+              <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">ModelHub</span>
             </Link>
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-10">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    "text-[15px] font-medium transition-colors py-5",
+                    "text-[15px] font-bold transition-all py-2 relative group",
                     location.pathname === link.path
-                      ? "text-primary border-b-2 border-primary"
-                      : "text-slate-600 dark:text-slate-400 hover:text-primary"
+                      ? "text-primary"
+                      : "text-slate-500 dark:text-slate-400 hover:text-primary"
                   )}
                 >
                   {link.name}
+                  {location.pathname === link.path && (
+                    <motion.div 
+                      layoutId="nav-underline"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                    />
+                  )}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-1.5 gap-2 border border-slate-200 dark:border-slate-700 focus-within:ring-2 ring-primary/20 transition-all">
+          <div className="flex items-center gap-6">
+            <div className="hidden lg:flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl px-5 py-2.5 gap-3 border border-slate-200 dark:border-slate-700 focus-within:ring-4 ring-primary/10 transition-all w-72">
               <Search className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                className="bg-transparent border-none focus:ring-0 text-sm w-48 p-0 text-slate-900 dark:text-white"
+                className="bg-transparent border-none focus:ring-0 text-sm w-full p-0 text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
                 placeholder="搜索模型或厂商..."
               />
             </div>
             <button
               onClick={toggleDark}
-              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400"
+              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
-            <button className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-sm font-bold px-5 py-2 rounded-full hover:opacity-90 transition-all">
-              登录
-            </button>
+            <Link
+              to="/login"
+              className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-sm font-black px-7 py-3 rounded-2xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-all shadow-lg shadow-slate-200 dark:shadow-none"
+            >
+              登录/控制台
+            </Link>
           </div>
         </div>
       </div>
@@ -97,18 +106,13 @@ export const Footer = () => {
           <div>
             <h4 className="text-xs font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-6">开发者资源</h4>
             <ul className="space-y-3">
-              <li><a href="#" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">行业评测基准</a></li>
-              <li><a href="#" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">厂商 API 状态</a></li>
-              <li><a href="#" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">接入文档指南</a></li>
+              <li><Link to="/resources#benchmarks" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">行业评测基准</Link></li>
+              <li><Link to="/resources#status" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">厂商 API 状态</Link></li>
+              <li><Link to="/resources#docs" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">接入文档指南</Link></li>
             </ul>
           </div>
-          <div>
-            <h4 className="text-xs font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-6">模型对比</h4>
-            <ul className="space-y-3">
-              <li><a href="#" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">DeepSeek vs Qwen</a></li>
-              <li><a href="#" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">智谱 GLM vs 百川</a></li>
-              <li><a href="#" className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Claude vs GPT-4o</a></li>
-            </ul>
+          <div className="hidden md:block">
+            {/* Empty space to maintain grid layout after removing Model Comparison */}
           </div>
           <div>
             <h4 className="text-xs font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-6">订阅更新</h4>
@@ -128,9 +132,9 @@ export const Footer = () => {
         <div className="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest gap-4">
           <p>© 2024 LLM Selector Inc. 沪ICP备88888888号</p>
           <div className="flex gap-8">
-            <a href="#" className="hover:text-primary transition-colors">隐私政策</a>
-            <a href="#" className="hover:text-primary transition-colors">服务条款</a>
-            <a href="#" className="hover:text-primary transition-colors">联系我们</a>
+            <Link to="/about#privacy" className="hover:text-primary transition-colors">隐私政策</Link>
+            <Link to="/about#terms" className="hover:text-primary transition-colors">服务条款</Link>
+            <Link to="/about#contact" className="hover:text-primary transition-colors">联系我们</Link>
           </div>
         </div>
       </div>
