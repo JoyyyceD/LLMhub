@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Star,
   ArrowRightLeft,
-  Verified
+  Verified,
+  Rocket
 } from 'lucide-react';
 import { MODELS } from '../constants';
 import { Link } from 'react-router-dom';
@@ -159,6 +160,11 @@ export const Home = () => {
 
       {/* Recommended Models */}
       <section>
+        <div className="mb-8">
+          <button className="bg-primary text-white px-8 py-3.5 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-3">
+            <Rocket className="w-6 h-6" /> 推荐模型
+          </button>
+        </div>
         <div className="flex justify-between items-end mb-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">推荐模型</h2>

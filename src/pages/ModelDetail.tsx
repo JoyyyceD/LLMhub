@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
@@ -19,12 +19,60 @@ import {
   Terminal,
   Cpu,
   ShieldCheck,
-  TrendingUp
+  TrendingUp,
+  Zap,
+  ExternalLink,
+  Lock,
+  ZapOff
 } from 'lucide-react';
 import { MODELS } from '../constants';
 
+const API_PROVIDERS = [
+  {
+    id: 'siliconflow',
+    name: 'SiliconFlow (硅基流动)',
+    logo: 'SF',
+    pricing: { input: '¥0.14', output: '¥0.28' },
+    features: ['高并发', '大陆直连', '赠送 14 元额度'],
+    status: 'stable',
+    latency: '120ms',
+    isOfficial: false
+  },
+  {
+    id: 'deepseek-official',
+    name: 'DeepSeek 官方 API',
+    logo: 'DS',
+    pricing: { input: '¥1.00', output: '¥2.00' },
+    features: ['官方原厂', '最全模型支持', '企业级 SLA'],
+    status: 'stable',
+    latency: '180ms',
+    isOfficial: true
+  },
+  {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    logo: 'OR',
+    pricing: { input: '$0.07', output: '$0.14' },
+    features: ['聚合网关', '免翻墙', '支持多种支付'],
+    status: 'stable',
+    latency: '350ms',
+    isOfficial: false
+  },
+  {
+    id: 'together',
+    name: 'Together AI',
+    logo: 'TG',
+    pricing: { input: '$0.10', output: '$0.10' },
+    features: ['极速推理', '开发者友好', '按量计费'],
+    status: 'stable',
+    latency: '220ms',
+    isOfficial: false
+  }
+];
+
 export const ModelDetail = () => {
   const { id } = useParams();
+  const [activeTab, setActiveTab] = useState<'details' | 'providers'>('details');
   const model = MODELS.find(m => m.id === id) || MODELS[0];
 
   return (
@@ -81,7 +129,10 @@ export const ModelDetail = () => {
             <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
               <Star className="w-5 h-5 text-primary" /> 点评
             </button>
-            <button className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none">
+            <button 
+              onClick={() => setActiveTab('providers')}
+              className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
+            >
               <Rocket className="w-5 h-5" /> 快速接入
             </button>
           </div>
@@ -91,10 +142,24 @@ export const ModelDetail = () => {
       {/* Tabs */}
       <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
         <nav className="flex gap-10">
-          <button className="pb-4 px-1 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-semibold text-[15px] transition-all">
+          <button 
+            onClick={() => setActiveTab('providers')}
+            className={`pb-4 px-1 border-b-2 font-semibold text-[15px] transition-all ${
+              activeTab === 'providers' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
+          >
             API 供应商
           </button>
-          <button className="pb-4 px-1 border-b-2 border-primary text-primary font-bold text-[15px]">
+          <button 
+            onClick={() => setActiveTab('details')}
+            className={`pb-4 px-1 border-b-2 font-semibold text-[15px] transition-all ${
+              activeTab === 'details' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
+          >
             模型详情
           </button>
         </nav>
@@ -103,68 +168,139 @@ export const ModelDetail = () => {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-8">
-          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2.5">
-              <Cpu className="w-6 h-6 text-primary" /> 模型简介
-            </h2>
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-              <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed mb-6">
-                {model.description}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                  <Star className="w-5 h-5 text-primary mt-0.5" />
-                  <div>
-                    <span className="block font-bold text-slate-900 dark:text-white mb-0.5">逻辑推理</span>
-                    <span className="text-sm text-slate-500">在数学解题和复杂指令遵循方面表现卓越，MMLU 评分超过 {model.benchmarks.mmlu} 分。</span>
+          {activeTab === 'details' ? (
+            <>
+              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2.5">
+                  <Cpu className="w-6 h-6 text-primary" /> 模型简介
+                </h2>
+                <div className="prose prose-slate dark:prose-invert max-w-none">
+                  <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed mb-6">
+                    {model.description}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                      <Star className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <span className="block font-bold text-slate-900 dark:text-white mb-0.5">逻辑推理</span>
+                        <span className="text-sm text-slate-500">在数学解题和复杂指令遵循方面表现卓越，MMLU 评分超过 {model.benchmarks.mmlu} 分。</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                      <Terminal className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <span className="block font-bold text-slate-900 dark:text-white mb-0.5">代码能力</span>
+                        <span className="text-sm text-slate-500">针对多种编程语言进行了专项优化，HumanEval 成绩达到 {model.benchmarks.humanEval}。</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                  <Terminal className="w-5 h-5 text-primary mt-0.5" />
-                  <div>
-                    <span className="block font-bold text-slate-900 dark:text-white mb-0.5">代码能力</span>
-                    <span className="text-sm text-slate-500">针对多种编程语言进行了专项优化，HumanEval 成绩达到 {model.benchmarks.humanEval}。</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+              </section>
 
-          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" /> 性能跑分 (Benchmarks)
-              </h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-slate-500">
-                  <tr>
-                    <th className="px-8 py-4 font-semibold">评估基准</th>
-                    <th className="px-8 py-4 font-bold text-primary">{model.name}</th>
-                    <th className="px-8 py-4 font-semibold">行业平均</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  <tr>
-                    <td className="px-8 py-5 font-medium">MMLU (五选一)</td>
-                    <td className="px-8 py-5 font-bold text-primary">{model.benchmarks.mmlu}</td>
-                    <td className="px-8 py-5">72.3</td>
-                  </tr>
-                  <tr>
-                    <td className="px-8 py-5 font-medium">HumanEval (代码)</td>
-                    <td className="px-8 py-5 font-bold text-primary">{model.benchmarks.humanEval}</td>
-                    <td className="px-8 py-5">65.1</td>
-                  </tr>
-                  <tr>
-                    <td className="px-8 py-5 font-medium">GSM8K (数学)</td>
-                    <td className="px-8 py-5 font-bold text-primary">{model.benchmarks.gsm8k}</td>
-                    <td className="px-8 py-5">78.4</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" /> 性能跑分 (Benchmarks)
+                  </h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-slate-500">
+                      <tr>
+                        <th className="px-8 py-4 font-semibold">评估基准</th>
+                        <th className="px-8 py-4 font-bold text-primary">{model.name}</th>
+                        <th className="px-8 py-4 font-semibold">行业平均</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      <tr>
+                        <td className="px-8 py-5 font-medium">MMLU (五选一)</td>
+                        <td className="px-8 py-5 font-bold text-primary">{model.benchmarks.mmlu}</td>
+                        <td className="px-8 py-5">72.3</td>
+                      </tr>
+                      <tr>
+                        <td className="px-8 py-5 font-medium">HumanEval (代码)</td>
+                        <td className="px-8 py-5 font-bold text-primary">{model.benchmarks.humanEval}</td>
+                        <td className="px-8 py-5">65.1</td>
+                      </tr>
+                      <tr>
+                        <td className="px-8 py-5 font-medium">GSM8K (数学)</td>
+                        <td className="px-8 py-5 font-bold text-primary">{model.benchmarks.gsm8k}</td>
+                        <td className="px-8 py-5">78.4</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          ) : (
+            <section className="space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xl font-bold flex items-center gap-2.5">
+                  <Network className="w-6 h-6 text-primary" /> 可用 API 供应商
+                </h2>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">共 {API_PROVIDERS.length} 个可用端点</span>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {API_PROVIDERS.map((provider) => (
+                  <motion.div 
+                    key={provider.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:shadow-lg transition-all group"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl font-black text-slate-400 group-hover:text-primary transition-colors">
+                          {provider.logo}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{provider.name}</h3>
+                            {provider.isOfficial && (
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded uppercase tracking-widest">官方</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {provider.features.map(f => (
+                              <span key={f} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                <Zap className="w-3 h-3 text-amber-400" /> {f}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-8 md:gap-12">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">价格 (Input/Output)</span>
+                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-display">
+                            {provider.pricing.input} / {provider.pricing.output}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">平均延迟</span>
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{provider.latency}</span>
+                        </div>
+                        <button className="px-6 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2">
+                          立即接入 <ExternalLink className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/30 p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
+                <HelpCircle className="w-8 h-8 text-slate-300 mb-3" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">没有找到合适的供应商？</h4>
+                <p className="text-xs text-slate-500 max-w-md">
+                  我们正在持续收录更多优质 API 供应商。如果您是供应商，欢迎提交您的 API 端点进行评测。
+                </p>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Sidebar Info */}
@@ -204,3 +340,4 @@ export const ModelDetail = () => {
     </div>
   );
 };
+
