@@ -429,7 +429,7 @@ export const Community = () => {
                     <select
                       value={postForm.model_id}
                       onChange={(e) => setPostForm({ ...postForm, model_id: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 ring-primary/20"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
                       required
                     >
                       {modelOptions.map((m) => (
@@ -446,7 +446,7 @@ export const Community = () => {
                     <select
                       value={postForm.provider_name}
                       onChange={(e) => setPostForm({ ...postForm, provider_name: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 ring-primary/20"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
                     >
                       <option value="">未指定</option>
                       {PROVIDERS.map((p) => (
@@ -501,7 +501,7 @@ export const Community = () => {
                       value={postForm.pros}
                       onChange={(e) => setPostForm({ ...postForm, pros: e.target.value.slice(0, 200) })}
                       placeholder="值得推荐的地方..."
-                      className="w-full h-28 px-4 py-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl text-sm focus:ring-2 ring-emerald-500/20 resize-none placeholder:text-emerald-300 dark:placeholder:text-emerald-700"
+                      className="w-full h-28 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-slate-900 focus:ring-2 ring-emerald-500/20 resize-none placeholder:text-emerald-400"
                     />
                     <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.pros.length}/200</p>
                   </section>
@@ -513,7 +513,7 @@ export const Community = () => {
                       value={postForm.cons}
                       onChange={(e) => setPostForm({ ...postForm, cons: e.target.value.slice(0, 200) })}
                       placeholder="待改进地方..."
-                      className="w-full h-28 px-4 py-3 bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30 rounded-xl text-sm focus:ring-2 ring-rose-500/20 resize-none placeholder:text-rose-300 dark:placeholder:text-rose-700"
+                      className="w-full h-28 px-4 py-3 bg-rose-50 border border-rose-100 rounded-xl text-sm text-slate-900 focus:ring-2 ring-rose-500/20 resize-none placeholder:text-rose-400"
                     />
                     <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.cons.length}/200</p>
                   </section>
@@ -528,7 +528,7 @@ export const Community = () => {
                     value={postForm.comment}
                     onChange={(e) => setPostForm({ ...postForm, comment: e.target.value.slice(0, 800) })}
                     placeholder="分享您的使用体验..."
-                    className="w-full h-32 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 ring-primary/20 resize-none"
+                    className="w-full h-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20 resize-none"
                   />
                   <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.comment.length}/800</p>
                 </section>
@@ -558,7 +558,7 @@ export const Community = () => {
           <input
             type="text"
             placeholder="搜索模型评测、使用心得或开发者讨论..."
-            className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-2 ring-primary/20 transition-all text-sm"
+            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 ring-primary/20 transition-all text-sm text-slate-900 placeholder:text-slate-400"
           />
         </div>
         {user ? (
@@ -781,7 +781,7 @@ export const Community = () => {
                               value={newReply}
                               onChange={(e) => setNewReply(e.target.value.slice(0, 300))}
                               placeholder="写下您的回复（≤300字）..."
-                              className="flex-1 px-6 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-4 ring-primary/10 font-medium"
+                              className="flex-1 px-6 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-4 ring-primary/10 font-medium"
                               onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply(post.id)}
                             />
                             <button

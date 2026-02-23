@@ -1,13 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Force class-based dark mode — dark: variants only apply when .dark is on <html>.
+   Since we never add .dark, the entire UI stays in light mode regardless of OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", "Noto Sans SC", sans-serif;
   
   --color-primary: #137fec;
   --color-indigo-accent: #4f46e5;
-  --color-background-light: #f1f5f9;
+  --color-background-light: #F6F8FB;
   --color-background-dark: #0f172a;
 
   --radius-xl: 1rem;
@@ -17,13 +21,7 @@
 
 @layer base {
   body {
-    @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100;
-    background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-    background-size: 32px 32px;
-    background-attachment: fixed;
-  }
-  .dark body {
-    background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
+    @apply bg-background-light text-slate-900;
   }
 }
 
@@ -37,7 +35,4 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
-}
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
 }

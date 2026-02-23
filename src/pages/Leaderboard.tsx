@@ -195,7 +195,7 @@ export const Leaderboard = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="搜索模型名称..."
-              className="pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 ring-primary/20"
+              className="pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
             />
           </div>
           <div className="flex items-center gap-4">
