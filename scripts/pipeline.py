@@ -175,11 +175,11 @@ def flatten_aa(record: dict) -> dict:
 def flatten_or(record: dict) -> dict:
     """Extract relevant fields from a raw OpenRouter model record."""
     arch = record.get("architecture", {}) or {}
-    top_prov = record.get("top_provider", {}) or {}
     return {
-        "id":             record.get("id", ""),
-        "name":           record.get("name", ""),
-        "context_length": record.get("context_length"),
+        "id":                 record.get("id", ""),
+        "name":               record.get("name", ""),
+        "context_length":     record.get("context_length"),
+        "input_modalities":   arch.get("input_modalities"),
     }
 
 # ---------------------------------------------------------------------------
@@ -285,6 +285,8 @@ def merge_aa_or(aa_records: list[dict], or_records: list[dict]) -> list[dict]:
             "aa_price_blended_usd":  aa.get("price_blended"),
             "aa_release_date":       aa.get("release_date") or None,
             "aa_context_length":     best_or[1].get("context_length") if best_or else None,
+            "or_context_length":     best_or[1].get("context_length") if best_or else None,
+            "or_architecture_input_modalities": best_or[1].get("input_modalities") if best_or else None,
             "has_aa":                True,
             "has_or":                has_or,
             "match_confidence":      confidence if has_or else None,

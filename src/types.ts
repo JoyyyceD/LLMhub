@@ -31,6 +31,8 @@ export interface ModelSnapshot {
 
   // Context & meta
   aa_context_length: number | null;
+  or_context_length: number | null;
+  or_architecture_input_modalities: string[] | null;
   aa_release_date: string | null;
 
   // Source flags
@@ -79,10 +81,16 @@ export type SpeedProfileKey = 'low_latency' | 'high_throughput' | 'balanced_spee
 
 export interface RecommendationInput {
   scenario: ScenarioKey;
-  sub_scenario: SubScenarioKey;
+  sub_scenario?: SubScenarioKey;
+  sub_scenarios?: SubScenarioKey[];
   region: RegionKey;
   profile: ProfileKey;
   speed_profile: SpeedProfileKey;
+  advanced_filters?: {
+    require_pdf?: boolean;
+    require_image?: boolean;
+    min_context_tokens?: number;
+  };
   /** Monthly token budget in USD (optional, used for cost normalisation) */
   monthly_budget_usd?: number;
 }

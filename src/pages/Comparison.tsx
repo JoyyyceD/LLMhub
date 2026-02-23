@@ -3,13 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   TrendingUp,
-  Download,
   List,
-  Check,
   RefreshCcw,
   Search,
   Info,
-  Zap,
   Loader2,
 } from 'lucide-react';
 import {
@@ -29,6 +26,89 @@ const USD_TO_CNY = 7.25;
 function fmtCny(usd: number | null | undefined): string {
   if (usd == null) return '—';
   return `¥${(usd * USD_TO_CNY).toFixed(1)}`;
+}
+
+type MetricKey =
+  | 'aa_intelligence_index'
+  | 'aa_coding_index'
+  | 'aa_gpqa'
+  | 'aa_ifbench'
+  | 'aa_lcr'
+  | 'aa_scicode'
+  | 'aa_terminalbench_hard'
+  | 'aa_tau2'
+  | 'aa_price_blended_usd'
+  | 'aa_ttft_seconds'
+  | 'aa_tps';
+
+interface MetricDef {
+  code: string;
+  label: string;
+  key: MetricKey;
+  lowerBetter?: boolean;
+  kDiv?: number;
+}
+
+const METRIC_DEFS: MetricDef[] = [
+  { code: 'I', label: '智力能力', key: 'aa_intelligence_index' },
+  { code: 'C', label: '代码能力', key: 'aa_coding_index' },
+  { code: 'G', label: '科学问答能力', key: 'aa_gpqa' },
+  { code: 'F', label: '指令遵循能力', key: 'aa_ifbench' },
+  { code: 'L', label: '长上下文能力', key: 'aa_lcr' },
+  { code: 'S', label: '科学编程能力', key: 'aa_scicode' },
+  { code: 'T', label: '终端任务能力', key: 'aa_terminalbench_hard' },
+  { code: 'U', label: '工具调用能力', key: 'aa_tau2' },
+  { code: 'P', label: '低成本', key: 'aa_price_blended_usd', lowerBetter: true, kDiv: 1.1 },
+  { code: 'D', label: '低延迟', key: 'aa_ttft_seconds', lowerBetter: true, kDiv: 1.1 },
+  { code: 'R', label: '高吞吐', key: 'aa_tps', kDiv: 1.3 },
+];
+
+interface RobustStats {
+  med: number;
+  mad: number;
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function quantile(sorted: number[], q: number): number {
+  if (sorted.length === 0) return 0;
+  const idx = Math.floor((sorted.length - 1) * q);
+  return sorted[clamp(idx, 0, sorted.length - 1)];
+}
+
+function median(vals: number[]): number {
+  if (vals.length === 0) return 0;
+  const sorted = [...vals].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function buildRobustStats(vals: number[]): RobustStats | null {
+  if (vals.length === 0) return null;
+  const sorted = [...vals].sort((a, b) => a - b);
+  const p5 = quantile(sorted, 0.05);
+  const p95 = quantile(sorted, 0.95);
+  const winsorized = vals.map((v) => clamp(v, p5, p95));
+  const med = median(winsorized);
+  const mad = median(winsorized.map((v) => Math.abs(v - med)));
+  return { med, mad };
+}
+
+function robustScore(
+  value: number | null | undefined,
+  stats: RobustStats | null,
+  opts?: { lowerBetter?: boolean; kDiv?: number },
+): number {
+  if (value == null || Number.isNaN(value) || !stats) return 50;
+  const scale = 1.4826 * stats.mad;
+  if (scale === 0) return 50;
+  const zRaw = (value - stats.med) / scale;
+  const z = (opts?.lowerBetter ? -zRaw : zRaw) / (opts?.kDiv ?? 1.6);
+  // Logistic mapping keeps 0-100 semantics without artificial soft caps.
+  const score = 100 / (1 + Math.exp(-z));
+  return clamp(score, 0, 100);
 }
 
 export const Comparison = () => {
@@ -84,30 +164,50 @@ export const Comparison = () => {
     });
   };
 
-  // Build radar data from real metrics
-  const radarData = [
-    { subject: '综合智力', key: 'aa_intelligence_index', max: 100 },
-    { subject: '代码能力', key: 'aa_coding_index', max: 100 },
-    { subject: '逻辑推理', key: 'aa_hle', max: 1, scale: 100 },
-    { subject: '指令遵循', key: 'aa_ifbench', max: 1, scale: 100 },
-    { subject: '吞吐速度', key: 'aa_tps', max: 200 },
-    { subject: '长上下文', key: 'aa_lcr', max: 1, scale: 100 },
-  ].map((item) => {
-    const point: Record<string, number | string> = { subject: item.subject };
+  const metricStats = useMemo(() => {
+    const stats = new Map<MetricKey, RobustStats | null>();
+    METRIC_DEFS.forEach((m) => {
+      const vals = allModels
+        .map((model) => model[m.key])
+        .filter((v): v is number => v != null && !Number.isNaN(v));
+      stats.set(m.key, buildRobustStats(vals));
+    });
+    return stats;
+  }, [allModels]);
+
+  const normalizedBySlug = useMemo(() => {
+    const map = new Map<string, Record<MetricKey, number>>();
+    allModels.forEach((model) => {
+      const row = {} as Record<MetricKey, number>;
+      METRIC_DEFS.forEach((m) => {
+        row[m.key] = robustScore(model[m.key], metricStats.get(m.key) ?? null, {
+          lowerBetter: m.lowerBetter,
+          kDiv: m.kDiv,
+        });
+      });
+      map.set(model.aa_slug, row);
+    });
+    return map;
+  }, [allModels, metricStats]);
+
+  const radarData = METRIC_DEFS.map((item) => {
+    const point: Record<string, number | string> = { subject: item.label };
     selectedModels.forEach((model) => {
-      const raw = model[item.key as keyof ModelSnapshot] as number | null;
-      // Clean model name for display in chart
       const modelName = model.aa_name.replace(/\s*\(.*?\)\s*/g, '');
-      if (raw == null) {
-        point[modelName] = 0;
-      } else {
-        const scale = (item as { scale?: number }).scale ?? 1;
-        const max = item.max;
-        point[modelName] = Math.min(100, ((raw * scale) / max) * 100);
-      }
+      point[modelName] = Math.round(normalizedBySlug.get(model.aa_slug)?.[item.key] ?? 50);
     });
     return point;
   });
+
+  const selectedModelsSorted = useMemo(() => {
+    return [...selectedModels].sort((a, b) => {
+      const aScores = normalizedBySlug.get(a.aa_slug);
+      const bScores = normalizedBySlug.get(b.aa_slug);
+      const aAvg = METRIC_DEFS.reduce((sum, m) => sum + (aScores?.[m.key] ?? 50), 0) / METRIC_DEFS.length;
+      const bAvg = METRIC_DEFS.reduce((sum, m) => sum + (bScores?.[m.key] ?? 50), 0) / METRIC_DEFS.length;
+      return bAvg - aAvg;
+    });
+  }, [selectedModels, normalizedBySlug]);
 
   const colors = ['#137fec', '#10b981', '#8b5cf6', '#f59e0b'];
 
@@ -193,7 +293,7 @@ export const Comparison = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">模型多维度对比</h2>
-                <p className="text-sm text-slate-500">基于真实测评数据的能力雷达分布图（最多对比 4 个）</p>
+                <p className="text-sm text-slate-500">与性能榜单同源字段（model_snapshots），此处展示为均一化后的 0-100 分（最多对比 4 个）</p>
               </div>
               <div className="flex flex-wrap gap-4 justify-end">
                 {selectedModels.map((model, idx) => (
@@ -223,6 +323,8 @@ export const Comparison = () => {
                   ))}
                   {selectedModels.length > 0 && (
                     <RechartsTooltip
+                      formatter={(value) => [Math.round(Number(value) || 0), '分数']}
+                      labelFormatter={(label) => String(label)}
                       contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
                       itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                     />
@@ -239,20 +341,20 @@ export const Comparison = () => {
                 <span className="text-sm font-medium">对比分析概览</span>
               </div>
               <h3 className="text-3xl font-bold leading-tight">
-                {selectedModels.length > 0 ? selectedModels[0].aa_name.replace(/\s*\(.*?\)\s*/g, '') : 'N/A'}
+                {selectedModelsSorted.length > 0 ? selectedModelsSorted[0].aa_name.replace(/\s*\(.*?\)\s*/g, '') : 'N/A'}
                 <span className="block text-lg font-medium opacity-70 mt-1">在当前选择中综合指数最高</span>
               </h3>
-              {selectedModels[0] && (
+              {selectedModelsSorted[0] && (
                 <div className="mt-8 space-y-4">
                   <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10">
                     <div className="flex items-center gap-2 mb-1">
                       <Info className="w-4 h-4 text-sky-300" />
-                      <span className="text-xs font-bold uppercase tracking-wider">核心数据</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">标准化核心数据</span>
                     </div>
                     <p className="text-sm opacity-90 leading-relaxed">
-                      智力指数 {selectedModels[0].aa_intelligence_index?.toFixed(1) ?? 'N/A'} ·{' '}
-                      代码 {selectedModels[0].aa_coding_index?.toFixed(1) ?? 'N/A'} ·{' '}
-                      混合价格 {fmtCny(selectedModels[0].aa_price_blended_usd)}/1M
+                      智力能力 {Math.round(normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.aa_intelligence_index ?? 50)} ·{' '}
+                      代码能力 {Math.round(normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.aa_coding_index ?? 50)} ·{' '}
+                      终端任务能力 {Math.round(normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.aa_terminalbench_hard ?? 50)}
                     </p>
                   </div>
                 </div>
@@ -275,22 +377,20 @@ export const Comparison = () => {
               <List className="w-5 h-5 text-primary" />
               对比模型详细数据
             </h3>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-sm">
-              <Download className="w-4 h-4" />
-              导出对比数据
-            </button>
+          </div>
+          <div className="px-6 py-3 text-xs text-slate-500 border-b border-slate-100 dark:border-slate-800">
+            说明：智力能力、代码能力、科学问答能力、指令遵循能力、长上下文能力、科学编程能力、终端任务能力、工具调用能力、低成本、低延迟、高吞吐与性能榜单使用同一原始指标；本页为便于横向对比，已做均一化处理（0-100）。
           </div>
 
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[11px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 dark:bg-slate-800/50">
+                <tr className="text-[11px] font-black tracking-widest text-slate-500 bg-slate-50 dark:bg-slate-800/50">
                   <th className="px-6 py-4 min-w-[200px]">模型名称</th>
                   <th className="px-6 py-4">厂商</th>
-                  <th className="px-6 py-4 text-center">智力指数</th>
-                  <th className="px-6 py-4 text-center">代码指数</th>
-                  <th className="px-6 py-4 text-center">TTFT</th>
-                  <th className="px-6 py-4 text-center">吞吐量</th>
+                  {METRIC_DEFS.map((m) => (
+                    <th key={m.code} className="px-4 py-4 text-center">{m.label}</th>
+                  ))}
                   <th className="px-6 py-4 text-right">混合价格 (¥/1M)</th>
                 </tr>
               </thead>
@@ -313,20 +413,11 @@ export const Comparison = () => {
                     <td className="px-6 py-5 text-xs font-medium text-slate-600 dark:text-slate-400">
                       {model.aa_model_creator_name ?? '—'}
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className="inline-block px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
-                        {model.aa_intelligence_index?.toFixed(1) ?? '—'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-center text-sm font-bold text-slate-700 dark:text-slate-300">
-                      {model.aa_coding_index?.toFixed(1) ?? '—'}
-                    </td>
-                    <td className="px-6 py-5 text-center text-sm font-bold text-primary">
-                      {model.aa_ttft_seconds != null ? `${model.aa_ttft_seconds.toFixed(2)}s` : '—'}
-                    </td>
-                    <td className="px-6 py-5 text-center text-sm font-bold text-slate-700 dark:text-slate-300">
-                      {model.aa_tps?.toFixed(1) ?? '—'} t/s
-                    </td>
+                    {METRIC_DEFS.map((m) => (
+                      <td key={m.code} className="px-4 py-5 text-center text-sm font-bold text-slate-700 dark:text-slate-300">
+                        {Math.round(normalizedBySlug.get(model.aa_slug)?.[m.key] ?? 50)}
+                      </td>
+                    ))}
                     <td className="px-6 py-5 text-right font-mono text-sm font-bold text-emerald-600">
                       {fmtCny(model.aa_price_blended_usd)}
                     </td>
@@ -334,7 +425,7 @@ export const Comparison = () => {
                 ))}
                 {selectedModels.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm italic">
+                    <td colSpan={METRIC_DEFS.length + 3} className="px-6 py-12 text-center text-slate-400 text-sm italic">
                       请在左侧侧边栏选择模型进行对比
                     </td>
                   </tr>

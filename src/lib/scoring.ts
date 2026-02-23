@@ -41,8 +41,39 @@ export function filterCandidates(
     if (!m.has_aa || !m.has_or) return false;
     if (m.aa_intelligence_index == null) return false;
     if (input.region === 'cn' && !m.is_cn_provider) return false;
+
+    const af = input.advanced_filters;
+    if (af) {
+      const modalities = parseInputModalities(m.or_architecture_input_modalities);
+      if (af.require_image && !modalities.has('image')) return false;
+      if (af.require_pdf && !modalities.has('file')) return false;
+
+      if (af.min_context_tokens != null) {
+        const ctx = m.or_context_length ?? m.aa_context_length ?? 0;
+        if (!(ctx > af.min_context_tokens)) return false;
+      }
+    }
+
     return true;
   });
+}
+
+function parseInputModalities(raw: ModelSnapshot['or_architecture_input_modalities']): Set<string> {
+  if (!raw) return new Set();
+  if (Array.isArray(raw)) {
+    return new Set(raw.map((v) => String(v).toLowerCase()));
+  }
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return new Set(parsed.map((v) => String(v).toLowerCase()));
+      }
+    } catch {
+      return new Set();
+    }
+  }
+  return new Set();
 }
 
 function filterBaseCandidates(models: ModelSnapshot[]): ModelSnapshot[] {
@@ -147,13 +178,9 @@ export function computeScores(
   referencePool: ModelSnapshot[],
   input: RecommendationInput,
 ): DimensionScores[] {
-  const subKey = input.sub_scenario;
-  const scenarioWeights =
-    QUALITY_CONFIG[input.scenario]?.[subKey] ??
-    QUALITY_CONFIG[input.scenario]?.['general'] ??
-    { aa_intelligence_index: 1 };
+  const scenarioWeights = getScenarioWeights(input);
 
-  const dimWeights = PROFILE_WEIGHTS[input.profile];
+  const baseWeights = PROFILE_WEIGHTS[input.profile];
 
   const qualityMetrics = Object.keys(scenarioWeights) as QualityMetric[];
   if (!qualityMetrics.includes('aa_intelligence_index')) {
@@ -179,6 +206,30 @@ export function computeScores(
   const throughputStats = buildRobustStats(referencePool
     .map((m) => throughputRaw(m))
     .filter((v): v is number => v != null && !Number.isNaN(v)));
+
+  const effectiveWeights = (() => {
+    if (input.speed_profile === 'low_latency') {
+      const moveFromQ = baseWeights.quality * 0.2;
+      const moveFromC = baseWeights.cost * 0.2;
+      return {
+        quality: baseWeights.quality - moveFromQ,
+        cost: baseWeights.cost - moveFromC,
+        latency: baseWeights.latency + moveFromQ + moveFromC,
+        throughput: baseWeights.throughput,
+      };
+    }
+    if (input.speed_profile === 'high_throughput') {
+      const moveFromQ = baseWeights.quality * 0.2;
+      const moveFromC = baseWeights.cost * 0.2;
+      return {
+        quality: baseWeights.quality - moveFromQ,
+        cost: baseWeights.cost - moveFromC,
+        latency: baseWeights.latency,
+        throughput: baseWeights.throughput + moveFromQ + moveFromC,
+      };
+    }
+    return baseWeights;
+  })();
 
   return candidates.map((m) => {
     let qualityWeightedSum = 0;
@@ -208,24 +259,14 @@ export function computeScores(
     const latencyBase = robustScore(latencyRaw(m), latencyStats, LATENCY_K, true) ?? 50;
     const throughputBase = robustScore(throughputRaw(m), throughputStats, THROUGHPUT_K, false) ?? 50;
 
-    const speedAdjusted = (() => {
-      if (input.speed_profile === 'low_latency') {
-        return { latency: latencyBase * 1.3, throughput: throughputBase * 0.7 };
-      }
-      if (input.speed_profile === 'high_throughput') {
-        return { latency: latencyBase * 0.7, throughput: throughputBase * 1.3 };
-      }
-      return { latency: latencyBase, throughput: throughputBase };
-    })();
-
-    const latency = clamp(speedAdjusted.latency, 0, 100);
-    const throughput = clamp(speedAdjusted.throughput, 0, 100);
+    const latency = clamp(latencyBase, 0, 100);
+    const throughput = clamp(throughputBase, 0, 100);
 
     const total =
-      quality * dimWeights.quality +
-      cost * dimWeights.cost +
-      latency * dimWeights.latency +
-      throughput * dimWeights.throughput;
+      quality * effectiveWeights.quality +
+      cost * effectiveWeights.cost +
+      latency * effectiveWeights.latency +
+      throughput * effectiveWeights.throughput;
 
     return {
       quality: Math.round(quality),
@@ -261,6 +302,8 @@ export function generateExplanations(
 ): { explanations: string[]; tradeoffs: string[] } {
   const exps: string[] = [];
   const tradeoffs: string[] = [];
+  const selectedSubs = getSelectedSubScenarios(input);
+  const primarySub = selectedSubs[0];
 
   if (model.aa_intelligence_index != null) {
     exps.push(
@@ -269,16 +312,16 @@ export function generateExplanations(
     );
   }
   if (input.scenario === 'code' && model.aa_coding_index != null) {
-    exps.push(`代码专项指数 ${fmt(model.aa_coding_index)}，尤其适合${input.sub_scenario === 'generation' ? '代码生成' : input.sub_scenario === 'debugging' ? 'Bug 调试' : '代码相关任务'}。`);
+    exps.push(`代码专项指数 ${fmt(model.aa_coding_index)}，尤其适合${primarySub === 'generation' ? '代码生成' : primarySub === 'debugging' ? 'Bug 调试' : '代码相关任务'}。`);
   }
-  if ((input.scenario === 'rag' || input.sub_scenario === 'long_context' || input.sub_scenario === 'long_doc') && model.aa_lcr != null) {
+  if ((input.scenario === 'rag' || selectedSubs.includes('long_context') || selectedSubs.includes('long_doc')) && model.aa_lcr != null) {
     exps.push(`长上下文召回率 ${fmt(model.aa_lcr * 100, 1)}%，适合处理大量文档内容。`);
   }
   if (input.scenario === 'agent' && model.aa_tau2 != null) {
     exps.push(`工具调用能力评分 ${fmt(model.aa_tau2 * 100, 1)}%，在 Agent 工作流中表现${model.aa_tau2 > 0.5 ? '优秀' : '尚可'}。`);
   }
   if (input.scenario === 'science' && model.aa_hle != null) {
-    exps.push(`硬逻辑评估得分 ${fmt(model.aa_hle * 100, 1)}%，适合${input.sub_scenario === 'aime' ? 'AIME竞赛级' : '高难度科学'}推理任务。`);
+    exps.push(`硬逻辑评估得分 ${fmt(model.aa_hle * 100, 1)}%，适合${primarySub === 'aime' ? 'AIME竞赛级' : '高难度科学'}推理任务。`);
   }
 
   if (model.aa_ttft_seconds != null && model.aa_tps != null) {
@@ -314,10 +357,43 @@ export function generateExplanations(
   }
 
   if (exps.length < 3) {
-    exps.push(`在 ${input.scenario} 场景的 ${input.sub_scenario} 子类下，综合得分 ${scores.total} / 100。`);
+    if (selectedSubs.length > 1) {
+      exps.push(`在 ${input.scenario} 场景下（已聚合 ${selectedSubs.length} 个细分任务），综合得分 ${scores.total} / 100。`);
+    } else {
+      exps.push(`在 ${input.scenario} 场景的 ${primarySub ?? '默认'} 子类下，综合得分 ${scores.total} / 100。`);
+    }
   }
 
   return { explanations: exps.slice(0, 6), tradeoffs: tradeoffs.slice(0, 2) };
+}
+
+function getSelectedSubScenarios(input: RecommendationInput): string[] {
+  if (input.sub_scenarios && input.sub_scenarios.length > 0) return input.sub_scenarios;
+  if (input.sub_scenario) return [input.sub_scenario];
+  return [];
+}
+
+function getScenarioWeights(input: RecommendationInput): Record<QualityMetric, number> {
+  const scenarioConfig = QUALITY_CONFIG[input.scenario] ?? {};
+  const selected = getSelectedSubScenarios(input).filter((k) => scenarioConfig[k]);
+
+  if (selected.length === 0) {
+    return (scenarioConfig['general'] ?? { aa_intelligence_index: 1 }) as Record<QualityMetric, number>;
+  }
+
+  if (selected.length === 1) {
+    return (scenarioConfig[selected[0]] ?? { aa_intelligence_index: 1 }) as Record<QualityMetric, number>;
+  }
+
+  const merged: Partial<Record<QualityMetric, number>> = {};
+  for (const sub of selected) {
+    const w = scenarioConfig[sub] ?? {};
+    for (const [metric, weight] of Object.entries(w) as [QualityMetric, number][]) {
+      merged[metric] = (merged[metric] ?? 0) + weight / selected.length;
+    }
+  }
+
+  return merged as Record<QualityMetric, number>;
 }
 
 // ---------------------------------------------------------------------------

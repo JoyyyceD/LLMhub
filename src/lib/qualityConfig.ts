@@ -109,10 +109,10 @@ export interface DimensionWeights {
 }
 
 export const PROFILE_WEIGHTS: Record<ProfileKey, DimensionWeights> = {
-  balanced:     { quality: 0.35, cost: 0.25, latency: 0.20, throughput: 0.20 },
-  best_quality: { quality: 0.60, cost: 0.10, latency: 0.15, throughput: 0.15 },
-  best_value:   { quality: 0.35, cost: 0.40, latency: 0.15, throughput: 0.10 },
-  cheapest:     { quality: 0.15, cost: 0.60, latency: 0.15, throughput: 0.10 },
+  balanced:     { quality: 0.75, cost: 0.25, latency: 0.00, throughput: 0.00 },
+  best_quality: { quality: 1.00, cost: 0.00, latency: 0.00, throughput: 0.00 },
+  best_value:   { quality: 0.50, cost: 0.50, latency: 0.00, throughput: 0.00 },
+  cheapest:     { quality: 0.30, cost: 0.70, latency: 0.00, throughput: 0.00 },
   fastest:      { quality: 0.25, cost: 0.10, latency: 0.40, throughput: 0.25 },
 };
 

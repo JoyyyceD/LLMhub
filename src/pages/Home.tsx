@@ -57,6 +57,7 @@ const SCENARIO_ICONS: Record<ScenarioKey, React.FC<{ className?: string }>> = {
 };
 
 const SCENARIOS = Object.entries(SCENARIO_LABELS) as [ScenarioKey, string][];
+const CONTEXT_OPTIONS = [4096, 32768, 131072, 1000000] as const;
 
 const USD_TO_CNY = 7.25;
 
@@ -102,11 +103,14 @@ const ScoreBar = ({ label, value }: { label: string; value: number }) => (
 export const Home = () => {
   // Filter state
   const [scenario, setScenario] = useState<ScenarioKey>('code');
-  const [subScenario, setSubScenario] = useState<SubScenarioKey>('generation');
+  const [selectedSubScenarios, setSelectedSubScenarios] = useState<SubScenarioKey[]>(['generation']);
   const [region, setRegion] = useState<RegionKey>('global');
   const [profile, setProfile] = useState<ProfileKey>('balanced');
   const [speedProfile, setSpeedProfile] = useState<SpeedProfileKey>('balanced_speed');
   const [isAdvancedExpanded, setIsAdvancedExpanded] = useState(false);
+  const [requirePdfInput, setRequirePdfInput] = useState(false);
+  const [requireImageInput, setRequireImageInput] = useState(false);
+  const [minContextTokens, setMinContextTokens] = useState<number>(32768);
 
   // Data state
   const [allModels, setAllModels] = useState<ModelSnapshot[]>([]);
@@ -142,17 +146,23 @@ export const Home = () => {
   // When scenario changes, reset sub-scenario to first option
   useEffect(() => {
     const subs = SCENARIO_SUB_SCENARIOS[scenario];
-    if (subs.length > 0) setSubScenario(subs[0]);
+    if (subs.length > 0) setSelectedSubScenarios([subs[0]]);
   }, [scenario]);
 
   const handleRecommend = useCallback(() => {
     setComputing(true);
     const input: RecommendationInput = {
       scenario,
-      sub_scenario: subScenario,
+      sub_scenarios: selectedSubScenarios,
+      sub_scenario: selectedSubScenarios[0],
       region,
       profile,
       speed_profile: speedProfile,
+      advanced_filters: {
+        require_pdf: requirePdfInput,
+        require_image: requireImageInput,
+        min_context_tokens: minContextTokens,
+      },
     };
     // Async tick to let spinner render
     setTimeout(() => {
@@ -161,10 +171,12 @@ export const Home = () => {
       setHasRecommended(true);
       setComputing(false);
     }, 50);
-  }, [allModels, scenario, subScenario, region, profile, speedProfile]);
+  }, [allModels, scenario, selectedSubScenarios, region, profile, speedProfile, requirePdfInput, requireImageInput, minContextTokens]);
 
   const subScenarios = SCENARIO_SUB_SCENARIOS[scenario] ?? [];
   const currentScenarioLabel = SCENARIO_LABELS[scenario];
+  const contextIndex = Math.max(0, CONTEXT_OPTIONS.indexOf(minContextTokens as (typeof CONTEXT_OPTIONS)[number]));
+  const contextThresholdPct = (contextIndex / (CONTEXT_OPTIONS.length - 1)) * 100;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -261,7 +273,7 @@ export const Home = () => {
               <CreditCard className="w-4 h-4" /> 3. 预算偏好
             </h2>
             <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
-              {([['cheapest', '省钱'], ['best_value', '性价比'], ['best_quality', '质量优先']] as [ProfileKey, string][]).map(([key, label]) => (
+              {([['balanced', '均衡'], ['cheapest', '省钱'], ['best_value', '性价比'], ['best_quality', '质量优先']] as [ProfileKey, string][]).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setProfile(key)}
@@ -311,9 +323,17 @@ export const Home = () => {
             {subScenarios.map((sub) => (
               <button
                 key={sub}
-                onClick={() => setSubScenario(sub)}
+                onClick={() => {
+                  setSelectedSubScenarios((prev) => {
+                    if (prev.includes(sub)) {
+                      if (prev.length === 1) return prev;
+                      return prev.filter((s) => s !== sub);
+                    }
+                    return [...prev, sub];
+                  });
+                }}
                 className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                  subScenario === sub
+                  selectedSubScenarios.includes(sub)
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary'
                 }`}
@@ -355,39 +375,52 @@ export const Home = () => {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">综合偏好</label>
-                  <div className="space-y-2">
-                    {([['balanced', '均衡推荐'], ['best_quality', '最强性能'], ['best_value', '最高性价比'], ['cheapest', '最低成本'], ['fastest', '最快速度']] as [ProfileKey, string][]).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => setProfile(key)}
-                        className={`w-full text-left px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                          profile === key
-                            ? 'bg-primary/10 text-primary border border-primary/20'
-                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">输入类型支持</label>
+                  <div className="flex items-center gap-6">
+                    <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={requirePdfInput}
+                        onChange={(e) => setRequirePdfInput(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+                      />
+                      PDF/文档
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={requireImageInput}
+                        onChange={(e) => setRequireImageInput(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+                      />
+                      图像
+                    </label>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">隐私合规</label>
-                  <div className="flex items-center gap-4 mt-4">
-                    <div className="w-12 h-6 bg-primary rounded-full relative cursor-pointer">
-                      <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
-                    </div>
-                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">数据零保留 API</span>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                    上下文长度: <span className="text-primary">&gt; {Math.round(minContextTokens / 1024)}K TOKENS</span>
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={CONTEXT_OPTIONS.length - 1}
+                    step={1}
+                    value={contextIndex}
+                    onChange={(e) => setMinContextTokens(CONTEXT_OPTIONS[Number(e.target.value)] ?? 32768)}
+                    className="context-slider w-full"
+                    style={{
+                      background: `linear-gradient(to right, #e2e8f0 0%, #e2e8f0 ${contextThresholdPct}%, #137fec ${contextThresholdPct}%, #137fec 100%)`,
+                    }}
+                  />
+                  <div className="mt-3 flex justify-between text-[11px] font-bold text-slate-400">
+                    <span>4K</span>
+                    <span>32K</span>
+                    <span>128K</span>
+                    <span>1M+</span>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">说明</label>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    推荐引擎基于 Artificial Analysis 真实测评数据，在浏览器本地计算，无需服务端。评分覆盖智力、代码、速度、成本四维度。
-                  </p>
                 </div>
               </div>
             </motion.div>
@@ -402,7 +435,7 @@ export const Home = () => {
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">推荐模型</h2>
               <p className="text-slate-500 text-sm mt-1">
-                基于 <b>{currentScenarioLabel}</b> · <b>{SUB_SCENARIO_LABELS[subScenario]}</b> ·{' '}
+                基于 <b>{currentScenarioLabel}</b> · <b>{selectedSubScenarios.map((s) => SUB_SCENARIO_LABELS[s] ?? s).join(' / ')}</b> ·{' '}
                 <b>{region === 'cn' ? '大陆直连' : '海外可用'}</b> 偏好筛选。
               </p>
             </div>

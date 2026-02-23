@@ -66,6 +66,21 @@ def safe_int(val: str):
 def safe_bool(val: str) -> bool:
     return str(val).strip().lower() in ("true", "1", "yes")
 
+def safe_json_string_array(val: str):
+    """Parse JSON string array, fallback to None."""
+    if val is None:
+        return None
+    text = str(val).strip()
+    if text in ("", "nan", "None", "NaN"):
+        return None
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            return [str(x) for x in parsed]
+    except json.JSONDecodeError:
+        return None
+    return None
+
 
 def map_row(row: dict) -> dict:
     """Map CSV row to model_snapshots schema."""
@@ -97,7 +112,9 @@ def map_row(row: dict) -> dict:
         "aa_price_blended_usd":  safe_float(row.get("aa_pricing_price_1m_blended_3_to_1")),
 
         # Context & metadata
-        "aa_context_length":  safe_int(row.get("or_context_length")),
+        "aa_context_length":                safe_int(row.get("or_context_length")),
+        "or_context_length":                safe_int(row.get("or_context_length")),
+        "or_architecture_input_modalities": safe_json_string_array(row.get("or_architecture_input_modalities")),
         "aa_release_date":    row.get("aa_release_date", "").strip() or None,
 
         # Source flags
