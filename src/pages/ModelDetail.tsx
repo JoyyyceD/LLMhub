@@ -30,12 +30,12 @@ const USD_TO_CNY = 7.25;
 
 function fmtCny(usd: number | null | undefined): string {
   if (usd == null) return 'N/A';
-  return `¥${(usd * USD_TO_CNY).toFixed(4)}`;
+  return `¥${(usd * USD_TO_CNY).toFixed(1)}`;
 }
 
 function fmtUsd(usd: number | null | undefined): string {
   if (usd == null) return 'N/A';
-  return `$${usd.toFixed(4)}`;
+  return `$${usd.toFixed(1)}`;
 }
 
 function fmtNum(n: number | null | undefined, decimals = 2): string {
@@ -45,7 +45,7 @@ function fmtNum(n: number | null | undefined, decimals = 2): string {
 
 function fmtPct(n: number | null | undefined): string {
   if (n == null) return 'N/A';
-  return `${(n * 100).toFixed(1)}%`;
+  return (n * 100).toFixed(1);
 }
 
 function fmtTtft(s: number | null | undefined): string {
@@ -134,14 +134,15 @@ export const ModelDetail = () => {
   }
 
   const benchmarks = [
-    { label: '综合智力指数', value: fmtNum(model.aa_intelligence_index), avg: '—' },
-    { label: '代码专项指数', value: fmtNum(model.aa_coding_index), avg: '—' },
-    { label: 'GPQA（研究生科学）', value: fmtPct(model.aa_gpqa), avg: '—' },
-    { label: 'HLE（硬逻辑）', value: fmtPct(model.aa_hle), avg: '—' },
-    { label: 'IFBench（指令遵循）', value: fmtPct(model.aa_ifbench), avg: '—' },
-    { label: '长上下文召回 (LCR)', value: fmtPct(model.aa_lcr), avg: '—' },
-    { label: 'TerminalBench Hard', value: fmtPct(model.aa_terminalbench_hard), avg: '—' },
-    { label: 'TAU2（工具调用）', value: fmtNum(model.aa_tau2), avg: '—' },
+    { name: 'Intelligence Index', desc: '综合智力', value: fmtNum(model.aa_intelligence_index) },
+    { name: 'Coding Index', desc: '代码', value: fmtNum(model.aa_coding_index) },
+    { name: 'GQPA Diamond Benchmark', desc: '研究生科学', value: fmtPct(model.aa_gpqa) },
+    { name: "Humanity's Last Exam Benchmark", desc: '硬逻辑', value: fmtPct(model.aa_hle) },
+    { name: 'IFBench Benchmark', desc: '指令遵循', value: fmtPct(model.aa_ifbench) },
+    { name: 'LiveCodeBench Benchmark', desc: '长文召回', value: fmtPct(model.aa_lcr) },
+    { name: 'SciCode Benchmark', desc: '科学计算', value: fmtPct(model.aa_scicode) },
+    { name: 'Terminal-Bench Hard Benchmark', desc: '命令行', value: fmtPct(model.aa_terminalbench_hard) },
+    { name: 'tau2 Bench Telecom Benchmark', desc: '工具调用', value: fmtNum(model.aa_tau2) },
   ].filter(({ value }) => value !== 'N/A');
 
   return (
@@ -154,19 +155,19 @@ export const ModelDetail = () => {
         <ChevronRight className="w-4 h-4" />
         <Link to="/leaderboard" className="hover:text-primary transition-colors">模型库</Link>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-slate-900 dark:text-white font-medium">{model.aa_name}</span>
+        <span className="text-slate-900 dark:text-white font-medium">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
       </nav>
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 rounded-2xl bg-slate-900 flex items-center justify-center shadow-xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
-            <div className="text-white font-bold text-2xl">{model.aa_name.substring(0, 2)}</div>
+            <div className="text-white font-bold text-2xl">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '').substring(0, 2)}</div>
           </div>
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {model.aa_name}
+                {model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
               </h1>
               {model.is_cn_provider && (
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -290,13 +291,18 @@ export const ModelDetail = () => {
                       <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-slate-500">
                         <tr>
                           <th className="px-8 py-4 font-semibold">评估基准</th>
-                          <th className="px-8 py-4 font-bold text-primary">{model.aa_name}</th>
+                          <th className="px-8 py-4 font-bold text-primary">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {benchmarks.map(({ label, value }) => (
-                          <tr key={label}>
-                            <td className="px-8 py-5 font-medium">{label}</td>
+                        {benchmarks.map(({ name, desc, value }) => (
+                          <tr key={name}>
+                            <td className="px-8 py-5">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{name}</span>
+                                <span className="text-xs text-slate-400 font-normal mt-0.5">{desc}</span>
+                              </div>
+                            </td>
                             <td className="px-8 py-5 font-bold text-primary">{value}</td>
                           </tr>
                         ))}

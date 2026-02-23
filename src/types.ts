@@ -46,7 +46,7 @@ export interface ModelSnapshot {
 export type ScenarioKey =
   | 'chat'
   | 'code'
-  | 'math'
+  | 'science'
   | 'copy'
   | 'rag'
   | 'agent'
@@ -58,7 +58,7 @@ export type SubScenarioKey =
   | 'general' | 'creative' | 'customer_service' | 'instruction_following' | 'long_context' | 'multilingual'
   // code
   | 'generation' | 'debugging' | 'refactoring' | 'sql' | 'testing' | 'explanation'
-  // math
+  // science
   | 'basic' | 'advanced' | 'statistics' | 'logic' | 'proof' | 'aime'
   // copy
   | 'marketing' | 'social_media' | 'technical_docs' | 'story' | 'seo' | 'email'

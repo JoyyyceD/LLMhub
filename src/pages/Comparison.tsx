@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   TrendingUp,
   Download,
@@ -28,7 +28,7 @@ const USD_TO_CNY = 7.25;
 
 function fmtCny(usd: number | null | undefined): string {
   if (usd == null) return '—';
-  return `¥${(usd * USD_TO_CNY).toFixed(4)}`;
+  return `¥${(usd * USD_TO_CNY).toFixed(1)}`;
 }
 
 export const Comparison = () => {
@@ -96,12 +96,14 @@ export const Comparison = () => {
     const point: Record<string, number | string> = { subject: item.subject };
     selectedModels.forEach((model) => {
       const raw = model[item.key as keyof ModelSnapshot] as number | null;
+      // Clean model name for display in chart
+      const modelName = model.aa_name.replace(/\s*\(.*?\)\s*/g, '');
       if (raw == null) {
-        point[model.aa_name] = 0;
+        point[modelName] = 0;
       } else {
         const scale = (item as { scale?: number }).scale ?? 1;
         const max = item.max;
-        point[model.aa_name] = Math.min(100, ((raw * scale) / max) * 100);
+        point[modelName] = Math.min(100, ((raw * scale) / max) * 100);
       }
     });
     return point;
@@ -155,7 +157,7 @@ export const Comparison = () => {
                     className="rounded border-slate-300 text-primary focus:ring-primary disabled:opacity-30"
                   />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold truncate">{model.aa_name}</span>
+                    <span className="text-sm font-bold truncate">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
                     <span className="text-[10px] text-slate-400 truncate">
                       {model.aa_model_creator_name ?? '—'}
                     </span>
@@ -197,7 +199,7 @@ export const Comparison = () => {
                 {selectedModels.map((model, idx) => (
                   <div key={model.aa_slug} className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[idx] }} />
-                    <span className="text-xs font-bold">{model.aa_name}</span>
+                    <span className="text-xs font-bold">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
                   </div>
                 ))}
               </div>
@@ -211,8 +213,8 @@ export const Comparison = () => {
                   {selectedModels.map((model, idx) => (
                     <Radar
                       key={model.aa_slug}
-                      name={model.aa_name}
-                      dataKey={model.aa_name}
+                      name={model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
+                      dataKey={model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                       stroke={colors[idx]}
                       fill={colors[idx]}
                       fillOpacity={0.2}
@@ -237,7 +239,7 @@ export const Comparison = () => {
                 <span className="text-sm font-medium">对比分析概览</span>
               </div>
               <h3 className="text-3xl font-bold leading-tight">
-                {selectedModels.length > 0 ? selectedModels[0].aa_name : 'N/A'}
+                {selectedModels.length > 0 ? selectedModels[0].aa_name.replace(/\s*\(.*?\)\s*/g, '') : 'N/A'}
                 <span className="block text-lg font-medium opacity-70 mt-1">在当前选择中综合指数最高</span>
               </h3>
               {selectedModels[0] && (
@@ -299,9 +301,9 @@ export const Comparison = () => {
                       <div className="flex items-center gap-3">
                         <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[idx] }} />
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm group-hover:text-primary transition-colors">
-                            {model.aa_name}
-                          </span>
+                          <Link to={`/model/${model.aa_slug}`} className="font-bold text-sm group-hover:text-primary transition-colors hover:underline">
+                            {model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
+                          </Link>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             {model.is_cn_provider ? '国内' : '海外'}
                           </span>

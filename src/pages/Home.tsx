@@ -48,7 +48,7 @@ import type {
 const SCENARIO_ICONS: Record<ScenarioKey, React.FC<{ className?: string }>> = {
   chat:       MessageSquare,
   code:       Terminal,
-  math:       Calculator,
+  science:    Calculator,
   copy:       Edit3,
   rag:        Database,
   agent:      Bot,
@@ -61,10 +61,10 @@ const SCENARIOS = Object.entries(SCENARIO_LABELS) as [ScenarioKey, string][];
 const USD_TO_CNY = 7.25;
 
 function fmtPrice(usd: number | null | undefined): string {
-  if (usd == null) return 'N/A';
-  const cny = usd * USD_TO_CNY;
-  return `¥${cny.toFixed(2)}`;
-}
+    if (usd == null) return 'N/A';
+    const cny = usd * USD_TO_CNY;
+    return `¥${cny.toFixed(1)}`;
+  }
 
 function fmtTtft(s: number | null | undefined): string {
   if (s == null) return 'N/A';
@@ -103,7 +103,7 @@ export const Home = () => {
   // Filter state
   const [scenario, setScenario] = useState<ScenarioKey>('code');
   const [subScenario, setSubScenario] = useState<SubScenarioKey>('generation');
-  const [region, setRegion] = useState<RegionKey>('cn');
+  const [region, setRegion] = useState<RegionKey>('global');
   const [profile, setProfile] = useState<ProfileKey>('balanced');
   const [speedProfile, setSpeedProfile] = useState<SpeedProfileKey>('balanced_speed');
   const [isAdvancedExpanded, setIsAdvancedExpanded] = useState(false);
@@ -189,7 +189,7 @@ export const Home = () => {
           )}
           {!loadingModels && !fetchError && (
             <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
-              已加载 {allModels.length} 个模型
+              最新更新时间: {new Date().toISOString().split('T')[0]}
             </p>
           )}
         </div>
@@ -250,7 +250,7 @@ export const Home = () => {
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
-                海外可用
+                全球模型
               </button>
             </div>
           </div>
@@ -452,7 +452,7 @@ export const Home = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">
-                          {result.model.aa_name}
+                          {result.model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                         </h3>
                         <p className="text-xs font-medium text-slate-500 mt-0.5">
                           {result.model.aa_model_creator_name ?? '—'} ·{' '}

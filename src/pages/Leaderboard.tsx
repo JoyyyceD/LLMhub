@@ -11,8 +11,12 @@ import {
   LayoutGrid,
   Filter,
   ArrowUpRight,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
   Loader2,
   AlertCircle,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ModelSnapshot } from '../types';
@@ -22,7 +26,7 @@ const PAGE_SIZE = 20;
 
 function fmtCny(usd: number | null | undefined): string {
   if (usd == null) return '—';
-  return `¥${(usd * USD_TO_CNY).toFixed(2)}`;
+  return `¥${(usd * USD_TO_CNY).toFixed(1)}`;
 }
 
 function fmtNum(n: number | null | undefined, decimals = 1): string {
@@ -35,53 +39,32 @@ function fmtTtft(s: number | null | undefined): string {
   return `${(s * 1000).toFixed(0)} ms`;
 }
 
+function fmtPct(n: number | null | undefined): string {
+  if (n == null) return '—';
+  return (n * 100).toFixed(1);
+}
+
 type TabKey = 'global' | 'cn';
 
 export const Leaderboard = () => {
   const [models, setModels] = useState<ModelSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<TabKey>('cn');
+  const [tab, setTab] = useState<TabKey>('global');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState('aa_release_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
+  const fetchModels = async (currentPage: number, isNewFilter = false) => {
+    setLoading(true);
+    if (isNewFilter) {
       setError('');
       setPage(1);
-
-      let query = supabase
-        .from('model_snapshots')
-        .select('*', { count: 'exact' })
-        .eq('has_aa', true)
-        .eq('has_or', true)
-        .order('aa_intelligence_index', { ascending: false, nullsFirst: false });
-
-      if (tab === 'cn') query = query.eq('is_cn_provider', true);
-
-      if (search.trim()) {
-        query = query.ilike('aa_name', `%${search.trim()}%`);
-      }
-
-      const { data, count, error: err } = await query.range(0, PAGE_SIZE - 1);
-
-      if (err) {
-        setError('数据加载失败，请刷新重试。');
-        setLoading(false);
-        return;
-      }
-
-      setModels((data ?? []) as ModelSnapshot[]);
-      setTotalCount(count ?? 0);
-      setLoading(false);
-    };
-    fetch();
-  }, [tab, search]);
-
-  const loadPage = async (targetPage: number) => {
-    setLoading(true);
+    }
+    
+    const targetPage = isNewFilter ? 1 : currentPage;
     const from = (targetPage - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
@@ -90,41 +73,50 @@ export const Leaderboard = () => {
       .select('*', { count: 'exact' })
       .eq('has_aa', true)
       .eq('has_or', true)
-      .order('aa_intelligence_index', { ascending: false, nullsFirst: false });
+      .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false });
 
     if (tab === 'cn') query = query.eq('is_cn_provider', true);
     if (search.trim()) query = query.ilike('aa_name', `%${search.trim()}%`);
 
-    const { data, count } = await query.range(from, to);
+    const { data, count, error: err } = await query.range(from, to);
+
+    if (err) {
+      setError('数据加载失败，请刷新重试。');
+      setLoading(false);
+      return;
+    }
+
     setModels((data ?? []) as ModelSnapshot[]);
     setTotalCount(count ?? 0);
-    setPage(targetPage);
+    if (isNewFilter) setPage(1);
+    else setPage(targetPage);
     setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchModels(1, true);
+  }, [tab, search, sortField, sortOrder]);
+
+  const loadPage = (p: number) => fetchModels(p, false);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortField(field);
+      // Default sort direction logic based on field type
+      if (['aa_ttft_seconds', 'aa_price_input_usd', 'aa_price_output_usd'].includes(field)) {
+        setSortOrder('asc'); // Lower is better
+      } else {
+        setSortOrder('desc'); // Higher/Newer is better
+      }
+    }
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const topModel = models[0];
   const topScore = topModel?.aa_intelligence_index;
-
-  const STATS = [
-    {
-      label: '收录模型',
-      value: loading ? '...' : String(totalCount),
-      change: tab === 'cn' ? '国内优化' : '全球视图',
-      icon: LayoutGrid,
-    },
-    {
-      label: '最高智力指数',
-      value: loading ? '...' : topScore != null ? topScore.toFixed(1) : '—',
-      icon: Zap,
-    },
-    {
-      label: '数据更新',
-      value: topModel?.record_date ?? '—',
-      icon: Zap,
-    },
-  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -149,40 +141,15 @@ export const Leaderboard = () => {
                 : 'text-slate-400 hover:text-slate-600'
             }`}
           >
-            国内优化
+            中国大陆直连
           </button>
         </div>
         <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-          当前视图: <span className="text-primary">{tab === 'cn' ? '中国内地市场优化版' : '全球模型'}</span>
+          当前视图: <span className="text-primary">{tab === 'cn' ? '中国大陆直连' : '全球模型'}</span>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-        {STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none flex items-start gap-6 group hover:scale-[1.02] transition-all"
-          >
-            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl group-hover:bg-primary/5 transition-colors">
-              <stat.icon className="w-8 h-8 text-slate-300 group-hover:text-primary transition-colors" />
-            </div>
-            <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">{stat.label}</p>
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-black text-slate-900 dark:text-white font-display tracking-tighter">
-                  {stat.value}
-                </span>
-                {stat.change && (
-                  <span className="text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">
-                    {stat.change}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Stats - Removed */}
 
       {/* Table */}
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none mb-10 overflow-hidden">
@@ -199,12 +166,12 @@ export const Leaderboard = () => {
             />
           </div>
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:border-primary hover:text-primary transition-all">
-              <Filter className="w-4 h-4" /> 高级筛选
-            </button>
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:border-primary hover:text-primary transition-all">
-              <Download className="w-4 h-4" /> 导出数据
-            </button>
+            <Link
+              to="/community"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white border border-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-primary/20"
+            >
+              <MessageSquarePlus className="w-4 h-4" /> 发表点评
+            </Link>
           </div>
         </div>
 
@@ -221,13 +188,215 @@ export const Leaderboard = () => {
                 <th className="px-8 py-5">#</th>
                 <th className="px-8 py-5">模型名称</th>
                 <th className="px-8 py-5">厂商</th>
-                <th className="px-8 py-5">发布日期</th>
-                <th className="px-8 py-5 text-center">首字延迟</th>
-                <th className="px-8 py-5 text-center">吞吐 (tps)</th>
-                <th className="px-8 py-5 text-center">输入价 (¥/1M)</th>
-                <th className="px-8 py-5 text-center">输出价 (¥/1M)</th>
-                <th className="px-8 py-5 text-center">智力指数</th>
-                <th className="px-8 py-5 text-center">代码指数</th>
+                <th 
+                  className="px-8 py-5 cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_release_date')}
+                >
+                  <div className="flex items-center gap-1">
+                    发布日期
+                    {sortField === 'aa_release_date' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_price_input_usd')}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    输入价 (¥/1M)
+                    {sortField === 'aa_price_input_usd' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_price_output_usd')}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    输出价 (¥/1M)
+                    {sortField === 'aa_price_output_usd' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_intelligence_index')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>Intelligence Index</span>
+                      {sortField === 'aa_intelligence_index' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(综合智力)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_coding_index')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>Coding Index</span>
+                      {sortField === 'aa_coding_index' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(代码)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_gpqa')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>GQPA Diamond Benchmark</span>
+                      {sortField === 'aa_gpqa' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(研究生科学)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_hle')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>Humanity's Last Exam Benchmark</span>
+                      {sortField === 'aa_hle' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(硬逻辑)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_ifbench')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>IFBench Benchmark</span>
+                      {sortField === 'aa_ifbench' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(指令遵循)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_lcr')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>LiveCodeBench Benchmark</span>
+                      {sortField === 'aa_lcr' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(长文召回)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_scicode')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>SciCode Benchmark</span>
+                      {sortField === 'aa_scicode' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(科学计算)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_terminalbench_hard')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>Terminal-Bench Hard Benchmark</span>
+                      {sortField === 'aa_terminalbench_hard' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(命令行)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_tau2')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-0.5 leading-tight">
+                    <div className="flex items-center gap-1">
+                      <span>tau2 Bench Telecom Benchmark</span>
+                      {sortField === 'aa_tau2' ? (
+                        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-normal normal-case font-mono tracking-tight">(工具调用)</span>
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_ttft_seconds')}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    首字延迟
+                    {sortField === 'aa_ttft_seconds' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-center cursor-pointer hover:text-primary transition-colors group/th"
+                  onClick={() => handleSort('aa_tps')}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    吞吐 (tps)
+                    {sortField === 'aa_tps' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover/th:opacity-50" />
+                    )}
+                  </div>
+                </th>
                 <th className="px-8 py-5 text-center">操作</th>
               </tr>
             </thead>
@@ -256,29 +425,22 @@ export const Leaderboard = () => {
                     <tr key={m.aa_slug} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                       <td className="px-8 py-6 text-sm font-black text-slate-400 font-display">{rank}</td>
                       <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
+                        <Link to={`/model/${m.aa_slug}`} className="flex items-center gap-4 group cursor-pointer">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-black text-white shadow-lg ${colorClass}`}>
                             {m.aa_name.substring(0, 2)}
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">
-                              {m.aa_name}
+                              {m.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-400 tracking-tight">{m.aa_slug}</span>
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-8 py-6 text-sm font-bold text-slate-600 dark:text-slate-400">
                         {m.aa_model_creator_name ?? '—'}
                       </td>
                       <td className="px-8 py-6 text-sm font-bold text-slate-400">
                         {m.aa_release_date ?? '—'}
-                      </td>
-                      <td className="px-8 py-6 text-center text-sm font-black text-primary font-display">
-                        {fmtTtft(m.aa_ttft_seconds)}
-                      </td>
-                      <td className="px-8 py-6 text-center text-sm font-black text-primary font-display">
-                        {fmtNum(m.aa_tps)}
                       </td>
                       <td className="px-8 py-6 text-center text-sm font-black text-emerald-600 font-display">
                         {fmtCny(m.aa_price_input_usd)}
@@ -293,6 +455,33 @@ export const Leaderboard = () => {
                       </td>
                       <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
                         {fmtNum(m.aa_coding_index)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtPct(m.aa_gpqa)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtPct(m.aa_hle)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtPct(m.aa_ifbench)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtPct(m.aa_lcr)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtPct(m.aa_scicode)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtPct(m.aa_terminalbench_hard)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-slate-600 dark:text-slate-300 font-display">
+                        {fmtNum(m.aa_tau2)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-primary font-display">
+                        {fmtTtft(m.aa_ttft_seconds)}
+                      </td>
+                      <td className="px-8 py-6 text-center text-sm font-black text-primary font-display">
+                        {fmtNum(m.aa_tps)}
                       </td>
                       <td className="px-8 py-6 text-center">
                         <Link

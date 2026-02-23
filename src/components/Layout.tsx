@@ -37,7 +37,7 @@ export const Header = () => {
               <div className="bg-primary p-2 rounded-xl text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                 <Rocket className="w-6 h-6" />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-slate-900">ModelHub</span>
+              <span className="text-2xl font-black tracking-tighter text-slate-900">TokenGalaxy</span>
             </Link>
             <div className="hidden md:flex items-center gap-10">
               {navLinks.map((link) => (

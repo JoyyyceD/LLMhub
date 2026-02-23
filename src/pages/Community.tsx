@@ -162,6 +162,39 @@ export const Community = () => {
     comment: '',
   });
 
+  // Calculate average rating whenever scores change
+  useEffect(() => {
+    const scores = [
+      postForm.rating_quality,
+      postForm.rating_price,
+      postForm.rating_latency,
+      postForm.rating_throughput,
+      postForm.rating_stability
+    ];
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    setPostForm(prev => {
+        // Prevent infinite loop if rating hasn't changed
+        const newRating = Math.round(avg); // Use integer for star selector compatibility or keep float?
+        // The previous implementation used float for display. The current schema uses integer for rating_overall?
+        // Looking at DbPost interface: rating_overall: number. It can be float?
+        // But StarSelector takes integer.
+        // Let's stick to float for display but maybe round for the state if required.
+        // Actually, let's keep it consistent with the previous logic: 1 decimal place.
+        // BUT StarSelector expects value to be 1-5.
+        // Let's verify StarSelector: i <= value. So it handles floats fine (e.g. 4.5 >= 4).
+        
+        const newRatingFloat = parseFloat(avg.toFixed(1));
+        if (prev.rating_overall === newRatingFloat) return prev;
+        return { ...prev, rating_overall: newRatingFloat };
+    });
+  }, [
+    postForm.rating_quality,
+    postForm.rating_price,
+    postForm.rating_latency,
+    postForm.rating_throughput,
+    postForm.rating_stability
+  ]);
+
   // Load model options for the selector
   useEffect(() => {
     supabase
@@ -226,7 +259,7 @@ export const Community = () => {
         level: `LV.${p.profiles?.level ?? 1}`,
         time: timeAgo(p.created_at),
         modelId: p.model_id,
-        modelName: matchedModel?.aa_name ?? p.model_id,
+        modelName: (matchedModel?.aa_name ?? p.model_id).replace(/\s*\(.*?\)\s*/g, ''),
         ratingOverall: p.rating_overall,
         ratingQuality: p.rating_quality,
         ratingPrice: p.rating_price,
@@ -434,7 +467,7 @@ export const Community = () => {
                     >
                       {modelOptions.map((m) => (
                         <option key={m.aa_slug} value={m.aa_slug}>
-                          {m.aa_name}
+                          {m.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                         </option>
                       ))}
                     </select>
@@ -459,21 +492,25 @@ export const Community = () => {
                 {/* Overall rating */}
                 <section>
                   <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
-                    总体评分（必填）
+                    总体评分（自动计算）
                   </label>
                   <div className="flex items-center gap-3">
                     <span className="text-3xl font-black text-primary font-display">{postForm.rating_overall}</span>
-                    <StarSelector
-                      value={postForm.rating_overall}
-                      onChange={(v) => setPostForm({ ...postForm, rating_overall: v })}
-                    />
+                    <div className="flex gap-1 pointer-events-none opacity-80">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Star
+                          key={i}
+                          className={`w-5 h-5 ${i <= Math.round(postForm.rating_overall) ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </section>
 
                 {/* Dimension ratings */}
                 <section>
                   <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
-                    维度评分（可选）
+                    维度评分 (点击星星进行评分)
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
                     {ratingDims.map(({ key, label }) => (
@@ -506,8 +543,8 @@ export const Community = () => {
                     <p className="text-[10px] text-slate-400 mt-1 text-right">{postForm.pros.length}/200</p>
                   </section>
                   <section>
-                    <label className="block text-xs font-black uppercase tracking-widest text-rose-500 mb-2">
-                      — 缺点（≤200字）
+                    <label className="block text-xs font-black uppercase tracking-widest text-rose-500 mb-2 flex items-center gap-1">
+                      <div className="w-4 h-4 flex items-center justify-center font-bold bg-rose-100 dark:bg-rose-900/30 rounded-full text-[10px]">-</div> 缺点（≤200字）
                     </label>
                     <textarea
                       value={postForm.cons}

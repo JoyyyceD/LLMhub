@@ -15,13 +15,19 @@ import type {
 import {
   QUALITY_CONFIG,
   PROFILE_WEIGHTS,
-  CN_PROVIDERS,
   type QualityMetric,
-  type QualityWeights,
 } from './qualityConfig';
 
 // USD → CNY conversion rate (approx)
 const USD_TO_CNY = 7.25;
+
+// Standardization config
+const RECENT_WINDOW_DAYS = 180;
+const MIN_SAMPLE_SIZE = 30;
+const QUALITY_K = 15;
+const COST_K = 10;
+const LATENCY_K = 10;
+const THROUGHPUT_K = 12;
 
 // ---------------------------------------------------------------------------
 // Step 1: Filter candidates
@@ -32,82 +38,113 @@ export function filterCandidates(
   input: RecommendationInput,
 ): ModelSnapshot[] {
   return models.filter((m) => {
-    // Must have both sources
     if (!m.has_aa || !m.has_or) return false;
-
-    // Must have intelligence_index (minimum quality signal)
     if (m.aa_intelligence_index == null) return false;
-
-    // Region filter: CN = only cn providers
     if (input.region === 'cn' && !m.is_cn_provider) return false;
-
     return true;
   });
 }
 
-// ---------------------------------------------------------------------------
-// Step 2: Compute raw quality score for a model given metric weights
-// ---------------------------------------------------------------------------
-
-export function computeQualityRaw(
-  model: ModelSnapshot,
-  weights: QualityWeights,
-): number {
-  const entries = Object.entries(weights) as [QualityMetric, number][];
-  let weightedSum = 0;
-  let usedWeight = 0;
-
-  for (const [metric, w] of entries) {
-    const val = model[metric];
-    if (val != null && w > 0) {
-      weightedSum += val * w;
-      usedWeight += w;
-    }
-  }
-
-  // If all metrics are missing, fall back to intelligence_index
-  if (usedWeight === 0) {
-    return model.aa_intelligence_index ?? 0;
-  }
-
-  return weightedSum / usedWeight;
+function filterBaseCandidates(models: ModelSnapshot[]): ModelSnapshot[] {
+  return models.filter((m) => m.has_aa && m.has_or && m.aa_intelligence_index != null);
 }
 
-// ---------------------------------------------------------------------------
-// Step 3: Percentile normalisation (P10–P90 clipping → 0-100)
-// ---------------------------------------------------------------------------
+function pickReferencePool(models: ModelSnapshot[], fallback: ModelSnapshot[]): ModelSnapshot[] {
+  const base = filterBaseCandidates(models);
+  if (base.length === 0) return fallback;
 
-export function normalizeP10P90(vals: number[], lowerBetter: boolean): number[] {
-  if (vals.length === 0) return [];
-  const sorted = [...vals].sort((a, b) => a - b);
-  const n = sorted.length;
-  const p10 = sorted[Math.max(0, Math.floor(n * 0.1))];
-  const p90 = sorted[Math.min(n - 1, Math.floor(n * 0.9))];
-  const range = p90 - p10;
-
-  return vals.map((v) => {
-    if (range === 0) return 50;
-    const clipped = Math.max(p10, Math.min(p90, v));
-    const normalised = (clipped - p10) / range; // 0-1, higher=better raw
-    return lowerBetter
-      ? (1 - normalised) * 100
-      : normalised * 100;
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - RECENT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const recent = base.filter((m) => {
+    if (!m.record_date) return false;
+    const d = new Date(m.record_date);
+    return Number.isFinite(d.getTime()) && d >= cutoff;
   });
+
+  if (recent.length >= MIN_SAMPLE_SIZE) return recent;
+  if (base.length >= MIN_SAMPLE_SIZE) return base;
+  return fallback;
 }
 
 // ---------------------------------------------------------------------------
-// Step 4: Compute all 4 dimensions for each candidate, then normalise
+// Step 2: Robust z-score helpers
 // ---------------------------------------------------------------------------
 
-interface RawScores {
-  quality: number;
-  cost: number;      // raw cost (blended USD price, lower = better raw)
-  latency: number;   // raw TTFT seconds, lower = better
-  throughput: number;// raw TPS, higher = better
+function clamp(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function quantile(sorted: number[], q: number): number {
+  if (sorted.length === 0) return 0;
+  const idx = Math.floor((sorted.length - 1) * q);
+  return sorted[clamp(idx, 0, sorted.length - 1)];
+}
+
+function median(vals: number[]): number {
+  if (vals.length === 0) return 0;
+  const sorted = [...vals].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[mid];
+  return (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+interface RobustStats {
+  med: number;
+  mad: number;
+}
+
+function buildRobustStats(vals: number[]): RobustStats | null {
+  if (vals.length === 0) return null;
+  const sorted = [...vals].sort((a, b) => a - b);
+  const p5 = quantile(sorted, 0.05);
+  const p95 = quantile(sorted, 0.95);
+  const winsorized = vals.map((v) => clamp(v, p5, p95));
+  const med = median(winsorized);
+  const absDevs = winsorized.map((v) => Math.abs(v - med));
+  const mad = median(absDevs);
+  return { med, mad };
+}
+
+function robustScore(
+  value: number | null | undefined,
+  stats: RobustStats | null,
+  k: number,
+  lowerBetter: boolean,
+): number | null {
+  if (value == null || Number.isNaN(value)) return null;
+  if (!stats) return 50;
+
+  const scale = 1.4826 * stats.mad;
+  if (scale === 0) return 50;
+
+  const z = (value - stats.med) / scale;
+  const directed = lowerBetter ? -z : z;
+  return clamp(50 + k * directed, 0, 100);
+}
+
+// ---------------------------------------------------------------------------
+// Step 3: Compute all 4 dimensions with robust standardization
+// ---------------------------------------------------------------------------
+
+function costRaw(m: ModelSnapshot): number | null {
+  if (m.aa_price_blended_usd != null) return m.aa_price_blended_usd;
+  if (m.aa_price_input_usd != null && m.aa_price_output_usd != null) {
+    return (m.aa_price_input_usd + m.aa_price_output_usd * 3) / 4;
+  }
+  return null;
+}
+
+function latencyRaw(m: ModelSnapshot): number | null {
+  return m.aa_ttft_seconds;
+}
+
+function throughputRaw(m: ModelSnapshot): number | null {
+  return m.aa_tps;
 }
 
 export function computeScores(
   candidates: ModelSnapshot[],
+  referencePool: ModelSnapshot[],
   input: RecommendationInput,
 ): DimensionScores[] {
   const subKey = input.sub_scenario;
@@ -118,56 +155,90 @@ export function computeScores(
 
   const dimWeights = PROFILE_WEIGHTS[input.profile];
 
-  // ── Compute raw dimension values for each candidate ──
-  const rawList: RawScores[] = candidates.map((m) => ({
-    quality:    computeQualityRaw(m, scenarioWeights),
-    cost:       m.aa_price_blended_usd ?? (
-                  m.aa_price_input_usd != null && m.aa_price_output_usd != null
-                    ? (m.aa_price_input_usd + m.aa_price_output_usd * 3) / 4
-                    : 999
-                ),
-    latency:    m.aa_ttft_seconds ?? 99,
-    throughput: m.aa_tps ?? 0,
-  }));
+  const qualityMetrics = Object.keys(scenarioWeights) as QualityMetric[];
+  if (!qualityMetrics.includes('aa_intelligence_index')) {
+    qualityMetrics.push('aa_intelligence_index');
+  }
 
-  // ── Normalise each dimension P10-P90 → 0-100 ──
-  const qualNorm   = normalizeP10P90(rawList.map((r) => r.quality),    false);
-  const costNorm   = normalizeP10P90(rawList.map((r) => r.cost),       true);  // lower cost = higher score
-  const latNorm    = normalizeP10P90(rawList.map((r) => r.latency),    true);  // lower TTFT = higher score
-  const thruNorm   = normalizeP10P90(rawList.map((r) => r.throughput), false);
+  const metricStats = new Map<QualityMetric, RobustStats | null>();
+  for (const metric of qualityMetrics) {
+    const vals = referencePool
+      .map((m) => m[metric])
+      .filter((v): v is number => v != null && !Number.isNaN(v));
+    metricStats.set(metric, buildRobustStats(vals));
+  }
 
-  // ── Apply speed_profile bias ──
-  const speedMod = (i: number) => {
-    if (input.speed_profile === 'low_latency') return { lat: latNorm[i] * 1.3, thru: thruNorm[i] * 0.7 };
-    if (input.speed_profile === 'high_throughput') return { lat: latNorm[i] * 0.7, thru: thruNorm[i] * 1.3 };
-    return { lat: latNorm[i], thru: thruNorm[i] };
-  };
+  const costStats = buildRobustStats(referencePool
+    .map((m) => costRaw(m))
+    .filter((v): v is number => v != null && !Number.isNaN(v)));
 
-  return candidates.map((_, i) => {
-    const { lat, thru } = speedMod(i);
-    const q = qualNorm[i];
-    const c = costNorm[i];
-    const latClamped  = Math.min(100, lat);
-    const thruClamped = Math.min(100, thru);
+  const latencyStats = buildRobustStats(referencePool
+    .map((m) => latencyRaw(m))
+    .filter((v): v is number => v != null && !Number.isNaN(v)));
+
+  const throughputStats = buildRobustStats(referencePool
+    .map((m) => throughputRaw(m))
+    .filter((v): v is number => v != null && !Number.isNaN(v)));
+
+  return candidates.map((m) => {
+    let qualityWeightedSum = 0;
+    let qualityUsedWeight = 0;
+
+    for (const [metric, weight] of Object.entries(scenarioWeights) as [QualityMetric, number][]) {
+      if (weight <= 0) continue;
+      const metricScore = robustScore(m[metric], metricStats.get(metric) ?? null, QUALITY_K, false);
+      if (metricScore == null) continue;
+      qualityWeightedSum += metricScore * weight;
+      qualityUsedWeight += weight;
+    }
+
+    let quality = 50;
+    if (qualityUsedWeight > 0) {
+      quality = qualityWeightedSum / qualityUsedWeight;
+    } else {
+      quality = robustScore(
+        m.aa_intelligence_index,
+        metricStats.get('aa_intelligence_index') ?? null,
+        QUALITY_K,
+        false,
+      ) ?? 50;
+    }
+
+    const cost = robustScore(costRaw(m), costStats, COST_K, true) ?? 50;
+    const latencyBase = robustScore(latencyRaw(m), latencyStats, LATENCY_K, true) ?? 50;
+    const throughputBase = robustScore(throughputRaw(m), throughputStats, THROUGHPUT_K, false) ?? 50;
+
+    const speedAdjusted = (() => {
+      if (input.speed_profile === 'low_latency') {
+        return { latency: latencyBase * 1.3, throughput: throughputBase * 0.7 };
+      }
+      if (input.speed_profile === 'high_throughput') {
+        return { latency: latencyBase * 0.7, throughput: throughputBase * 1.3 };
+      }
+      return { latency: latencyBase, throughput: throughputBase };
+    })();
+
+    const latency = clamp(speedAdjusted.latency, 0, 100);
+    const throughput = clamp(speedAdjusted.throughput, 0, 100);
 
     const total =
-      q   * dimWeights.quality   +
-      c   * dimWeights.cost      +
-      latClamped  * dimWeights.latency   +
-      thruClamped * dimWeights.throughput;
+      quality * dimWeights.quality +
+      cost * dimWeights.cost +
+      latency * dimWeights.latency +
+      throughput * dimWeights.throughput;
 
     return {
-      quality:    Math.round(q),
-      cost:       Math.round(c),
-      latency:    Math.round(latClamped),
-      throughput: Math.round(thruClamped),
-      total:      Math.round(total),
+      quality: Math.round(quality),
+      cost: Math.round(cost),
+      latency: Math.round(latency),
+      throughput: Math.round(throughput),
+      total: Math.round(total),
     };
   });
 }
 
 // ---------------------------------------------------------------------------
-// Step 5: Generate rule-based explanations
+// Step 4: Generate rule-based explanations
 // ---------------------------------------------------------------------------
 
 function fmt(n: number | null | undefined, decimals = 2): string {
@@ -185,13 +256,12 @@ export function generateExplanations(
   model: ModelSnapshot,
   scores: DimensionScores,
   input: RecommendationInput,
-  rankAmongTop: number, // 0-indexed rank among top 4
-  secondScore: number,  // total score of #2 (for gap commentary)
+  rankAmongTop: number,
+  secondScore: number,
 ): { explanations: string[]; tradeoffs: string[] } {
   const exps: string[] = [];
   const tradeoffs: string[] = [];
 
-  // --- Quality explanations ---
   if (model.aa_intelligence_index != null) {
     exps.push(
       `综合智力指数 ${fmt(model.aa_intelligence_index)} — 在同场景候选集中` +
@@ -204,14 +274,13 @@ export function generateExplanations(
   if ((input.scenario === 'rag' || input.sub_scenario === 'long_context' || input.sub_scenario === 'long_doc') && model.aa_lcr != null) {
     exps.push(`长上下文召回率 ${fmt(model.aa_lcr * 100, 1)}%，适合处理大量文档内容。`);
   }
-  if ((input.scenario === 'agent') && model.aa_tau2 != null) {
+  if (input.scenario === 'agent' && model.aa_tau2 != null) {
     exps.push(`工具调用能力评分 ${fmt(model.aa_tau2 * 100, 1)}%，在 Agent 工作流中表现${model.aa_tau2 > 0.5 ? '优秀' : '尚可'}。`);
   }
-  if (input.scenario === 'math' && model.aa_hle != null) {
-    exps.push(`硬逻辑评估得分 ${fmt(model.aa_hle * 100, 1)}%，适合${input.sub_scenario === 'aime' ? 'AIME竞赛级' : '高难度数学'}推理任务。`);
+  if (input.scenario === 'science' && model.aa_hle != null) {
+    exps.push(`硬逻辑评估得分 ${fmt(model.aa_hle * 100, 1)}%，适合${input.sub_scenario === 'aime' ? 'AIME竞赛级' : '高难度科学'}推理任务。`);
   }
 
-  // --- Speed explanation ---
   if (model.aa_ttft_seconds != null && model.aa_tps != null) {
     exps.push(
       `首字延迟 ${fmt(model.aa_ttft_seconds, 3)}s，吞吐速度 ${fmt(model.aa_tps, 1)} token/s — ` +
@@ -221,7 +290,6 @@ export function generateExplanations(
     exps.push(`首字延迟 ${fmt(model.aa_ttft_seconds, 3)}s。`);
   }
 
-  // --- Cost explanation ---
   if (model.aa_price_blended_usd != null) {
     exps.push(
       `综合单价约 ${fmtPrice(model.aa_price_blended_usd)} / 百万 Token — ` +
@@ -229,12 +297,10 @@ export function generateExplanations(
     );
   }
 
-  // --- Region explanation ---
   if (input.region === 'cn' && model.is_cn_provider) {
     exps.push(`由国内厂商 ${model.aa_model_creator_name ?? '提供'}，支持中国大陆直接接入，无需代理。`);
   }
 
-  // --- Tradeoffs ---
   if (scores.cost < 40 && scores.quality > 70) {
     tradeoffs.push('注意：此模型质量较高但价格偏贵，建议评估实际 token 用量后再选用。');
   } else if (scores.cost > 70 && scores.quality < 50) {
@@ -247,7 +313,6 @@ export function generateExplanations(
     tradeoffs.push('建议在生产环境中进行小批量 A/B 测试，以验证模型在实际数据分布下的表现。');
   }
 
-  // Ensure at least 3 explanations
   if (exps.length < 3) {
     exps.push(`在 ${input.scenario} 场景的 ${input.sub_scenario} 子类下，综合得分 ${scores.total} / 100。`);
   }
@@ -266,9 +331,9 @@ export function recommend(
   const candidates = filterCandidates(models, input);
   if (candidates.length === 0) return [];
 
-  const scores = computeScores(candidates, input);
+  const referencePool = pickReferencePool(models, candidates);
+  const scores = computeScores(candidates, referencePool, input);
 
-  // Sort by total score descending
   const indexed = candidates.map((m, i) => ({ m, s: scores[i] }));
   indexed.sort((a, b) => b.s.total - a.s.total);
 
