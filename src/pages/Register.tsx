@@ -78,7 +78,7 @@ export const Register = () => {
             <Rocket className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2">创建新账号</h1>
-          <p className="text-slate-500">加入 LLM 智能筛选社区，开启您的模型探索之旅</p>
+          <p className="text-slate-500">加入 Token Galaxy 社区，开启您的模型探索之旅</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-none">

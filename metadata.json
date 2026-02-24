@@ -1,5 +1,5 @@
 {
-  "name": "LLM 智能筛选 (TokenGalaxy)",
+  "name": "Token Galaxy",
   "description": "一站式大模型对比、筛选与性能评测平台，帮助开发者找到最适合业务场景的 AI 模型。",
   "requestFramePermissions": []
 }

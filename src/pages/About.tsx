@@ -35,7 +35,7 @@ export const About = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-20"
       >
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">关于 TokenGalaxy</h1>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">关于 Token Galaxy</h1>
         <p className="text-lg text-slate-500 max-w-2xl mx-auto">
           我们把公开评测数据做中文化、结构化整理，帮助团队更快完成模型选型。核心目标是可追溯、可解释、可复核。
         </p>
@@ -166,7 +166,7 @@ export const About = () => {
           </div>
           <div className="prose prose-slate dark:prose-invert max-w-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              我们深知隐私对您的重要性。LLM 智能筛选承诺：
+              我们深知隐私对您的重要性。Token Galaxy 承诺：
             </p>
             <ul className="space-y-4 mt-4">
               <li className="flex gap-3 text-sm text-slate-600 dark:text-slate-400">
@@ -235,11 +235,11 @@ export const About = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5" />
-                    <span className="font-medium">support@llm-selector.com</span>
+                    <span className="font-medium">support@tokengalaxy.cn</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Globe className="w-5 h-5" />
-                    <span className="font-medium">www.llm-selector.com</span>
+                    <span className="font-medium">www.tokengalaxy.cn</span>
                   </div>
                 </div>
               </div>

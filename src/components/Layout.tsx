@@ -38,7 +38,7 @@ export const Header = () => {
               <div className="bg-primary p-2 rounded-xl text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                 <Rocket className="w-6 h-6" />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-slate-900">TokenGalaxy</span>
+              <span className="text-2xl font-black tracking-tighter text-slate-900">Token Galaxy</span>
             </Link>
             <div className="hidden md:flex items-center gap-10">
               {navLinks.map((link) => (
@@ -119,18 +119,15 @@ export const Footer = () => {
               <div className="bg-primary p-1.5 rounded-lg text-white">
                 <Rocket className="w-6 h-6" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">LLM 智能筛选</span>
+              <span className="text-xl font-bold tracking-tight text-slate-900">Token Galaxy</span>
             </div>
             <p className="text-sm text-slate-500 leading-relaxed">
-              致力于为中国开发者提供最客观、真实、实时的 LLM 模型选型建议与性能评测数据。
+              致力于为AI使用者提供最客观、真实、实时的 LLM 和多模态模型选型建议与性能评测数据。
             </p>
           </div>
           <div>
             <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">开发者资源</h4>
             <ul className="space-y-3">
-              <li><Link to="/resources#benchmarks" className="text-sm text-slate-600 hover:text-primary transition-colors">行业评测基准</Link></li>
-              <li><Link to="/resources#status" className="text-sm text-slate-600 hover:text-primary transition-colors">厂商 API 状态</Link></li>
-              <li><Link to="/resources#docs" className="text-sm text-slate-600 hover:text-primary transition-colors">接入文档指南</Link></li>
               <li><Link to="/ecosystem" className="text-sm text-slate-600 hover:text-primary transition-colors">开发者生态入口</Link></li>
             </ul>
           </div>
@@ -138,7 +135,6 @@ export const Footer = () => {
             <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">社区生态</h4>
             <ul className="space-y-3">
               <li><Link to="/community" className="text-sm text-slate-600 hover:text-primary transition-colors">模型讨论</Link></li>
-              <li><Link to="/community" className="text-sm text-slate-600 hover:text-primary transition-colors">数据标注协作</Link></li>
               <li><Link to="/compare" className="text-sm text-slate-600 hover:text-primary transition-colors">评测对比</Link></li>
               <li><Link to="/community" className="text-sm text-slate-600 hover:text-primary transition-colors">开发者沙龙</Link></li>
             </ul>
@@ -159,7 +155,7 @@ export const Footer = () => {
           </div>
         </div>
         <div className="mt-16 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest gap-4">
-          <p>© 2024 LLM Selector Inc. 沪ICP备88888888号</p>
+          <p>© 2024 Token Galaxy</p>
           <div className="flex gap-8">
             <Link to="/about#privacy" className="hover:text-primary transition-colors">隐私政策</Link>
             <Link to="/about#terms" className="hover:text-primary transition-colors">服务条款</Link>
