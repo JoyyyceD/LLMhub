@@ -15,7 +15,7 @@ import { supabase } from '../lib/supabase';
 import { buildRobustStats, metricValueForScoring, robustScore } from '../lib/scoring';
 import type { ModelSnapshot } from '../types';
 
-type ComparisonModality = 'llm' | 'text_to_image' | 'text_to_video' | 'image_to_video';
+type ComparisonModality = 'llm_global' | 'llm_cn' | 'text_to_image' | 'text_to_video' | 'image_to_video';
 type MetricKey =
   | 'aa_intelligence_index'
   | 'aa_coding_index'
@@ -52,14 +52,28 @@ interface MetricDef {
 }
 
 const MODALITY_LABEL: Record<ComparisonModality, string> = {
-  llm: 'LLM',
+  llm_global: '全球LLM',
+  llm_cn: '中国直连LLM',
   text_to_image: '文生图',
   text_to_video: '文生视频',
   image_to_video: '图生视频',
 };
 
 const METRIC_DEFS_BY_MODALITY: Record<ComparisonModality, MetricDef[]> = {
-  llm: [
+  llm_global: [
+    { code: 'I', label: '智力能力', key: 'aa_intelligence_index' },
+    { code: 'C', label: '代码能力', key: 'aa_coding_index' },
+    { code: 'G', label: '科学问答能力', key: 'aa_gpqa' },
+    { code: 'F', label: '指令遵循能力', key: 'aa_ifbench' },
+    { code: 'L', label: '长上下文能力', key: 'aa_lcr' },
+    { code: 'S', label: '科学编程能力', key: 'aa_scicode' },
+    { code: 'T', label: '终端任务能力', key: 'aa_terminalbench_hard' },
+    { code: 'U', label: '工具调用能力', key: 'aa_tau2' },
+    { code: 'P', label: '价格得分', key: 'aa_price_blended_usd', lowerBetter: true, k: 10 },
+    { code: 'D', label: '低延迟', key: 'aa_ttft_seconds', lowerBetter: true, k: 10 },
+    { code: 'R', label: '高吞吐', key: 'aa_tps', k: 12 },
+  ],
+  llm_cn: [
     { code: 'I', label: '智力能力', key: 'aa_intelligence_index' },
     { code: 'C', label: '代码能力', key: 'aa_coding_index' },
     { code: 'G', label: '科学问答能力', key: 'aa_gpqa' },
@@ -110,11 +124,45 @@ export const Comparison = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [modality, setModality] = useState<ComparisonModality>('llm');
+  const [modality, setModality] = useState<ComparisonModality>('llm_global');
 
   const metricDefs = METRIC_DEFS_BY_MODALITY[modality];
-  const showRawTailCol = modality !== 'llm';
-  const primarySortField = metricDefs[0]?.key ?? 'aa_elo';
+  const showRawTailCol = modality !== 'llm_global' && modality !== 'llm_cn';
+
+  const pickDefaultSlugs = (models: ModelSnapshot[], currentModality: ComparisonModality): string[] => {
+    const sortByRecent = (arr: ModelSnapshot[]) => [...arr].sort((a, b) => {
+      const ta = a.aa_release_date ? new Date(a.aa_release_date).getTime() : 0;
+      const tb = b.aa_release_date ? new Date(b.aa_release_date).getTime() : 0;
+      if (tb !== ta) return tb - ta;
+      return (b.aa_intelligence_index ?? 0) - (a.aa_intelligence_index ?? 0);
+    });
+
+    const pickUnique = (arr: ModelSnapshot[], out: string[], seen: Set<string>) => {
+      for (const m of arr) {
+        const creator = (m.aa_model_creator_name ?? '').trim().toLowerCase() || m.aa_slug;
+        if (seen.has(creator)) continue;
+        seen.add(creator);
+        out.push(m.aa_slug);
+        if (out.length >= 4) break;
+      }
+    };
+
+    const prioritized = (currentModality === 'llm_global' || currentModality === 'llm_cn')
+      ? sortByRecent(models.filter((m) => (m.aa_intelligence_index ?? 0) > 40))
+      : sortByRecent(models);
+    const fallback = sortByRecent(models);
+
+    const seen = new Set<string>();
+    const out: string[] = [];
+    pickUnique(prioritized, out, seen);
+    if (out.length < 4) {
+      pickUnique(fallback, out, seen);
+    }
+    if (out.length === 0) {
+      for (const m of fallback.slice(0, 4)) out.push(m.aa_slug);
+    }
+    return out;
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -122,11 +170,14 @@ export const Comparison = () => {
       .from('model_snapshots')
       .select('*')
       .eq('has_aa', true)
-      .eq('aa_modality', modality)
-      .order(primarySortField, { ascending: false, nullsFirst: false });
+      .eq('aa_modality', modality === 'llm_global' || modality === 'llm_cn' ? 'llm' : modality)
+      .order('aa_release_date', { ascending: false, nullsFirst: false });
 
-    if (modality === 'llm') {
+    if (modality === 'llm_global' || modality === 'llm_cn') {
       query = query.or('reasoning_type.is.null,reasoning_type.neq.Non Reasoning');
+      if (modality === 'llm_cn') {
+        query = query.eq('is_cn_provider', true);
+      }
     }
 
     query.then(({ data }) => {
@@ -134,8 +185,8 @@ export const Comparison = () => {
       setAllModels(models);
       setLoading(false);
 
-      const defaultSlugs = models.slice(0, 4).map((m) => m.aa_slug);
-      if (modality === 'llm' && location.state?.selectedModelIds) {
+      const defaultSlugs = pickDefaultSlugs(models, modality);
+      if ((modality === 'llm_global' || modality === 'llm_cn') && location.state?.selectedModelIds) {
         const allowed = new Set(models.map((m) => m.aa_slug));
         const selected = (location.state.selectedModelIds as string[]).filter((s) => allowed.has(s)).slice(0, 4);
         setSelectedSlugs(selected.length > 0 ? selected : defaultSlugs);
@@ -143,7 +194,7 @@ export const Comparison = () => {
         setSelectedSlugs(defaultSlugs);
       }
     });
-  }, [modality, location.state, primarySortField]);
+  }, [modality, location.state]);
 
   const selectedModels = useMemo(
     () => allModels.filter((m) => selectedSlugs.includes(m.aa_slug)),
@@ -204,7 +255,7 @@ export const Comparison = () => {
   }, [metricDefs, selectedModels, normalizedBySlug]);
 
   const radarMetricDefs = useMemo(() => {
-    if (modality !== 'llm') return visibleMetricDefs;
+    if (modality !== 'llm_global' && modality !== 'llm_cn') return visibleMetricDefs;
     return visibleMetricDefs.filter(
       (m) => m.key !== 'aa_ttft_seconds' && m.key !== 'aa_tps' && m.key !== 'aa_price_blended_usd'
     );
@@ -224,17 +275,21 @@ export const Comparison = () => {
     return [...selectedModels].sort((a, b) => {
       const aScores = normalizedBySlug.get(a.aa_slug);
       const bScores = normalizedBySlug.get(b.aa_slug);
-      const aVals = visibleMetricDefs
-        .map((m) => aScores?.[m.key])
+      const anchorKeys: MetricKey[] =
+        modality === 'llm_global' || modality === 'llm_cn'
+          ? ['aa_intelligence_index', 'aa_coding_index', 'aa_gpqa']
+          : radarMetricDefs.map((m) => m.key);
+      const aVals = anchorKeys
+        .map((k) => aScores?.[k])
         .filter((v): v is number => v != null);
-      const bVals = visibleMetricDefs
-        .map((m) => bScores?.[m.key])
+      const bVals = anchorKeys
+        .map((k) => bScores?.[k])
         .filter((v): v is number => v != null);
       const aAvg = aVals.length ? aVals.reduce((s, v) => s + v, 0) / aVals.length : 0;
       const bAvg = bVals.length ? bVals.reduce((s, v) => s + v, 0) / bVals.length : 0;
       return bAvg - aAvg;
     });
-  }, [selectedModels, normalizedBySlug, visibleMetricDefs]);
+  }, [selectedModels, normalizedBySlug, radarMetricDefs, modality]);
 
   const colors = ['#137fec', '#10b981', '#8b5cf6', '#f59e0b'];
 

@@ -14,7 +14,6 @@ import {
   Zap,
   ChevronDown,
   Star,
-  ArrowRightLeft,
   Rocket,
   BarChart3,
   Loader2,
@@ -22,9 +21,10 @@ import {
   TrendingUp,
   Clock,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { recommend } from '../lib/scoring';
+import { useAuth } from '../context/AuthContext';
 import {
   SCENARIO_LABELS,
   SUB_SCENARIO_LABELS,
@@ -77,6 +77,41 @@ function fmtTps(t: number | null | undefined): string {
   return `${t.toFixed(1)} t/s`;
 }
 
+type MultimodalMetricDef = { key: keyof ModelSnapshot; label: string };
+const MULTIMODAL_METRICS: Record<string, MultimodalMetricDef[]> = {
+  text_to_image: [
+    { key: 'aa_elo', label: '综合 ELO评分' },
+    { key: 'category_style_anime_elo', label: '动漫风评分' },
+    { key: 'category_style_cartoon_illustration_elo', label: '卡通/插画评分' },
+    { key: 'category_style_general_photorealistic_elo', label: '通用 & 写实评分' },
+    { key: 'category_style_graphic_design_digital_rendering_elo', label: '平面设计评分' },
+    { key: 'category_style_traditional_art_elo', label: '传统艺术评分' },
+    { key: 'category_subject_commercial_elo', label: '商业视觉评分' },
+  ],
+  text_to_video: [
+    { key: 'aa_elo', label: '综合 ELO评分' },
+    { key: 'category_format_short_prompt_elo', label: '短提示词评分' },
+    { key: 'category_format_long_prompt_elo', label: '长提示词评分' },
+    { key: 'category_format_moving_camera_elo', label: '运镜评分' },
+    { key: 'category_format_multi_scene_elo', label: '多场景评分' },
+    { key: 'category_style_photorealistic_elo', label: '写实/照片级真实评分' },
+    { key: 'category_style_cartoon_and_anime_elo', label: '卡通/动漫评分' },
+    { key: 'category_style_3d_animation_elo', label: '3D 动画/CG 风评分' },
+  ],
+  image_to_video: [
+    { key: 'aa_elo', label: '综合 ELO评分' },
+    { key: 'category_format_short_prompt_elo', label: '短提示词评分' },
+    { key: 'category_format_long_prompt_elo', label: '长提示词评分' },
+    { key: 'category_format_moving_camera_elo', label: '运镜评分' },
+    { key: 'category_format_multi_scene_elo', label: '多场景评分' },
+    { key: 'category_style_photorealistic_elo', label: '写实/照片级真实评分' },
+    { key: 'category_style_cartoon_and_anime_elo', label: '卡通/动漫评分' },
+    { key: 'category_style_3d_animation_elo', label: '3D 动画/CG 风评分' },
+  ],
+  image_editing: [{ key: 'aa_elo', label: '综合 ELO评分' }],
+  text_to_speech: [{ key: 'aa_elo', label: '综合 ELO评分' }],
+};
+
 // ---------------------------------------------------------------------------
 // Score bar component
 // ---------------------------------------------------------------------------
@@ -86,8 +121,10 @@ function fmtTps(t: number | null | undefined): string {
 // ---------------------------------------------------------------------------
 
 export const Home = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   // Filter state
-  const [scenario, setScenario] = useState<ScenarioKey>('code');
+  const [scenario, setScenario] = useState<ScenarioKey>('chat');
   const [selectedSubScenarios, setSelectedSubScenarios] = useState<SubScenarioKey[]>(['generation']);
   const [region, setRegion] = useState<RegionKey>('global');
   const [profile, setProfile] = useState<ProfileKey>('best_value');
@@ -106,6 +143,7 @@ export const Home = () => {
   const [results, setResults] = useState<RecommendationResult[]>([]);
   const [hasRecommended, setHasRecommended] = useState(false);
   const [computing, setComputing] = useState(false);
+  const [recommendGateError, setRecommendGateError] = useState('');
 
   // Load all models on mount
   useEffect(() => {
@@ -134,6 +172,18 @@ export const Home = () => {
   }, [scenario]);
 
   const handleRecommend = useCallback(() => {
+    setRecommendGateError('');
+    const key = 'llmhub_recommend_query_count';
+    const used = Number(localStorage.getItem(key) ?? '0');
+    if (!user && used >= 3) {
+      setRecommendGateError('已达到匿名试用次数上限，请登录后继续查询。');
+      navigate('/login');
+      return;
+    }
+    if (!user) {
+      localStorage.setItem(key, String(used + 1));
+    }
+
     setComputing(true);
     const input: RecommendationInput = {
       scenario,
@@ -155,12 +205,21 @@ export const Home = () => {
       setHasRecommended(true);
       setComputing(false);
     }, 50);
-  }, [allModels, scenario, selectedSubScenarios, region, profile, speedProfile, requirePdfInput, requireImageInput, minContextTokens]);
+  }, [allModels, scenario, selectedSubScenarios, region, profile, speedProfile, requirePdfInput, requireImageInput, minContextTokens, user, navigate]);
 
   const subScenarios = SCENARIO_SUB_SCENARIOS[scenario] ?? [];
   const currentScenarioLabel = SCENARIO_LABELS[scenario];
   const contextIndex = Math.max(0, CONTEXT_OPTIONS.indexOf(minContextTokens as (typeof CONTEXT_OPTIONS)[number]));
   const contextThresholdPct = (contextIndex / (CONTEXT_OPTIONS.length - 1)) * 100;
+  const isMultimodal = scenario === 'multimodal';
+
+  const getMultimodalRows = (model: ModelSnapshot): Array<{ label: string; value: number }> => {
+    const modality = (model.aa_modality ?? 'llm').toString();
+    const defs = MULTIMODAL_METRICS[modality] ?? [{ key: 'aa_elo', label: '综合 ELO评分' }];
+    return defs
+      .map((d) => ({ label: d.label, value: Number(model[d.key] ?? 0) }))
+      .filter((r) => Number.isFinite(r.value) && r.value > 0);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -181,6 +240,11 @@ export const Home = () => {
           {fetchError && (
             <p className="text-xs text-rose-500 mt-2 flex items-center justify-center gap-1">
               <AlertCircle className="w-3 h-3" /> {fetchError}
+            </p>
+          )}
+          {recommendGateError && (
+            <p className="text-xs text-amber-600 mt-2 flex items-center justify-center gap-1">
+              <AlertCircle className="w-3 h-3" /> {recommendGateError}
             </p>
           )}
           {!loadingModels && !fetchError && (
@@ -261,11 +325,12 @@ export const Home = () => {
                 <button
                   key={key}
                   onClick={() => setProfile(key)}
+                  disabled={isMultimodal}
                   className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
                     profile === key
                       ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                       : 'text-slate-400 hover:text-slate-600'
-                  }`}
+                  } ${isMultimodal ? 'opacity-40 cursor-not-allowed hover:text-slate-400' : ''}`}
                 >
                   {label}
                 </button>
@@ -283,11 +348,12 @@ export const Home = () => {
                 <button
                   key={key}
                   onClick={() => setSpeedProfile(key)}
+                  disabled={isMultimodal}
                   className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
                     speedProfile === key
                       ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                       : 'text-slate-400 hover:text-slate-600'
-                  }`}
+                  } ${isMultimodal ? 'opacity-40 cursor-not-allowed hover:text-slate-400' : ''}`}
                 >
                   {label}
                 </button>
@@ -302,12 +368,16 @@ export const Home = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4 overflow-x-auto pb-2 w-full md:w-auto">
             <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 whitespace-nowrap uppercase tracking-widest">
-              {currentScenarioLabel}细分:
+              {isMultimodal ? '多模态类别:' : `${currentScenarioLabel}细分:`}
             </span>
             {subScenarios.map((sub) => (
               <button
                 key={sub}
                 onClick={() => {
+                  if (isMultimodal) {
+                    setSelectedSubScenarios([sub]);
+                    return;
+                  }
                   setSelectedSubScenarios((prev) => {
                     if (prev.includes(sub)) {
                       if (prev.length === 1) return prev;
@@ -342,8 +412,11 @@ export const Home = () => {
       {/* ── Advanced Filters ─────────────────────────────────────────────── */}
       <section className="mb-12">
         <button
-          onClick={() => setIsAdvancedExpanded(!isAdvancedExpanded)}
-          className="flex items-center gap-2 text-xs font-black text-primary group uppercase tracking-widest"
+          onClick={() => {
+            if (isMultimodal) return;
+            setIsAdvancedExpanded(!isAdvancedExpanded);
+          }}
+          className={`flex items-center gap-2 text-xs font-black group uppercase tracking-widest ${isMultimodal ? 'text-slate-400 cursor-not-allowed' : 'text-primary'}`}
         >
           <span className="material-symbols-outlined text-lg">tune</span>
           <span>高级筛选与约束</span>
@@ -351,7 +424,7 @@ export const Home = () => {
         </button>
 
         <AnimatePresence>
-          {isAdvancedExpanded && (
+          {isAdvancedExpanded && !isMultimodal && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -420,15 +493,15 @@ export const Home = () => {
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">推荐模型</h2>
               <p className="text-slate-500 text-sm mt-1">
                 基于 <b>{currentScenarioLabel}</b> · <b>{selectedSubScenarios.map((s) => SUB_SCENARIO_LABELS[s] ?? s).join(' / ')}</b> ·{' '}
-                <b>{region === 'cn' ? '大陆直连' : '海外可用'}</b> 偏好筛选。
+                <b>{region === 'cn' ? '大陆直连' : '全球模型'}</b> 偏好筛选。
               </p>
             </div>
-            <div className="flex gap-3">
+          <div className="flex gap-3">
               <Link
-                to="/leaderboard"
+                to={`/leaderboard?scenario=${encodeURIComponent(scenario)}&subs=${encodeURIComponent(selectedSubScenarios.join(','))}&region=${encodeURIComponent(region)}&profile=${encodeURIComponent(profile)}&speed=${encodeURIComponent(speedProfile)}`}
                 className="flex items-center gap-2 text-sm font-bold px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-primary hover:text-primary transition-all shadow-sm text-slate-600 dark:text-slate-300"
               >
-                <BarChart3 className="w-4 h-4" /> 完整排行榜
+                <BarChart3 className="w-4 h-4" /> 查看排行榜
               </Link>
             </div>
           </div>
@@ -472,61 +545,69 @@ export const Home = () => {
                           {result.model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                         </h3>
                         <p className="text-xs font-medium text-slate-500 mt-0.5">
-                          {result.model.aa_model_creator_name ?? '—'} ·{' '}
-                          <span className={`font-bold ${
-                            result.confidence === 'high' ? 'text-emerald-500' :
-                            result.confidence === 'medium' ? 'text-amber-500' : 'text-slate-400'
-                          }`}>
-                            {result.confidence === 'high' ? '高置信' : result.confidence === 'medium' ? '中置信' : '低置信'}
-                          </span>
+                          {result.model.is_cn_provider
+                            ? (result.model.aa_model_creator_name_cn ?? result.model.aa_model_creator_name ?? '—')
+                            : (result.model.aa_model_creator_name ?? '—')}
                         </p>
                       </div>
                       <span className="text-2xl font-black text-primary font-display">#{result.rank}</span>
                     </div>
 
                     {/* Key metrics */}
-                    <div className="grid grid-cols-3 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 mb-5">
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">价格 (混合/1M)</p>
-                        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-display">
-                          {fmtPrice(result.model.aa_price_blended_usd)}
-                        </p>
+                    {isMultimodal ? (
+                      <div className="grid grid-cols-2 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 mb-5">
+                        {getMultimodalRows(result.model).slice(0, 8).map((row) => (
+                          <div key={row.label}>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">{row.label}</p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{Math.round(row.value)}</p>
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1 flex items-center gap-1">
-                          <Clock className="w-2.5 h-2.5" /> TTFT
-                        </p>
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
-                          {fmtTtft(result.model.aa_ttft_seconds)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1 flex items-center gap-1">
-                          <TrendingUp className="w-2.5 h-2.5" /> TPS
-                        </p>
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
-                          {fmtTps(result.model.aa_tps)}
-                        </p>
-                      </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-3 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 mb-5">
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">价格 (混合/1M)</p>
+                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-display">
+                              {fmtPrice(result.model.aa_price_blended_usd)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1 flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5" /> TTFT
+                            </p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
+                              {fmtTtft(result.model.aa_ttft_seconds)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1 flex items-center gap-1">
+                              <TrendingUp className="w-2.5 h-2.5" /> TPS
+                            </p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
+                              {fmtTps(result.model.aa_tps)}
+                            </p>
+                          </div>
+                        </div>
 
-                    {/* Scores */}
-                    <div className="grid grid-cols-3 gap-3 py-4 border-b border-slate-100 dark:border-slate-800 mb-5">
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合评分</p>
-                        <p className="text-sm font-bold text-primary font-display">{result.scores.total}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">场景质量评分</p>
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{result.scores.quality}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合智力评分</p>
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
-                          {result.model.aa_intelligence_index == null ? 'N/A' : result.model.aa_intelligence_index.toFixed(1)}
-                        </p>
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-3 gap-3 py-4 border-b border-slate-100 dark:border-slate-800 mb-5">
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合评分</p>
+                            <p className="text-sm font-bold text-primary font-display">{result.scores.total}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">场景质量评分</p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{result.scores.quality}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合智力评分</p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
+                              {result.model.aa_intelligence_index == null ? 'N/A' : result.model.aa_intelligence_index.toFixed(1)}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     {/* Explanations */}
                     <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-xl border border-primary/10 mb-4">
@@ -539,6 +620,11 @@ export const Home = () => {
                             <span className="text-primary font-black mt-0.5">·</span> {exp}
                           </li>
                         ))}
+                        {result.tradeoffs[0] && (
+                          <li className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed flex items-start gap-1.5">
+                            <span className="text-primary font-black mt-0.5">·</span> {result.tradeoffs[0]}
+                          </li>
+                        )}
                       </ul>
                     </div>
 
@@ -546,7 +632,7 @@ export const Home = () => {
                     <div className="flex gap-3">
                       <Link
                         to={`/model/${result.model.aa_slug}`}
-                        className={`flex-1 flex items-center justify-center font-bold py-2.5 rounded-lg text-sm transition-all ${
+                        className={`w-full flex items-center justify-center font-bold py-2.5 rounded-lg text-sm transition-all ${
                           idx === 0
                             ? 'bg-primary text-white hover:shadow-lg hover:shadow-primary/20'
                             : 'bg-slate-900 dark:bg-white dark:text-slate-900 text-white hover:opacity-90'
@@ -554,9 +640,6 @@ export const Home = () => {
                       >
                         查看详情
                       </Link>
-                      <button className="px-3 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <ArrowRightLeft className="w-5 h-5" />
-                      </button>
                     </div>
                   </div>
                 </motion.div>

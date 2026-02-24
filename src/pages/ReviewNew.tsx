@@ -164,11 +164,6 @@ export const ReviewNew = () => {
       .slice(0, 8);
   }, [models, searchText]);
 
-  const selectedModel = useMemo(
-    () => models.find((m) => m.aa_slug === form.model_id) ?? null,
-    [models, form.model_id]
-  );
-
   useEffect(() => {
     if (!user || !form.model_id) return;
     let canceled = false;
@@ -330,44 +325,57 @@ export const ReviewNew = () => {
             </section>
           </div>
 
-          <section>
-            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">搜索模型（自动匹配类别）</label>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="输入模型名称关键词..."
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
-              />
-            </div>
-            {searchText.trim() && (
-              <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden">
-                {searchMatches.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-slate-400">没有匹配模型</div>
-                ) : (
-                  searchMatches.map((m) => (
-                    <button
-                      key={m.aa_slug}
-                      type="button"
-                      onClick={() => {
-                        const nextModality = (m.aa_modality ?? 'llm') as ModalityKey;
-                        setForm((prev) => ({ ...prev, modality: nextModality, model_id: m.aa_slug }));
-                        setSearchText(cleanName(m.aa_name));
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 border-b last:border-b-0 border-slate-100"
-                    >
-                      <span className="font-bold text-slate-800">{cleanName(m.aa_name)}</span>
-                      <span className="ml-2 text-xs text-slate-400">
-                        {MODALITY_OPTIONS.find((x) => x.key === (m.aa_modality ?? 'llm'))?.label ?? (m.aa_modality ?? 'LLM')}
-                      </span>
-                    </button>
-                  ))
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">搜索模型（自动匹配类别）</label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="输入模型名称关键词..."
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
+                />
               </div>
-            )}
-          </section>
+              {searchText.trim() && (
+                <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden">
+                  {searchMatches.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-slate-400">没有匹配模型</div>
+                  ) : (
+                    searchMatches.map((m) => (
+                      <button
+                        key={m.aa_slug}
+                        type="button"
+                        onClick={() => {
+                          const nextModality = (m.aa_modality ?? 'llm') as ModalityKey;
+                          setForm((prev) => ({ ...prev, modality: nextModality, model_id: m.aa_slug }));
+                          setSearchText(cleanName(m.aa_name));
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 border-b last:border-b-0 border-slate-100"
+                      >
+                        <span className="font-bold text-slate-800">{cleanName(m.aa_name)}</span>
+                        <span className="ml-2 text-xs text-slate-400">
+                          {MODALITY_OPTIONS.find((x) => x.key === (m.aa_modality ?? 'llm'))?.label ?? (m.aa_modality ?? 'LLM')}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </section>
+            <section>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
+              <select
+                value={form.provider_name}
+                onChange={(e) => setForm((prev) => ({ ...prev, provider_name: e.target.value }))}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
+              >
+                <option value="">未指定</option>
+                {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </section>
+          </div>
 
           <section>
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">总体评分（必填）</label>
@@ -404,25 +412,7 @@ export const ReviewNew = () => {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
-              <select
-                value={form.provider_name}
-                onChange={(e) => setForm((prev) => ({ ...prev, provider_name: e.target.value }))}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
-              >
-                <option value="">未指定</option>
-                {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </section>
-            <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">当前模型</label>
-              <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700">
-                {selectedModel ? cleanName(selectedModel.aa_name) : '—'}
-              </div>
-            </section>
-          </div>
+          
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <section>

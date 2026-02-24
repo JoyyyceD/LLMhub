@@ -88,7 +88,7 @@ export type SubScenarioKey =
   // agent
   | 'planning' | 'tool_use' | 'multi_step' | 'self_correction' | 'browser' | 'code_agent'
   // multimodal
-  | 'image_understanding' | 'chart_analysis' | 'ocr' | 'vision_qa' | 'image_code' | 'mm_general'
+  | 'mm_text_to_image' | 'mm_text_to_video' | 'mm_image_editing' | 'mm_image_to_video' | 'mm_text_to_speech'
   // translate
   | 'zh_en' | 'en_zh' | 'multilingual_translate' | 'technical_translate' | 'literary' | 'localization';
 

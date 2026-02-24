@@ -15,11 +15,9 @@ import type {
 import {
   QUALITY_CONFIG,
   PROFILE_WEIGHTS,
+  SCENARIO_LABELS,
   type QualityMetric,
 } from './qualityConfig';
-
-// USD → CNY conversion rate (approx)
-const USD_TO_CNY = 7.25;
 
 // Standardization config
 const RECENT_WINDOW_DAYS = 180;
@@ -28,6 +26,14 @@ const QUALITY_K = 15;
 const COST_K = 10;
 const LATENCY_K = 10;
 const THROUGHPUT_K = 12;
+
+const MULTIMODAL_SUB_TO_MODALITY: Record<string, string> = {
+  mm_text_to_image: 'text_to_image',
+  mm_text_to_video: 'text_to_video',
+  mm_image_editing: 'image_editing',
+  mm_image_to_video: 'image_to_video',
+  mm_text_to_speech: 'text_to_speech',
+};
 
 // ---------------------------------------------------------------------------
 // Step 1: Filter candidates
@@ -39,6 +45,15 @@ export function filterCandidates(
 ): ModelSnapshot[] {
   return models.filter((m) => {
     if (!m.has_aa) return false;
+
+    if (input.scenario === 'multimodal') {
+      const modality = getSelectedMultimodalModality(input);
+      const modelModality = (m.aa_modality ?? 'llm').toString();
+      if (modality && modelModality !== modality) return false;
+      if (input.region === 'cn' && !m.is_cn_provider) return false;
+      if (m.aa_elo == null || Number.isNaN(m.aa_elo) || m.aa_elo <= 0) return false;
+      return true;
+    }
 
     // Hard requirements: key fields must be present and > 0.
     const price = costRaw(m);
@@ -69,6 +84,12 @@ export function filterCandidates(
 
     return true;
   });
+}
+
+function getSelectedMultimodalModality(input: RecommendationInput): string | null {
+  const selected = input.sub_scenarios?.[0] ?? input.sub_scenario;
+  if (!selected) return null;
+  return MULTIMODAL_SUB_TO_MODALITY[selected] ?? null;
 }
 
 function parseInputModalities(raw: ModelSnapshot['or_architecture_input_modalities']): Set<string> {
@@ -405,12 +426,6 @@ function fmt(n: number | null | undefined, decimals = 2): string {
   return n.toFixed(decimals);
 }
 
-function fmtPrice(usd: number | null | undefined): string {
-  if (usd == null) return 'N/A';
-  const cny = usd * USD_TO_CNY;
-  return `¥${cny.toFixed(2)} (≈$${usd.toFixed(3)})`;
-}
-
 export function generateExplanations(
   model: ModelSnapshot,
   scores: DimensionScores,
@@ -418,71 +433,86 @@ export function generateExplanations(
   rankAmongTop: number,
   secondScore: number,
 ): { explanations: string[]; tradeoffs: string[] } {
-  const exps: string[] = [];
-  const tradeoffs: string[] = [];
   const selectedSubs = getSelectedSubScenarios(input);
-  const primarySub = selectedSubs[0];
+  const scenarioLabel = SCENARIO_LABELS[input.scenario] ?? input.scenario;
+  const scenarioWeights = getScenarioWeights(input);
 
-  if (model.aa_intelligence_index != null) {
-    exps.push(
-      `综合智力指数 ${fmt(model.aa_intelligence_index)} — 在同场景候选集中` +
-      (scores.quality >= 75 ? '处于顶尖水平' : scores.quality >= 50 ? '表现中等偏上' : '具有一定基础能力') + '。'
-    );
-  }
-  if (input.scenario === 'code' && model.aa_coding_index != null) {
-    exps.push(`代码专项指数 ${fmt(model.aa_coding_index)}，尤其适合${primarySub === 'generation' ? '代码生成' : primarySub === 'debugging' ? 'Bug 调试' : '代码相关任务'}。`);
-  }
-  if ((input.scenario === 'rag' || selectedSubs.includes('long_context') || selectedSubs.includes('long_doc')) && model.aa_lcr != null) {
-    exps.push(`长上下文召回率 ${fmt(model.aa_lcr * 100, 1)}%，适合处理大量文档内容。`);
-  }
-  if (input.scenario === 'agent' && model.aa_tau2 != null) {
-    exps.push(`工具调用能力评分 ${fmt(model.aa_tau2 * 100, 1)}%，在 Agent 工作流中表现${model.aa_tau2 > 0.5 ? '优秀' : '尚可'}。`);
-  }
-  if (input.scenario === 'science' && model.aa_hle != null) {
-    exps.push(`硬逻辑评估得分 ${fmt(model.aa_hle * 100, 1)}%，适合${primarySub === 'aime' ? 'AIME竞赛级' : '高难度科学'}推理任务。`);
-  }
+  const metricLabel: Record<QualityMetric, string> = {
+    aa_intelligence_index: '综合智力',
+    aa_coding_index: '代码能力',
+    aa_gpqa: '科学问答',
+    aa_hle: '硬逻辑',
+    aa_ifbench: '指令遵循',
+    aa_lcr: '长上下文',
+    aa_scicode: '科学编程',
+    aa_terminalbench_hard: '终端任务',
+    aa_tau2: '工具调用',
+  };
+  const primaryMetric = (Object.entries(scenarioWeights) as [QualityMetric, number][])
+    .sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'aa_intelligence_index';
+  const primaryRaw = model[primaryMetric];
+  const isPctMetric = ['aa_gpqa', 'aa_hle', 'aa_ifbench', 'aa_lcr', 'aa_scicode', 'aa_terminalbench_hard', 'aa_tau2'].includes(primaryMetric);
+  const primaryVal = primaryRaw == null
+    ? 'N/A'
+    : (isPctMetric
+      ? `${(Number(primaryRaw) * 100).toFixed(1)}`
+      : Number(primaryRaw).toFixed(1));
+  const metricMeaning: Record<QualityMetric, string> = {
+    aa_intelligence_index: '综合智力',
+    aa_coding_index: '代码任务',
+    aa_gpqa: '科学问答',
+    aa_hle: '硬逻辑推理',
+    aa_ifbench: '指令遵循',
+    aa_lcr: '长上下文',
+    aa_scicode: '科学编程',
+    aa_terminalbench_hard: '终端任务执行',
+    aa_tau2: '工具调用',
+  };
+  const metricTestName: Record<QualityMetric, string> = {
+    aa_intelligence_index: 'Intelligence Index',
+    aa_coding_index: 'Coding Index',
+    aa_gpqa: 'GPQA Diamond Benchmark',
+    aa_hle: "Humanity's Last Exam Benchmark",
+    aa_ifbench: 'IFBench Benchmark',
+    aa_lcr: 'LiveCodeBench Benchmark',
+    aa_scicode: 'SciCode Benchmark',
+    aa_terminalbench_hard: 'Terminal-Bench Hard Benchmark',
+    aa_tau2: 'tau2 Bench Telecom Benchmark',
+  };
 
-  if (model.aa_ttft_seconds != null && model.aa_tps != null) {
-    exps.push(
-      `首字延迟 ${fmt(model.aa_ttft_seconds, 3)}s，吞吐速度 ${fmt(model.aa_tps, 1)} token/s — ` +
-      (scores.latency >= 70 ? '响应速度较快' : scores.latency >= 40 ? '速度中等' : '延迟偏高') + '。'
-    );
-  } else if (model.aa_ttft_seconds != null) {
-    exps.push(`首字延迟 ${fmt(model.aa_ttft_seconds, 3)}s。`);
-  }
+  const recommendVerb = rankAmongTop <= 1 ? '优先试用' : '试用';
+  const conclusion = `${scenarioLabel}场景综合评分为${scores.total}，推荐${recommendVerb}。`;
+  const evidence1 = primaryMetric === 'aa_intelligence_index' || primaryMetric === 'aa_coding_index'
+    ? `该模型${metricTestName[primaryMetric]}得分为${primaryVal}，${metricMeaning[primaryMetric]}较强。`
+    : `该模型在代表${metricMeaning[primaryMetric]}的${metricTestName[primaryMetric]}测试中得到了${primaryVal}分，${metricMeaning[primaryMetric]}较强。`;
 
-  if (model.aa_price_blended_usd != null) {
-    exps.push(
-      `综合单价约 ${fmtPrice(model.aa_price_blended_usd)} / 百万 Token — ` +
-      (scores.cost >= 75 ? '在候选集中具有显著价格优势' : scores.cost >= 50 ? '价格适中' : '价格偏高，需结合质量综合考量') + '。'
-    );
+  const weakness = [
+    { key: 'quality', label: '场景质量', score: scores.quality },
+    { key: 'cost', label: '成本控制', score: scores.cost },
+    { key: 'latency', label: '响应速度', score: scores.latency },
+    { key: 'throughput', label: '吞吐能力', score: scores.throughput },
+  ].sort((a, b) => a.score - b.score)[0];
+  let reminder = `该模型当前最大短板是${weakness.label}，建议按业务重点做针对性验证。`;
+  if (weakness.key === 'cost') {
+    reminder = '该模型当前最大短板是成本控制，建议先评估单次请求成本与月度预算。';
+  } else if (weakness.key === 'latency') {
+    reminder = '该模型当前最大短板是响应速度，建议用于非强实时交互场景。';
+  } else if (weakness.key === 'throughput') {
+    reminder = '该模型当前最大短板是吞吐能力，建议先压测并发上限。';
+  } else if (weakness.key === 'quality') {
+    reminder = '该模型当前最大短板是场景质量，建议先用核心样本集做效果验收。';
   }
-
+  if (rankAmongTop === 0 && secondScore > 0 && scores.total - secondScore < 3) {
+    reminder = '与次优模型分差较小，建议结合成本与延迟进一步比较。';
+  }
   if (input.region === 'cn' && model.is_cn_provider) {
-    exps.push(`由国内厂商 ${model.aa_model_creator_name ?? '提供'}，支持中国大陆直接接入，无需代理。`);
+    reminder = `${reminder} 支持中国直连。`;
+  }
+  if (selectedSubs.length > 1) {
+    reminder = `${reminder} 已聚合${selectedSubs.length}个细分任务。`;
   }
 
-  if (scores.cost < 40 && scores.quality > 70) {
-    tradeoffs.push('注意：此模型质量较高但价格偏贵，建议评估实际 token 用量后再选用。');
-  } else if (scores.cost > 70 && scores.quality < 50) {
-    tradeoffs.push('注意：此模型价格较低但综合能力一般，适合低复杂度高频率任务。');
-  } else if (scores.latency < 40) {
-    tradeoffs.push('注意：该模型首字延迟较高，不适合对实时性要求严格的交互场景。');
-  } else if (rankAmongTop === 0 && secondScore > 0 && scores.total - secondScore < 5) {
-    tradeoffs.push('提示：第二名模型综合得分接近，建议结合实际业务需求进一步比较。');
-  } else {
-    tradeoffs.push('建议在生产环境中进行小批量 A/B 测试，以验证模型在实际数据分布下的表现。');
-  }
-
-  if (exps.length < 3) {
-    if (selectedSubs.length > 1) {
-      exps.push(`在 ${input.scenario} 场景下（已聚合 ${selectedSubs.length} 个细分任务），综合得分 ${scores.total} / 100。`);
-    } else {
-      exps.push(`在 ${input.scenario} 场景的 ${primarySub ?? '默认'} 子类下，综合得分 ${scores.total} / 100。`);
-    }
-  }
-
-  return { explanations: exps.slice(0, 6), tradeoffs: tradeoffs.slice(0, 2) };
+  return { explanations: [conclusion, evidence1], tradeoffs: [reminder] };
 }
 
 function getSelectedSubScenarios(input: RecommendationInput): string[] {
@@ -522,6 +552,26 @@ export function recommend(
   models: ModelSnapshot[],
   input: RecommendationInput,
 ): RecommendationResult[] {
+  if (input.scenario === 'multimodal') {
+    const candidates = filterCandidates(models, input)
+      .sort((a, b) => (b.aa_elo ?? 0) - (a.aa_elo ?? 0))
+      .slice(0, 6);
+    return candidates.map((m, i) => ({
+      rank: i + 1,
+      model: m,
+      scores: {
+        quality: Math.round(m.aa_elo ?? 0),
+        cost: 0,
+        latency: 0,
+        throughput: 0,
+        total: Math.round(m.aa_elo ?? 0),
+      },
+      explanations: [`该模型综合ELO评分为${fmt(m.aa_elo, 1)}，在同类模型中排名靠前。`],
+      tradeoffs: ['多模态评测字段不完整，建议结合你的样本做实测验证。'],
+      confidence: 'high',
+    }));
+  }
+
   const candidates = dedupeReasoningPreferred(filterCandidates(models, input));
   if (candidates.length === 0) return [];
 
@@ -530,8 +580,20 @@ export function recommend(
 
   const indexed = candidates.map((m, i) => ({ m, s: scores[i] }));
   indexed.sort((a, b) => b.s.total - a.s.total);
+  const uniqueByCreator: typeof indexed = [];
+  const seenCreator = new Set<string>();
+  for (const item of indexed) {
+    const creatorKey = (item.m.aa_model_creator_name ?? item.m.aa_model_creator_id ?? item.m.aa_slug)
+      .toString()
+      .trim()
+      .toLowerCase();
+    if (seenCreator.has(creatorKey)) continue;
+    seenCreator.add(creatorKey);
+    uniqueByCreator.push(item);
+    if (uniqueByCreator.length >= 6) break;
+  }
 
-  const topN = indexed.slice(0, 6);
+  const topN = uniqueByCreator;
   const secondTotal = topN[1]?.s.total ?? 0;
 
   return topN.map(({ m, s }, i) => {

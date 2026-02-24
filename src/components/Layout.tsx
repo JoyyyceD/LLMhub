@@ -63,14 +63,14 @@ export const Header = () => {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <Link
-              to="/review/new"
-              className="inline-flex bg-primary text-white text-sm font-black px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-            >
-              写点评
-            </Link>
             {user ? (
               <div className="flex items-center gap-3">
+                <Link
+                  to="/review/new"
+                  className="inline-flex bg-primary text-white text-sm font-black px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all"
+                >
+                  写点评
+                </Link>
                 <Link to="/account" className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors">
                   <User className="w-4 h-4 text-slate-500" />
                   <span className="text-sm font-bold text-slate-700 max-w-[120px] truncate">

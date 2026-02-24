@@ -79,12 +79,11 @@ export const QUALITY_CONFIG: Record<ScenarioKey, Record<string, QualityWeights>>
   },
 
   multimodal: {
-    image_understanding: { aa_intelligence_index: 0.34, aa_ifbench: 0.24, aa_hle: 0.16, aa_gpqa: 0.14, aa_lcr: 0.07, aa_tau2: 0.05 },
-    chart_analysis:      { aa_intelligence_index: 0.28, aa_hle: 0.22, aa_gpqa: 0.20, aa_ifbench: 0.14, aa_coding_index: 0.10, aa_lcr: 0.04, aa_tau2: 0.02 },
-    ocr:                 { aa_ifbench: 0.30, aa_intelligence_index: 0.26, aa_hle: 0.14, aa_gpqa: 0.10, aa_lcr: 0.10, aa_tau2: 0.06, aa_coding_index: 0.04 },
-    vision_qa:           { aa_intelligence_index: 0.30, aa_hle: 0.20, aa_ifbench: 0.20, aa_gpqa: 0.16, aa_lcr: 0.08, aa_tau2: 0.06 },
-    image_code:          { aa_coding_index: 0.30, aa_intelligence_index: 0.24, aa_ifbench: 0.16, aa_hle: 0.10, aa_gpqa: 0.08, aa_lcr: 0.07, aa_tau2: 0.05 },
-    mm_general:          { aa_intelligence_index: 0.34, aa_ifbench: 0.24, aa_hle: 0.16, aa_gpqa: 0.14, aa_lcr: 0.07, aa_tau2: 0.05 },
+    mm_text_to_image:  { aa_intelligence_index: 1 },
+    mm_text_to_video:  { aa_intelligence_index: 1 },
+    mm_image_editing:  { aa_intelligence_index: 1 },
+    mm_image_to_video: { aa_intelligence_index: 1 },
+    mm_text_to_speech: { aa_intelligence_index: 1 },
   },
 
   translate: {
@@ -161,8 +160,8 @@ export const SUB_SCENARIO_LABELS: Record<string, string> = {
   planning: '任务规划', tool_use: '工具调用', multi_step: '多步骤推理',
   self_correction: '自我纠错', browser: '浏览器操作', code_agent: '代码执行体',
   // multimodal
-  image_understanding: '图像理解', chart_analysis: '图表分析', ocr: 'OCR识别',
-  vision_qa: '视觉问答', image_code: '图生代码', mm_general: '通用多模态',
+  mm_text_to_image: '文生图', mm_text_to_video: '文生视频', mm_image_editing: '图像编辑',
+  mm_image_to_video: '图生视频', mm_text_to_speech: '语音合成 / TTS',
   // translate
   zh_en: '中译英', en_zh: '英译中', multilingual_translate: '多语互译',
   technical_translate: '专业术语', literary: '文学翻译', localization: '本地化',
@@ -175,6 +174,6 @@ export const SCENARIO_SUB_SCENARIOS: Record<ScenarioKey, SubScenarioKey[]> = {
   copy:       ['marketing', 'social_media', 'technical_docs', 'story', 'seo', 'email'],
   rag:        ['document_qa', 'summarization', 'extraction', 'citation', 'multilingual_doc', 'long_doc'],
   agent:      ['planning', 'tool_use', 'multi_step', 'self_correction', 'browser', 'code_agent'],
-  multimodal: ['image_understanding', 'chart_analysis', 'ocr', 'vision_qa', 'image_code', 'mm_general'],
+  multimodal: ['mm_text_to_image', 'mm_text_to_video', 'mm_image_editing', 'mm_image_to_video', 'mm_text_to_speech'],
   translate:  ['zh_en', 'en_zh', 'multilingual_translate', 'technical_translate', 'literary', 'localization'],
 };
