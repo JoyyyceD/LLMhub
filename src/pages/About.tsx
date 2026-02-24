@@ -1,16 +1,17 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   ShieldCheck, 
   FileText, 
   Mail, 
-  Target, 
+  BookOpen,
+  Database,
+  Target,
   CheckCircle2, 
   ArrowRight,
   Globe,
-  Zap,
-  BarChart3
+  ExternalLink,
 } from 'lucide-react';
 
 export const About = () => {
@@ -34,31 +35,52 @@ export const About = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-20"
       >
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">关于 LLM 智能筛选</h1>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">关于 TokenGalaxy</h1>
         <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-          我们致力于构建全球最专业、最客观的大模型评测与选型平台，帮助开发者在海量模型中找到最适合的方案。
+          我们把公开评测数据做中文化、结构化整理，帮助团队更快完成模型选型。核心目标是可追溯、可解释、可复核。
         </p>
       </motion.div>
 
       <div className="space-y-24">
-        {/* Evaluation Logic */}
-        <section id="evaluation" className="scroll-mt-24">
+        {/* Positioning */}
+        <section id="positioning" className="scroll-mt-24">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 bg-primary/10 rounded-2xl text-primary">
               <Target className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold">测评逻辑</h2>
+            <h2 className="text-2xl font-bold">我们的定位</h2>
+          </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm space-y-4">
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+              我们不是模型官方发布方，而是面向中文用户的公开数据整理与决策辅助平台。平台展示的指标、排序和推荐，用于缩短筛选时间，不等同于你在线上业务中的最终效果。
+            </p>
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+              平台核心数据来源于 <a href="https://artificialanalysis.ai/" target="_blank" rel="noreferrer" className="text-primary hover:underline">Artificial Analysis</a> 的公开页面与方法文档，我们在引用基础上做中文化解释和字段映射。
+            </p>
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+              截至 2026 年 2 月 24 日，关于方法口径的核心参考来自 Artificial Analysis 的公开方法页和 Intelligence Benchmarking 页面。我们在保留来源的前提下做中文解释与产品化呈现。
+            </p>
+          </div>
+        </section>
+
+        {/* Evaluation Logic */}
+        <section id="evaluation" className="scroll-mt-24">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold">方法学摘要</h2>
           </div>
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
             <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-              我们的测评体系基于多维度、全自动化的实时测试框架，确保每一项数据都真实可信。
+              我们在中文页面中沿用公开方法学的关键原则：统一测试参数、尽量降低偏差、零样本指令评测、方法透明披露。
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { title: '多维基准测试', desc: '包含 MMLU, HumanEval, GSM8K 等国际主流基准，覆盖通用能力、代码、数学。', icon: BarChart3 },
-                { title: '实时性能监测', desc: '通过全球分布式节点，实时测试各厂商 API 的响应延迟（Latency）与吞吐量（TPS）。', icon: Zap },
-                { title: '真实场景模拟', desc: '引入 1000+ 真实业务 Prompt，模拟长文本理解、复杂逻辑推理等实际应用场景。', icon: Globe },
-                { title: '动态权重算法', desc: '根据用户选择的业务场景（如代码助手、创意写作），动态计算模型推荐分数。', icon: CheckCircle2 },
+                { title: '统一定义', desc: '区分 Model、Model Creator、Provider、Endpoint，并将 TTFT、TPS、Blended Price 等指标口径统一。', icon: CheckCircle2 },
+                { title: '端到端性能', desc: '性能指标以用户实际调用体验为目标，不等同于某一硬件平台的理论峰值吞吐。', icon: Globe },
+                { title: '综合智力指数', desc: 'Intelligence Index 由多个评测维度组合而成，可用于横向比较，但不能替代业务实测。', icon: CheckCircle2 },
+                { title: '版本可追溯', desc: '页面中明确标注口径版本与更新时间，避免“不同版本分数直接比较”的误用。', icon: CheckCircle2 },
               ].map((item, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="mt-1">
@@ -69,8 +91,68 @@ export const About = () => {
                     <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
-              ))}
+                ))}
+              </div>
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link
+                to="/about/methodology"
+                className="flex items-center justify-between px-5 py-4 rounded-2xl border border-slate-200 hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <span className="font-bold text-slate-800 dark:text-slate-100">查看完整方法学说明</span>
+                <ArrowRight className="w-4 h-4 text-primary" />
+              </Link>
+              <Link
+                to="/about/data-sources"
+                className="flex items-center justify-between px-5 py-4 rounded-2xl border border-slate-200 hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <span className="font-bold text-slate-800 dark:text-slate-100">查看数据来源与更新机制</span>
+                <ArrowRight className="w-4 h-4 text-primary" />
+              </Link>
+              <Link
+                to="/about/data-sources/intelligence-benchmarking"
+                className="flex items-center justify-between px-5 py-4 rounded-2xl border border-slate-200 hover:border-primary hover:bg-primary/5 transition-all md:col-span-2"
+              >
+                <span className="font-bold text-slate-800 dark:text-slate-100">人工智能分析基准测试方法（细化文档）</span>
+                <ArrowRight className="w-4 h-4 text-primary" />
+              </Link>
             </div>
+            <div className="mt-8 text-xs text-slate-500 space-y-2">
+              <p className="font-bold text-slate-700 dark:text-slate-300">核心数据计算方法与来源链接</p>
+              <a
+                href="https://artificialanalysis.ai/methodology"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 hover:text-primary"
+              >
+                Artificial Analysis Methodology（总方法框架） <ExternalLink className="w-3 h-3" />
+              </a>
+              <br />
+              <a
+                href="https://artificialanalysis.ai/methodology/intelligence-benchmarking"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 hover:text-primary"
+              >
+                Intelligence Benchmarking（核心计算口径） <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section id="data" className="scroll-mt-24">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl text-indigo-600">
+              <Database className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold">数据来源与边界</h2>
+          </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+            <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+              <li>1. 我们优先使用公开可追溯的数据源，保留原始字段并做中文字段映射。</li>
+              <li>2. 同一模型在不同提供商可能表现不同，页面展示的是当前口径下的可比视图，不代表全部部署形态。</li>
+              <li>3. 对于缺失、0 值或统计不稳定字段，我们在前端展示时会标记为 N/A 或不参与统计。</li>
+              <li>4. 推荐结果是辅助决策，不是线上 SLA 承诺；上线前建议使用你的真实样本做 A/B 验证。</li>
+            </ul>
           </div>
         </section>
 

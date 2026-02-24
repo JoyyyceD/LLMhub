@@ -13,6 +13,9 @@ import { ModelDetail } from './pages/ModelDetail';
 import { Community } from './pages/Community';
 import { Comparison } from './pages/Comparison';
 import { About } from './pages/About';
+import { AboutMethodology } from './pages/AboutMethodology';
+import { AboutDataSources } from './pages/AboutDataSources';
+import { AboutIntelligenceBenchmarkingDoc } from './pages/AboutIntelligenceBenchmarkingDoc';
 import { Resources } from './pages/Resources';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -32,6 +35,9 @@ export default function App() {
             <Route path="/model/:id" element={<ModelDetail />} />
             <Route path="/community" element={<Community />} />
             <Route path="/about" element={<About />} />
+            <Route path="/about/methodology" element={<AboutMethodology />} />
+            <Route path="/about/data-sources" element={<AboutDataSources />} />
+            <Route path="/about/data-sources/intelligence-benchmarking" element={<AboutIntelligenceBenchmarkingDoc />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/provider/:name" element={<ProviderDetail />} />
             <Route path="/review/new" element={<ReviewNew />} />
