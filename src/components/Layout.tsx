@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Rocket, Search, LogOut, User } from 'lucide-react';
+import { Rocket, LogOut, User } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../context/AuthContext';
@@ -63,22 +63,20 @@ export const Header = () => {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center bg-slate-100 rounded-2xl px-5 py-2.5 gap-3 border border-slate-200 focus-within:ring-4 ring-primary/10 transition-all w-72">
-              <Search className="w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                className="bg-transparent border-none focus:ring-0 text-sm w-full p-0 text-slate-900 placeholder:text-slate-400 font-medium"
-                placeholder="搜索模型或厂商..."
-              />
-            </div>
+            <Link
+              to="/review/new"
+              className="inline-flex bg-primary text-white text-sm font-black px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+            >
+              写点评
+            </Link>
             {user ? (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-2xl">
+                <Link to="/account" className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors">
                   <User className="w-4 h-4 text-slate-500" />
                   <span className="text-sm font-bold text-slate-700 max-w-[120px] truncate">
                     {user.user_metadata?.username ?? user.email?.split('@')[0]}
                   </span>
-                </div>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="p-2.5 rounded-xl hover:bg-slate-100 transition-colors text-slate-500"
@@ -88,12 +86,20 @@ export const Header = () => {
                 </button>
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="bg-slate-900 text-white text-sm font-black px-7 py-3 rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
-              >
-                登录/注册
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/review/new"
+                  className="inline-flex bg-primary text-white text-sm font-black px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all"
+                >
+                  写点评
+                </Link>
+                <Link
+                  to="/login"
+                  className="bg-slate-900 text-white text-sm font-black px-7 py-3 rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+                >
+                  登录/注册
+                </Link>
+              </div>
             )}
           </div>
         </div>

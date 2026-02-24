@@ -1,14 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
-import {
-  TrendingUp,
-  List,
-  RefreshCcw,
-  Search,
-  Info,
-  Loader2,
-} from 'lucide-react';
+import { TrendingUp, List, RefreshCcw, Search, Info, Loader2 } from 'lucide-react';
 import {
   Radar,
   RadarChart,
@@ -19,15 +12,10 @@ import {
   Tooltip as RechartsTooltip,
 } from 'recharts';
 import { supabase } from '../lib/supabase';
+import { buildRobustStats, metricValueForScoring, robustScore } from '../lib/scoring';
 import type { ModelSnapshot } from '../types';
 
-const USD_TO_CNY = 7.25;
-
-function fmtCny(usd: number | null | undefined): string {
-  if (usd == null) return '—';
-  return `¥${(usd * USD_TO_CNY).toFixed(1)}`;
-}
-
+type ComparisonModality = 'llm' | 'text_to_image' | 'text_to_video' | 'image_to_video';
 type MetricKey =
   | 'aa_intelligence_index'
   | 'aa_coding_index'
@@ -39,77 +27,81 @@ type MetricKey =
   | 'aa_tau2'
   | 'aa_price_blended_usd'
   | 'aa_ttft_seconds'
-  | 'aa_tps';
+  | 'aa_tps'
+  | 'aa_elo'
+  | 'category_style_anime_elo'
+  | 'category_style_cartoon_illustration_elo'
+  | 'category_style_general_photorealistic_elo'
+  | 'category_style_graphic_design_digital_rendering_elo'
+  | 'category_style_traditional_art_elo'
+  | 'category_subject_commercial_elo'
+  | 'category_format_short_prompt_elo'
+  | 'category_format_long_prompt_elo'
+  | 'category_format_moving_camera_elo'
+  | 'category_format_multi_scene_elo'
+  | 'category_style_photorealistic_elo'
+  | 'category_style_cartoon_and_anime_elo'
+  | 'category_style_3d_animation_elo';
 
 interface MetricDef {
   code: string;
   label: string;
   key: MetricKey;
   lowerBetter?: boolean;
-  kDiv?: number;
+  k?: number;
 }
 
-const METRIC_DEFS: MetricDef[] = [
-  { code: 'I', label: '智力能力', key: 'aa_intelligence_index' },
-  { code: 'C', label: '代码能力', key: 'aa_coding_index' },
-  { code: 'G', label: '科学问答能力', key: 'aa_gpqa' },
-  { code: 'F', label: '指令遵循能力', key: 'aa_ifbench' },
-  { code: 'L', label: '长上下文能力', key: 'aa_lcr' },
-  { code: 'S', label: '科学编程能力', key: 'aa_scicode' },
-  { code: 'T', label: '终端任务能力', key: 'aa_terminalbench_hard' },
-  { code: 'U', label: '工具调用能力', key: 'aa_tau2' },
-  { code: 'P', label: '低成本', key: 'aa_price_blended_usd', lowerBetter: true, kDiv: 1.1 },
-  { code: 'D', label: '低延迟', key: 'aa_ttft_seconds', lowerBetter: true, kDiv: 1.1 },
-  { code: 'R', label: '高吞吐', key: 'aa_tps', kDiv: 1.3 },
-];
+const MODALITY_LABEL: Record<ComparisonModality, string> = {
+  llm: 'LLM',
+  text_to_image: '文生图',
+  text_to_video: '文生视频',
+  image_to_video: '图生视频',
+};
 
-interface RobustStats {
-  med: number;
-  mad: number;
-}
-
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, n));
-}
-
-function quantile(sorted: number[], q: number): number {
-  if (sorted.length === 0) return 0;
-  const idx = Math.floor((sorted.length - 1) * q);
-  return sorted[clamp(idx, 0, sorted.length - 1)];
-}
-
-function median(vals: number[]): number {
-  if (vals.length === 0) return 0;
-  const sorted = [...vals].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-function buildRobustStats(vals: number[]): RobustStats | null {
-  if (vals.length === 0) return null;
-  const sorted = [...vals].sort((a, b) => a - b);
-  const p5 = quantile(sorted, 0.05);
-  const p95 = quantile(sorted, 0.95);
-  const winsorized = vals.map((v) => clamp(v, p5, p95));
-  const med = median(winsorized);
-  const mad = median(winsorized.map((v) => Math.abs(v - med)));
-  return { med, mad };
-}
-
-function robustScore(
-  value: number | null | undefined,
-  stats: RobustStats | null,
-  opts?: { lowerBetter?: boolean; kDiv?: number },
-): number {
-  if (value == null || Number.isNaN(value) || !stats) return 50;
-  const scale = 1.4826 * stats.mad;
-  if (scale === 0) return 50;
-  const zRaw = (value - stats.med) / scale;
-  const z = (opts?.lowerBetter ? -zRaw : zRaw) / (opts?.kDiv ?? 1.6);
-  // Logistic mapping keeps 0-100 semantics without artificial soft caps.
-  const score = 100 / (1 + Math.exp(-z));
-  return clamp(score, 0, 100);
-}
+const METRIC_DEFS_BY_MODALITY: Record<ComparisonModality, MetricDef[]> = {
+  llm: [
+    { code: 'I', label: '智力能力', key: 'aa_intelligence_index' },
+    { code: 'C', label: '代码能力', key: 'aa_coding_index' },
+    { code: 'G', label: '科学问答能力', key: 'aa_gpqa' },
+    { code: 'F', label: '指令遵循能力', key: 'aa_ifbench' },
+    { code: 'L', label: '长上下文能力', key: 'aa_lcr' },
+    { code: 'S', label: '科学编程能力', key: 'aa_scicode' },
+    { code: 'T', label: '终端任务能力', key: 'aa_terminalbench_hard' },
+    { code: 'U', label: '工具调用能力', key: 'aa_tau2' },
+    { code: 'P', label: '价格得分', key: 'aa_price_blended_usd', lowerBetter: true, k: 10 },
+    { code: 'D', label: '低延迟', key: 'aa_ttft_seconds', lowerBetter: true, k: 10 },
+    { code: 'R', label: '高吞吐', key: 'aa_tps', k: 12 },
+  ],
+  text_to_image: [
+    { code: 'E', label: '综合 ELO', key: 'aa_elo' },
+    { code: 'A', label: 'Anime', key: 'category_style_anime_elo' },
+    { code: 'C', label: 'Cartoon/Illustration', key: 'category_style_cartoon_illustration_elo' },
+    { code: 'P', label: 'General & Photorealistic', key: 'category_style_general_photorealistic_elo' },
+    { code: 'G', label: 'Graphic Design', key: 'category_style_graphic_design_digital_rendering_elo' },
+    { code: 'T', label: 'Traditional Art', key: 'category_style_traditional_art_elo' },
+    { code: 'M', label: 'Commercial', key: 'category_subject_commercial_elo' },
+  ],
+  text_to_video: [
+    { code: 'E', label: '综合 ELO', key: 'aa_elo' },
+    { code: 'S', label: 'Short Prompt', key: 'category_format_short_prompt_elo' },
+    { code: 'L', label: 'Long Prompt', key: 'category_format_long_prompt_elo' },
+    { code: 'M', label: 'Moving Camera', key: 'category_format_moving_camera_elo' },
+    { code: 'U', label: 'Multi-Scene', key: 'category_format_multi_scene_elo' },
+    { code: 'P', label: 'Photorealistic', key: 'category_style_photorealistic_elo' },
+    { code: 'C', label: 'Cartoon & Anime', key: 'category_style_cartoon_and_anime_elo' },
+    { code: '3', label: '3D Animation', key: 'category_style_3d_animation_elo' },
+  ],
+  image_to_video: [
+    { code: 'E', label: '综合 ELO', key: 'aa_elo' },
+    { code: 'S', label: 'Short Prompt', key: 'category_format_short_prompt_elo' },
+    { code: 'L', label: 'Long Prompt', key: 'category_format_long_prompt_elo' },
+    { code: 'M', label: 'Moving Camera', key: 'category_format_moving_camera_elo' },
+    { code: 'U', label: 'Multi-Scene', key: 'category_format_multi_scene_elo' },
+    { code: 'P', label: 'Photorealistic', key: 'category_style_photorealistic_elo' },
+    { code: 'C', label: 'Cartoon & Anime', key: 'category_style_cartoon_and_anime_elo' },
+    { code: '3', label: '3D Animation', key: 'category_style_3d_animation_elo' },
+  ],
+};
 
 export const Comparison = () => {
   const location = useLocation();
@@ -118,28 +110,40 @@ export const Comparison = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [modality, setModality] = useState<ComparisonModality>('llm');
 
-  // Load models from Supabase
+  const metricDefs = METRIC_DEFS_BY_MODALITY[modality];
+  const showRawTailCol = modality !== 'llm';
+  const primarySortField = metricDefs[0]?.key ?? 'aa_elo';
+
   useEffect(() => {
-    supabase
+    setLoading(true);
+    let query = supabase
       .from('model_snapshots')
       .select('*')
       .eq('has_aa', true)
-      .eq('has_or', true)
-      .order('aa_intelligence_index', { ascending: false, nullsFirst: false })
-      .then(({ data }) => {
-        const models = (data ?? []) as ModelSnapshot[];
-        setAllModels(models);
-        setLoading(false);
-        // Default selection: top 4 by intelligence index
-        const defaultSlugs = models.slice(0, 4).map((m) => m.aa_slug);
-        if (location.state?.selectedModelIds) {
-          setSelectedSlugs(location.state.selectedModelIds.slice(0, 4));
-        } else {
-          setSelectedSlugs(defaultSlugs);
-        }
-      });
-  }, [location.state]);
+      .eq('aa_modality', modality)
+      .order(primarySortField, { ascending: false, nullsFirst: false });
+
+    if (modality === 'llm') {
+      query = query.or('reasoning_type.is.null,reasoning_type.neq.Non Reasoning');
+    }
+
+    query.then(({ data }) => {
+      const models = (data ?? []) as ModelSnapshot[];
+      setAllModels(models);
+      setLoading(false);
+
+      const defaultSlugs = models.slice(0, 4).map((m) => m.aa_slug);
+      if (modality === 'llm' && location.state?.selectedModelIds) {
+        const allowed = new Set(models.map((m) => m.aa_slug));
+        const selected = (location.state.selectedModelIds as string[]).filter((s) => allowed.has(s)).slice(0, 4);
+        setSelectedSlugs(selected.length > 0 ? selected : defaultSlugs);
+      } else {
+        setSelectedSlugs(defaultSlugs);
+      }
+    });
+  }, [modality, location.state, primarySortField]);
 
   const selectedModels = useMemo(
     () => allModels.filter((m) => selectedSlugs.includes(m.aa_slug)),
@@ -166,35 +170,52 @@ export const Comparison = () => {
 
   const metricStats = useMemo(() => {
     const stats = new Map<MetricKey, RobustStats | null>();
-    METRIC_DEFS.forEach((m) => {
+    metricDefs.forEach((m) => {
       const vals = allModels
-        .map((model) => model[m.key])
-        .filter((v): v is number => v != null && !Number.isNaN(v));
+        .map((model) => metricValueForScoring(model, m.key, { treatZeroAsMissing: true }))
+        .filter((v): v is number => v != null);
       stats.set(m.key, buildRobustStats(vals));
     });
     return stats;
-  }, [allModels]);
+  }, [allModels, metricDefs]);
 
   const normalizedBySlug = useMemo(() => {
-    const map = new Map<string, Record<MetricKey, number>>();
+    const map = new Map<string, Partial<Record<MetricKey, number>>>();
     allModels.forEach((model) => {
-      const row = {} as Record<MetricKey, number>;
-      METRIC_DEFS.forEach((m) => {
-        row[m.key] = robustScore(model[m.key], metricStats.get(m.key) ?? null, {
-          lowerBetter: m.lowerBetter,
-          kDiv: m.kDiv,
-        });
+      const row: Partial<Record<MetricKey, number>> = {};
+      metricDefs.forEach((m) => {
+        const transformed = metricValueForScoring(model, m.key, { treatZeroAsMissing: true });
+        if (transformed == null) {
+          return;
+        }
+        const score = robustScore(transformed, metricStats.get(m.key) ?? null, m.k ?? 15, !!m.lowerBetter);
+        if (score == null) return;
+        row[m.key] = score;
       });
       map.set(model.aa_slug, row);
     });
     return map;
-  }, [allModels, metricStats]);
+  }, [allModels, metricDefs, metricStats]);
 
-  const radarData = METRIC_DEFS.map((item) => {
-    const point: Record<string, number | string> = { subject: item.label };
+  const visibleMetricDefs = useMemo(() => {
+    return metricDefs.filter((m) =>
+      selectedModels.some((model) => normalizedBySlug.get(model.aa_slug)?.[m.key] != null)
+    );
+  }, [metricDefs, selectedModels, normalizedBySlug]);
+
+  const radarMetricDefs = useMemo(() => {
+    if (modality !== 'llm') return visibleMetricDefs;
+    return visibleMetricDefs.filter(
+      (m) => m.key !== 'aa_ttft_seconds' && m.key !== 'aa_tps' && m.key !== 'aa_price_blended_usd'
+    );
+  }, [modality, visibleMetricDefs]);
+
+  const radarData = radarMetricDefs.map((item) => {
+    const point: Record<string, number | string | null> = { subject: item.label };
     selectedModels.forEach((model) => {
       const modelName = model.aa_name.replace(/\s*\(.*?\)\s*/g, '');
-      point[modelName] = Math.round(normalizedBySlug.get(model.aa_slug)?.[item.key] ?? 50);
+      const score = normalizedBySlug.get(model.aa_slug)?.[item.key];
+      point[modelName] = score == null ? null : Math.round(score);
     });
     return point;
   });
@@ -203,24 +224,47 @@ export const Comparison = () => {
     return [...selectedModels].sort((a, b) => {
       const aScores = normalizedBySlug.get(a.aa_slug);
       const bScores = normalizedBySlug.get(b.aa_slug);
-      const aAvg = METRIC_DEFS.reduce((sum, m) => sum + (aScores?.[m.key] ?? 50), 0) / METRIC_DEFS.length;
-      const bAvg = METRIC_DEFS.reduce((sum, m) => sum + (bScores?.[m.key] ?? 50), 0) / METRIC_DEFS.length;
+      const aVals = visibleMetricDefs
+        .map((m) => aScores?.[m.key])
+        .filter((v): v is number => v != null);
+      const bVals = visibleMetricDefs
+        .map((m) => bScores?.[m.key])
+        .filter((v): v is number => v != null);
+      const aAvg = aVals.length ? aVals.reduce((s, v) => s + v, 0) / aVals.length : 0;
+      const bAvg = bVals.length ? bVals.reduce((s, v) => s + v, 0) / bVals.length : 0;
       return bAvg - aAvg;
     });
-  }, [selectedModels, normalizedBySlug]);
+  }, [selectedModels, normalizedBySlug, visibleMetricDefs]);
 
   const colors = ['#137fec', '#10b981', '#8b5cf6', '#f59e0b'];
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 flex gap-8">
-      {/* Sidebar */}
       <aside className="w-80 flex-shrink-0 flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar pr-2">
         <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">模型种类</h3>
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            {(Object.keys(MODALITY_LABEL) as ComparisonModality[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  setModality(m);
+                  setSearchQuery('');
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  modality === m
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {MODALITY_LABEL[m]}
+              </button>
+            ))}
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">选择对比模型</h3>
-            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-              {selectedSlugs.length}/4
-            </span>
+            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{selectedSlugs.length}/4</span>
           </div>
 
           <div className="relative mb-4">
@@ -258,15 +302,11 @@ export const Comparison = () => {
                   />
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-bold truncate">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
-                    <span className="text-[10px] text-slate-400 truncate">
-                      {model.aa_model_creator_name ?? '—'}
-                    </span>
+                    <span className="text-[10px] text-slate-400 truncate">{model.aa_model_creator_name ?? '—'}</span>
                   </div>
                 </label>
               ))}
-              {filteredModels.length === 0 && (
-                <div className="py-8 text-center text-slate-400 text-xs">未找到匹配的模型</div>
-              )}
+              {filteredModels.length === 0 && <div className="py-8 text-center text-slate-400 text-xs">未找到匹配的模型</div>}
             </div>
           )}
         </div>
@@ -285,15 +325,15 @@ export const Comparison = () => {
         </div>
       </aside>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col gap-6 min-w-0">
-        {/* Radar + Summary */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">模型多维度对比</h2>
-                <p className="text-sm text-slate-500">与性能榜单同源字段（model_snapshots），此处展示为均一化后的 0-100 分（最多对比 4 个）</p>
+                <p className="text-sm text-slate-500">
+                  当前种类：{MODALITY_LABEL[modality]}。按同类指标做鲁棒归一化（0-100），最多对比 4 个模型。
+                </p>
               </div>
               <div className="flex flex-wrap gap-4 justify-end">
                 {selectedModels.map((model, idx) => (
@@ -323,7 +363,10 @@ export const Comparison = () => {
                   ))}
                   {selectedModels.length > 0 && (
                     <RechartsTooltip
-                      formatter={(value) => [Math.round(Number(value) || 0), '分数']}
+                      formatter={(value) => {
+                        if (value == null || Number.isNaN(Number(value))) return ['N/A', '分数'];
+                        return [Math.round(Number(value)), '分数'];
+                      }}
                       labelFormatter={(label) => String(label)}
                       contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
                       itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
@@ -352,9 +395,16 @@ export const Comparison = () => {
                       <span className="text-xs font-bold uppercase tracking-wider">标准化核心数据</span>
                     </div>
                     <p className="text-sm opacity-90 leading-relaxed">
-                      智力能力 {Math.round(normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.aa_intelligence_index ?? 50)} ·{' '}
-                      代码能力 {Math.round(normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.aa_coding_index ?? 50)} ·{' '}
-                      终端任务能力 {Math.round(normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.aa_terminalbench_hard ?? 50)}
+                      {visibleMetricDefs.slice(0, 3).map((m, i) => (
+                        <span key={m.code}>
+                          {m.label}{' '}
+                          {(() => {
+                            const v = normalizedBySlug.get(selectedModelsSorted[0].aa_slug)?.[m.key];
+                            return v == null ? 'N/A' : Math.round(v);
+                          })()}
+                          {i < 2 ? ' · ' : ''}
+                        </span>
+                      ))}
                     </p>
                   </div>
                 </div>
@@ -370,7 +420,6 @@ export const Comparison = () => {
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
             <h3 className="font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
@@ -379,19 +428,21 @@ export const Comparison = () => {
             </h3>
           </div>
           <div className="px-6 py-3 text-xs text-slate-500 border-b border-slate-100 dark:border-slate-800">
-            说明：智力能力、代码能力、科学问答能力、指令遵循能力、长上下文能力、科学编程能力、终端任务能力、工具调用能力、低成本、低延迟、高吞吐与性能榜单使用同一原始指标；本页为便于横向对比，已做均一化处理（0-100）。
+            说明：当前按{MODALITY_LABEL[modality]}指标做均一化（0-100），用于同类模型横向对比。
           </div>
 
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-[11px] font-black tracking-widest text-slate-500 bg-slate-50 dark:bg-slate-800/50">
-                  <th className="px-6 py-4 min-w-[200px]">模型名称</th>
+                  <th className="px-6 py-4 min-w-[220px]">模型名称</th>
                   <th className="px-6 py-4">厂商</th>
-                  {METRIC_DEFS.map((m) => (
+                  {visibleMetricDefs.map((m) => (
                     <th key={m.code} className="px-4 py-4 text-center">{m.label}</th>
                   ))}
-                  <th className="px-6 py-4 text-right">混合价格 (¥/1M)</th>
+                  {showRawTailCol ? (
+                    <th className="px-6 py-4 text-right">原始 ELO</th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -405,28 +456,39 @@ export const Comparison = () => {
                             {model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                           </Link>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            {model.is_cn_provider ? '国内' : '海外'}
+                            {(model.aa_modality ?? 'llm').replaceAll('_', ' ')}
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-5 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      {model.aa_model_creator_name ?? '—'}
+                      {model.aa_model_creator_name ? (
+                        <Link to={`/provider/${encodeURIComponent(model.aa_model_creator_name)}`} className="hover:text-primary hover:underline transition-colors">
+                          {model.aa_model_creator_name}
+                        </Link>
+                      ) : (
+                        '—'
+                      )}
                     </td>
-                    {METRIC_DEFS.map((m) => (
+                    {visibleMetricDefs.map((m) => (
                       <td key={m.code} className="px-4 py-5 text-center text-sm font-bold text-slate-700 dark:text-slate-300">
-                        {Math.round(normalizedBySlug.get(model.aa_slug)?.[m.key] ?? 50)}
+                        {(() => {
+                          const v = normalizedBySlug.get(model.aa_slug)?.[m.key];
+                          return v == null ? 'N/A' : Math.round(v);
+                        })()}
                       </td>
                     ))}
-                    <td className="px-6 py-5 text-right font-mono text-sm font-bold text-emerald-600">
-                      {fmtCny(model.aa_price_blended_usd)}
-                    </td>
+                    {showRawTailCol ? (
+                      <td className="px-6 py-5 text-right font-mono text-sm font-bold text-emerald-600">
+                        {model.aa_elo == null ? '—' : model.aa_elo.toFixed(1)}
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
                 {selectedModels.length === 0 && (
                   <tr>
-                    <td colSpan={METRIC_DEFS.length + 3} className="px-6 py-12 text-center text-slate-400 text-sm italic">
-                      请在左侧侧边栏选择模型进行对比
+                    <td colSpan={visibleMetricDefs.length + (showRawTailCol ? 3 : 2)} className="px-6 py-12 text-center text-slate-400 text-sm italic">
+                      请先选择模型种类，然后在左侧选择模型进行对比
                     </td>
                   </tr>
                 )}

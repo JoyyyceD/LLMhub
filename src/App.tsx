@@ -16,6 +16,9 @@ import { About } from './pages/About';
 import { Resources } from './pages/Resources';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ProviderDetail } from './pages/ProviderDetail';
+import { ReviewNew } from './pages/ReviewNew';
+import { Account } from './pages/Account';
 
 export default function App() {
   return (
@@ -30,6 +33,9 @@ export default function App() {
             <Route path="/community" element={<Community />} />
             <Route path="/about" element={<About />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/provider/:name" element={<ProviderDetail />} />
+            <Route path="/review/new" element={<ReviewNew />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Routes>

@@ -7,24 +7,29 @@ import type { ModelSnapshot } from '../types';
 const USD_TO_CNY = 7.25;
 const PAGE_SIZE = 20;
 
+function isZeroOrInvalid(n: number | null | undefined): boolean {
+  if (n == null || Number.isNaN(n)) return true;
+  return Math.abs(n) < 1e-12;
+}
+
 function fmtCny(usd: number | null | undefined): string {
-  if (usd == null) return '—';
+  if (isZeroOrInvalid(usd)) return 'N/A';
   return `¥${(usd * USD_TO_CNY).toFixed(1)}`;
 }
 
 function fmtNum(n: number | null | undefined, decimals = 1): string {
-  if (n == null) return '—';
+  if (isZeroOrInvalid(n)) return 'N/A';
   return n.toFixed(decimals);
 }
 
 function fmtPct(n: number | null | undefined): string {
-  if (n == null) return '—';
+  if (isZeroOrInvalid(n)) return 'N/A';
   return (n * 100).toFixed(1);
 }
 
 function fmtTtft(s: number | null | undefined): string {
-  if (s == null) return '—';
-  return `${(s * 1000).toFixed(0)} ms`;
+  if (isZeroOrInvalid(s) || (s ?? 0) < 0) return 'N/A';
+  return `${s.toFixed(2)} s`;
 }
 
 type TabKey =
@@ -235,6 +240,13 @@ export const Leaderboard = () => {
     return (model.aa_model_creator_name ?? '—') as string;
   };
 
+  const currentReviewModality: string = isLlm ? 'llm' : tab;
+
+  const providerLink = (model: ModelSnapshot): string | null => {
+    if (!model.aa_model_creator_name) return null;
+    return `/provider/${encodeURIComponent(model.aa_model_creator_name)}`;
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-10 gap-4 flex-wrap">
@@ -271,7 +283,7 @@ export const Leaderboard = () => {
             />
           </div>
           <Link
-            to="/community"
+            to={`/review/new?modality=${encodeURIComponent(currentReviewModality)}`}
             className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white border border-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-primary/20"
           >
             <MessageSquarePlus className="w-4 h-4" /> 发表点评
@@ -349,6 +361,7 @@ export const Leaderboard = () => {
               ) : (
                 models.map((m, i) => {
                   const rank = (page - 1) * PAGE_SIZE + i + 1;
+                  const link = providerLink(m);
                   return (
                     <tr key={`${m.aa_modality || 'llm'}:${m.aa_slug}`} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-5 text-sm font-black text-slate-400">{rank}</td>
@@ -357,7 +370,15 @@ export const Leaderboard = () => {
                           {m.aa_name?.replace(/\s*\(.*?\)\s*/g, '')}
                         </Link>
                       </td>
-                      <td className="px-6 py-5 text-sm font-bold text-slate-600">{displayCreatorName(m)}</td>
+                      <td className="px-6 py-5 text-sm font-bold text-slate-600">
+                        {link ? (
+                          <Link to={link} className="hover:text-primary hover:underline transition-colors">
+                            {displayCreatorName(m)}
+                          </Link>
+                        ) : (
+                          displayCreatorName(m)
+                        )}
+                      </td>
 
                       {isLlm ? (
                         <>
@@ -372,10 +393,10 @@ export const Leaderboard = () => {
                           {showMediaReleaseDate ? (
                             <td className="px-6 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? '—'}</td>
                           ) : null}
-                          <td className="px-6 py-5 text-center text-sm font-black text-indigo-600">{fmtNum(m.aa_elo)}</td>
+                          <td className="px-6 py-5 text-center text-sm font-black text-indigo-600">{fmtNum(m.aa_elo, 0)}</td>
                           {mediaAdvFields.map((f) => (
                             <td key={`${m.aa_slug}:${String(f.key)}`} className="px-6 py-5 text-center text-sm font-black text-slate-600">
-                              {fmtNum(m[f.key] as number | null | undefined)}
+                              {fmtNum(m[f.key] as number | null | undefined, 0)}
                             </td>
                           ))}
                         </>

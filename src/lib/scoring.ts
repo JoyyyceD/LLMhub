@@ -38,8 +38,21 @@ export function filterCandidates(
   input: RecommendationInput,
 ): ModelSnapshot[] {
   return models.filter((m) => {
-    if (!m.has_aa || !m.has_or) return false;
-    if (m.aa_intelligence_index == null) return false;
+    if (!m.has_aa) return false;
+
+    // Hard requirements: key fields must be present and > 0.
+    const price = costRaw(m);
+    if (price == null || Number.isNaN(price) || price <= 0) return false;
+    if (m.aa_intelligence_index == null || Number.isNaN(m.aa_intelligence_index) || m.aa_intelligence_index <= 0) return false;
+    if (m.aa_coding_index == null || Number.isNaN(m.aa_coding_index) || m.aa_coding_index <= 0) return false;
+
+    // Non-multimodal scenarios: only LLM + Reasoning/unknown.
+    if (input.scenario !== 'multimodal') {
+      if ((m.aa_modality ?? 'llm') !== 'llm') return false;
+      const rt = (m.reasoning_type ?? 'unknown').toString().trim().toLowerCase();
+      if (rt === 'non reasoning' || rt === 'non-reasoning') return false;
+    }
+
     if (input.region === 'cn' && !m.is_cn_provider) return false;
 
     const af = input.advanced_filters;
@@ -77,7 +90,21 @@ function parseInputModalities(raw: ModelSnapshot['or_architecture_input_modaliti
 }
 
 function filterBaseCandidates(models: ModelSnapshot[]): ModelSnapshot[] {
-  return models.filter((m) => m.has_aa && m.has_or && m.aa_intelligence_index != null);
+  return models.filter((m) => {
+    const price = costRaw(m);
+    return (
+      m.has_aa &&
+      price != null &&
+      !Number.isNaN(price) &&
+      price > 0 &&
+      m.aa_intelligence_index != null &&
+      !Number.isNaN(m.aa_intelligence_index) &&
+      m.aa_intelligence_index > 0 &&
+      m.aa_coding_index != null &&
+      !Number.isNaN(m.aa_coding_index) &&
+      m.aa_coding_index > 0
+    );
+  });
 }
 
 function pickReferencePool(models: ModelSnapshot[], fallback: ModelSnapshot[]): ModelSnapshot[] {
@@ -95,6 +122,59 @@ function pickReferencePool(models: ModelSnapshot[], fallback: ModelSnapshot[]): 
   if (recent.length >= MIN_SAMPLE_SIZE) return recent;
   if (base.length >= MIN_SAMPLE_SIZE) return base;
   return fallback;
+}
+
+function reasoningPriority(reasoningType: ModelSnapshot['reasoning_type']): number {
+  const rt = (reasoningType ?? 'unknown').toString().trim().toLowerCase();
+  if (rt === 'reasoning') return 2;
+  if (rt === 'unknown' || rt === '') return 1;
+  return 0;
+}
+
+function reasoningFamilyKey(m: ModelSnapshot): string {
+  const creator = (m.aa_model_creator_name ?? '').toLowerCase().trim();
+  const baseName = (m.aa_name ?? '')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return `${creator}::${baseName}`;
+}
+
+function dedupeReasoningPreferred(models: ModelSnapshot[]): ModelSnapshot[] {
+  const grouped = new Map<string, ModelSnapshot>();
+  for (const m of models) {
+    if ((m.aa_modality ?? 'llm') !== 'llm') {
+      grouped.set(`nonllm::${m.aa_slug}`, m);
+      continue;
+    }
+    const key = reasoningFamilyKey(m);
+    const prev = grouped.get(key);
+    if (!prev) {
+      grouped.set(key, m);
+      continue;
+    }
+    const pCur = reasoningPriority(m.reasoning_type);
+    const pPrev = reasoningPriority(prev.reasoning_type);
+    if (pCur > pPrev) {
+      grouped.set(key, m);
+      continue;
+    }
+    if (pCur < pPrev) continue;
+
+    const curIntel = m.aa_intelligence_index ?? -1;
+    const prevIntel = prev.aa_intelligence_index ?? -1;
+    if (curIntel > prevIntel) {
+      grouped.set(key, m);
+      continue;
+    }
+    if (curIntel < prevIntel) continue;
+
+    const curDate = m.aa_release_date ? new Date(m.aa_release_date).getTime() : 0;
+    const prevDate = prev.aa_release_date ? new Date(prev.aa_release_date).getTime() : 0;
+    if (curDate >= prevDate) grouped.set(key, m);
+  }
+  return Array.from(grouped.values());
 }
 
 // ---------------------------------------------------------------------------
@@ -119,12 +199,12 @@ function median(vals: number[]): number {
   return (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-interface RobustStats {
+export interface RobustStats {
   med: number;
   mad: number;
 }
 
-function buildRobustStats(vals: number[]): RobustStats | null {
+export function buildRobustStats(vals: number[]): RobustStats | null {
   if (vals.length === 0) return null;
   const sorted = [...vals].sort((a, b) => a - b);
   const p5 = quantile(sorted, 0.05);
@@ -136,7 +216,7 @@ function buildRobustStats(vals: number[]): RobustStats | null {
   return { med, mad };
 }
 
-function robustScore(
+export function robustScore(
   value: number | null | undefined,
   stats: RobustStats | null,
   k: number,
@@ -163,6 +243,29 @@ function costRaw(m: ModelSnapshot): number | null {
     return (m.aa_price_input_usd + m.aa_price_output_usd * 3) / 4;
   }
   return null;
+}
+
+export function costForScoring(m: ModelSnapshot): number | null {
+  const raw = costRaw(m);
+  if (raw == null || Number.isNaN(raw) || raw <= 0) return null;
+  // Compress long-tail price differences so ultra-cheap models don't dominate.
+  return Math.log1p(raw);
+}
+
+export function metricValueForScoring(
+  model: ModelSnapshot,
+  key: keyof ModelSnapshot,
+  opts?: { treatZeroAsMissing?: boolean },
+): number | null {
+  if (key === 'aa_price_blended_usd') {
+    return costForScoring(model);
+  }
+  const raw = model[key] as unknown as number | null | undefined;
+  if (raw == null || Number.isNaN(raw)) return null;
+  if (opts?.treatZeroAsMissing ?? false) {
+    if (raw === 0) return null;
+  }
+  return raw;
 }
 
 function latencyRaw(m: ModelSnapshot): number | null {
@@ -196,7 +299,7 @@ export function computeScores(
   }
 
   const costStats = buildRobustStats(referencePool
-    .map((m) => costRaw(m))
+    .map((m) => costForScoring(m))
     .filter((v): v is number => v != null && !Number.isNaN(v)));
 
   const latencyStats = buildRobustStats(referencePool
@@ -231,6 +334,21 @@ export function computeScores(
     return baseWeights;
   })();
 
+  const normalizedWeights = (() => {
+    const sum =
+      effectiveWeights.quality +
+      effectiveWeights.cost +
+      effectiveWeights.latency +
+      effectiveWeights.throughput;
+    if (sum <= 0) return { quality: 1, cost: 0, latency: 0, throughput: 0 };
+    return {
+      quality: effectiveWeights.quality / sum,
+      cost: effectiveWeights.cost / sum,
+      latency: effectiveWeights.latency / sum,
+      throughput: effectiveWeights.throughput / sum,
+    };
+  })();
+
   return candidates.map((m) => {
     let qualityWeightedSum = 0;
     let qualityUsedWeight = 0;
@@ -255,7 +373,7 @@ export function computeScores(
       ) ?? 50;
     }
 
-    const cost = robustScore(costRaw(m), costStats, COST_K, true) ?? 50;
+    const cost = robustScore(costForScoring(m), costStats, COST_K, true) ?? 50;
     const latencyBase = robustScore(latencyRaw(m), latencyStats, LATENCY_K, true) ?? 50;
     const throughputBase = robustScore(throughputRaw(m), throughputStats, THROUGHPUT_K, false) ?? 50;
 
@@ -263,10 +381,10 @@ export function computeScores(
     const throughput = clamp(throughputBase, 0, 100);
 
     const total =
-      quality * effectiveWeights.quality +
-      cost * effectiveWeights.cost +
-      latency * effectiveWeights.latency +
-      throughput * effectiveWeights.throughput;
+      quality * normalizedWeights.quality +
+      cost * normalizedWeights.cost +
+      latency * normalizedWeights.latency +
+      throughput * normalizedWeights.throughput;
 
     return {
       quality: Math.round(quality),
@@ -404,19 +522,19 @@ export function recommend(
   models: ModelSnapshot[],
   input: RecommendationInput,
 ): RecommendationResult[] {
-  const candidates = filterCandidates(models, input);
+  const candidates = dedupeReasoningPreferred(filterCandidates(models, input));
   if (candidates.length === 0) return [];
 
-  const referencePool = pickReferencePool(models, candidates);
+  const referencePool = pickReferencePool(candidates, candidates);
   const scores = computeScores(candidates, referencePool, input);
 
   const indexed = candidates.map((m, i) => ({ m, s: scores[i] }));
   indexed.sort((a, b) => b.s.total - a.s.total);
 
-  const top4 = indexed.slice(0, 4);
-  const secondTotal = top4[1]?.s.total ?? 0;
+  const topN = indexed.slice(0, 6);
+  const secondTotal = topN[1]?.s.total ?? 0;
 
-  return top4.map(({ m, s }, i) => {
+  return topN.map(({ m, s }, i) => {
     const { explanations, tradeoffs } = generateExplanations(m, s, input, i, secondTotal);
     const confidence: 'high' | 'medium' | 'low' =
       m.match_confidence === 'high' ? 'high'

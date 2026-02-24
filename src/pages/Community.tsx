@@ -17,6 +17,7 @@ import {
   LogIn,
   Loader2,
   AlertCircle,
+  Trash2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -63,6 +64,7 @@ interface DbReply {
 
 interface UIPost {
   id: string;
+  userId: string;
   user: string;
   avatar: string;
   level: string;
@@ -102,6 +104,22 @@ const PROVIDERS = [
 
 const SORT_OPTIONS = ['最新发布', '最多点赞', '最高评分'] as const;
 type SortOption = typeof SORT_OPTIONS[number];
+
+function formatModelIdDisplay(modelId: string): string {
+  const idx = modelId.indexOf('::');
+  if (idx < 0) return modelId;
+  const modality = modelId.slice(0, idx);
+  const slug = modelId.slice(idx + 2);
+  const labelMap: Record<string, string> = {
+    llm: 'LLM模型',
+    text_to_image: '文生图模型',
+    text_to_video: '文生视频模型',
+    image_editing: '图像编辑模型',
+    image_to_video: '图生视频模型',
+    text_to_speech: '语音合成 / TTS模型',
+  };
+  return `${labelMap[modality] ?? modality}：${slug}`;
+}
 
 // ---------------------------------------------------------------------------
 // Star rating component
@@ -201,7 +219,6 @@ export const Community = () => {
       .from('model_snapshots')
       .select('aa_slug, aa_name, aa_model_creator_name')
       .eq('has_aa', true)
-      .eq('has_or', true)
       .order('aa_name')
       .then(({ data }) => {
         if (data) {
@@ -254,12 +271,15 @@ export const Community = () => {
       const matchedModel = modelOptions.find((m) => m.aa_slug === p.model_id);
       return {
         id: p.id,
+        userId: p.user_id,
         user: p.profiles?.username ?? '匿名用户',
         avatar: p.profiles?.avatar_url ?? `https://picsum.photos/seed/${p.user_id}/100/100`,
         level: `LV.${p.profiles?.level ?? 1}`,
         time: timeAgo(p.created_at),
         modelId: p.model_id,
-        modelName: (matchedModel?.aa_name ?? p.model_id).replace(/\s*\(.*?\)\s*/g, ''),
+        modelName: matchedModel
+          ? matchedModel.aa_name.replace(/\s*\(.*?\)\s*/g, '')
+          : formatModelIdDisplay(p.model_id),
         ratingOverall: p.rating_overall,
         ratingQuality: p.rating_quality,
         ratingPrice: p.rating_price,
@@ -393,6 +413,23 @@ export const Community = () => {
     navigator.clipboard.writeText(window.location.href);
     setShowShareToast(true);
     setTimeout(() => setShowShareToast(false), 2000);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!user) return;
+    const ok = window.confirm('确认删除这条点评吗？删除后不可恢复。');
+    if (!ok) return;
+
+    const { error } = await supabase
+      .from('model_review_posts')
+      .delete()
+      .eq('id', postId)
+      .eq('user_id', user.id);
+    if (error) {
+      setPostError(`删除失败：${error.message}`);
+      return;
+    }
+    fetchPosts();
   };
 
   const ratingDims = [
@@ -599,12 +636,12 @@ export const Community = () => {
           />
         </div>
         {user ? (
-          <button
-            onClick={() => setIsPostModalOpen(true)}
+          <Link
+            to="/review/new"
             className="w-full md:w-auto px-8 py-3.5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
           >
             <Plus className="w-5 h-5" /> 发表点评
-          </button>
+          </Link>
         ) : (
           <Link
             to="/login"
@@ -793,12 +830,22 @@ export const Community = () => {
                       <MessageCircle className="w-4 h-4" /> 回复
                     </button>
                   </div>
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-primary transition-all"
-                  >
-                    <Share2 className="w-4 h-4" /> 分享
-                  </button>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-primary transition-all"
+                    >
+                      <Share2 className="w-4 h-4" /> 分享
+                    </button>
+                    {user && post.userId === user.id && (
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        className="flex items-center gap-2 text-xs font-black text-rose-400 hover:text-rose-600 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" /> 删除
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Reply area */}

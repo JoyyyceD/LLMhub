@@ -147,6 +147,10 @@ export const ModelDetail = () => {
   const creatorDisplay = model.is_cn_provider
     ? (model.aa_model_creator_name_cn ?? model.aa_model_creator_name ?? 'N/A')
     : (model.aa_model_creator_name ?? 'N/A');
+  const providerLink = model.aa_model_creator_name
+    ? `/provider/${encodeURIComponent(model.aa_model_creator_name)}`
+    : null;
+  const reviewLink = `/review/new?model=${encodeURIComponent(model.aa_slug)}&modality=${encodeURIComponent(model.aa_modality ?? 'llm')}`;
   const hasPricing =
     model.aa_price_input_usd != null ||
     model.aa_price_output_usd != null ||
@@ -225,7 +229,14 @@ export const ModelDetail = () => {
             <div className="flex items-center gap-5 text-slate-500 dark:text-slate-400 text-sm flex-wrap">
               {creatorDisplay && (
                 <span className="flex items-center gap-1.5">
-                  <Verified className="w-4 h-4 text-blue-500" /> {creatorDisplay}
+                  <Verified className="w-4 h-4 text-blue-500" />
+                  {providerLink ? (
+                    <Link to={providerLink} className="hover:text-primary hover:underline transition-colors">
+                      {creatorDisplay}
+                    </Link>
+                  ) : (
+                    creatorDisplay
+                  )}
                 </span>
               )}
               {model.aa_context_length && (
@@ -247,7 +258,7 @@ export const ModelDetail = () => {
 
         <div className="flex gap-3">
           <Link
-            to="/community"
+            to={reviewLink}
             className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
           >
             <Star className="w-5 h-5 text-primary" /> 点评
@@ -296,7 +307,15 @@ export const ModelDetail = () => {
                   <div className={`grid grid-cols-1 ${isTts ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}>
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">厂商</p>
-                      <p className="text-lg font-black text-slate-800 dark:text-slate-100">{creatorDisplay}</p>
+                      <p className="text-lg font-black text-slate-800 dark:text-slate-100">
+                        {providerLink ? (
+                          <Link to={providerLink} className="hover:text-primary hover:underline transition-colors">
+                            {creatorDisplay}
+                          </Link>
+                        ) : (
+                          creatorDisplay
+                        )}
+                      </p>
                     </div>
                     {!isTts && (
                       <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
@@ -529,7 +548,7 @@ export const ModelDetail = () => {
               在社区发表您的真实使用体验，帮助其他开发者做出更好的决策。
             </p>
             <Link
-              to="/community"
+              to={reviewLink}
               className="w-full flex items-center justify-center gap-2 text-xs bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-lg transition-all font-semibold"
             >
               发表您的点评

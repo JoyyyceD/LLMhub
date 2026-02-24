@@ -81,21 +81,6 @@ function fmtTps(t: number | null | undefined): string {
 // Score bar component
 // ---------------------------------------------------------------------------
 
-const ScoreBar = ({ label, value }: { label: string; value: number }) => (
-  <div>
-    <div className="flex justify-between items-center mb-1">
-      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
-      <span className="text-[10px] font-black text-primary">{value}</span>
-    </div>
-    <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-      <div
-        className="h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-700"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  </div>
-);
-
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -105,7 +90,7 @@ export const Home = () => {
   const [scenario, setScenario] = useState<ScenarioKey>('code');
   const [selectedSubScenarios, setSelectedSubScenarios] = useState<SubScenarioKey[]>(['generation']);
   const [region, setRegion] = useState<RegionKey>('global');
-  const [profile, setProfile] = useState<ProfileKey>('balanced');
+  const [profile, setProfile] = useState<ProfileKey>('best_value');
   const [speedProfile, setSpeedProfile] = useState<SpeedProfileKey>('balanced_speed');
   const [isAdvancedExpanded, setIsAdvancedExpanded] = useState(false);
   const [requirePdfInput, setRequirePdfInput] = useState(false);
@@ -129,8 +114,7 @@ export const Home = () => {
       const { data, error } = await supabase
         .from('model_snapshots')
         .select('*')
-        .eq('has_aa', true)
-        .eq('has_or', true);
+        .eq('has_aa', true);
 
       if (error) {
         setFetchError('模型数据加载失败，请刷新重试。');
@@ -273,7 +257,7 @@ export const Home = () => {
               <CreditCard className="w-4 h-4" /> 3. 预算偏好
             </h2>
             <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
-              {([['balanced', '均衡'], ['cheapest', '省钱'], ['best_value', '性价比'], ['best_quality', '质量优先']] as [ProfileKey, string][]).map(([key, label]) => (
+              {([['best_value', '性价比'], ['cheapest', '省钱'], ['best_quality', '质量优先']] as [ProfileKey, string][]).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setProfile(key)}
@@ -456,7 +440,7 @@ export const Home = () => {
               <p className="text-sm mt-1">请尝试调整地区或偏好设置</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {results.map((result, idx) => (
                 <motion.div
                   key={result.model.aa_slug}
@@ -526,16 +510,22 @@ export const Home = () => {
                       </div>
                     </div>
 
-                    {/* Score bars */}
-                    <div className="space-y-2 mb-5">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">综合评分</span>
-                        <span className="text-lg font-black text-primary font-display">{result.scores.total}</span>
+                    {/* Scores */}
+                    <div className="grid grid-cols-3 gap-3 py-4 border-b border-slate-100 dark:border-slate-800 mb-5">
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合评分</p>
+                        <p className="text-sm font-bold text-primary font-display">{result.scores.total}</p>
                       </div>
-                      <ScoreBar label="质量" value={result.scores.quality} />
-                      <ScoreBar label="成本" value={result.scores.cost} />
-                      <ScoreBar label="延迟" value={result.scores.latency} />
-                      <ScoreBar label="吞吐" value={result.scores.throughput} />
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">场景质量评分</p>
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{result.scores.quality}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合智力评分</p>
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
+                          {result.model.aa_intelligence_index == null ? 'N/A' : result.model.aa_intelligence_index.toFixed(1)}
+                        </p>
+                      </div>
                     </div>
 
                     {/* Explanations */}
@@ -551,13 +541,6 @@ export const Home = () => {
                         ))}
                       </ul>
                     </div>
-
-                    {/* Tradeoff */}
-                    {result.tradeoffs[0] && (
-                      <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg mb-4 leading-relaxed">
-                        {result.tradeoffs[0]}
-                      </p>
-                    )}
 
                     {/* Actions */}
                     <div className="flex gap-3">
