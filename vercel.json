@@ -3,5 +3,19 @@
     "api/**/*.mjs": {
       "maxDuration": 10
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/v1/model-recommendation",
+      "destination": "/api/v1/model-recommendation"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
