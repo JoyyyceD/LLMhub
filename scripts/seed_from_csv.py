@@ -34,6 +34,29 @@ MEDIA_FILES = {
     "image_to_video": BASE_DIR / "aa_image_to_video_raw.csv",
 }
 
+CN_PROVIDERS = {
+    "deepseek", "alibaba", "baidu", "bytedance", "zhipu",
+    "moonshot", "minimax", "tencent", "01ai", "kimi", "z ai", "xiaomi",
+    "seed", "vidu", "klingai", "pixverse",
+}
+
+CN_NAME_MAP = {
+    "Kimi": "月之暗面Kimi",
+    "DeepSeek": "深度求索Deepseek",
+    "Z AI": "智谱",
+    "Alibaba": "阿里巴巴",
+    "MiniMax": "Minimax",
+    "Xiaomi": "小米",
+    "Baidu": "百度",
+    "ByteDance Seed": "字节跳动",
+    "Seed": "字节跳动",
+    "ByteDance": "字节跳动",
+    "Tencent": "腾讯",
+    "Vidu": "生数Vidu",
+    "KlingAI": "快手可灵",
+    "PixVerse": "爱诗PixVerse",
+}
+
 
 def safe_float(v):
     s = "" if v is None else str(v).strip()
@@ -45,8 +68,21 @@ def safe_float(v):
         return None
 
 
+def safe_int(v):
+    f = safe_float(v)
+    if f is None:
+        return None
+    return int(f)
+
+
 def safe_bool(v):
     return str(v).strip().lower() in ("true", "1", "yes")
+
+def is_cn_provider(creator_name: str) -> bool:
+    if not creator_name:
+        return False
+    lower = creator_name.lower()
+    return any(k in lower for k in CN_PROVIDERS)
 
 
 def upsert_batch(records):
@@ -65,6 +101,21 @@ def upsert_batch(records):
         resp.raise_for_status()
 
 
+def delete_non_llm_rows():
+    if not SUPABASE_URL or not SERVICE_ROLE_KEY:
+        raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars must be set.")
+    url = f"{SUPABASE_URL}/rest/v1/model_snapshots"
+    headers = {
+        "apikey": SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SERVICE_ROLE_KEY}",
+        "Prefer": "return=minimal",
+    }
+    resp = requests.delete(url, headers=headers, params={"aa_modality": "neq.llm"}, timeout=60)
+    if not resp.ok:
+        print(f"DELETE ERROR {resp.status_code}: {resp.text[:400]}", file=sys.stderr)
+        resp.raise_for_status()
+
+
 def load_llm_records():
     if not LLM_CSV.exists():
         raise FileNotFoundError(f"Missing CSV: {LLM_CSV}")
@@ -77,12 +128,17 @@ def load_llm_records():
                 continue
             out.append(
                 {
+                    "aa_id": None,
+                    "aa_model_creator_id": None,
                     "aa_slug": slug,
                     "aa_name": (row.get("aa_name") or "").strip(),
                     "aa_modality": "llm",
                     "aa_model_creator_name": (row.get("aa_model_creator_name") or "").strip() or None,
-                    "aa_model_creator_name_cn": (row.get("aa_model_creator_name_CN") or "").strip() or None,
-                    "is_cn_provider": safe_bool(row.get("is_cn_provider")),
+                    "aa_model_creator_name_cn": (
+                        (row.get("aa_model_creator_name_CN") or "").strip()
+                        or CN_NAME_MAP.get((row.get("aa_model_creator_name") or "").strip())
+                    ),
+                    "is_cn_provider": safe_bool(row.get("is_cn_provider")) or is_cn_provider((row.get("aa_model_creator_name") or "").strip()),
                     "reasoning_type": (row.get("reasoning_type") or "").strip() or None,
                     "aa_intelligence_index": safe_float(row.get("aa_intelligence_index")),
                     "aa_coding_index": safe_float(row.get("aa_coding_index")),
@@ -98,11 +154,10 @@ def load_llm_records():
                     "aa_price_input_usd": safe_float(row.get("aa_price_input_usd")),
                     "aa_price_output_usd": safe_float(row.get("aa_price_output_usd")),
                     "aa_price_blended_usd": safe_float(row.get("aa_price_blended_usd")),
-                    "aa_context_length": safe_float(row.get("aa_context_length")),
-                    "or_context_length": safe_float(row.get("aa_context_length")),
+                    "aa_context_length": safe_int(row.get("aa_context_length")),
                     "aa_release_date": (row.get("aa_release_date") or "").strip() or None,
                     "has_aa": True,
-                    "has_or": safe_float(row.get("aa_context_length")) is not None,
+                    "has_or": safe_int(row.get("aa_context_length")) is not None,
                     "record_date": (row.get("record_date") or "").strip() or None,
                 }
             )
@@ -116,16 +171,21 @@ def load_media_records(modality, path):
     out = []
     with open(path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            slug = (row.get("slug") or "").strip()
-            if not slug:
+            source_slug = (row.get("slug") or "").strip()
+            if not source_slug:
                 continue
+            # Avoid PK collision with LLM rows using same aa_slug.
+            slug = f"{modality}::{source_slug}"
+            creator_name = (row.get("model_creator_name") or "").strip()
             record = {
                 "aa_slug": slug,
                 "aa_id": (row.get("id") or "").strip() or None,
                 "aa_name": (row.get("name") or "").strip(),
                 "aa_modality": modality,
                 "aa_model_creator_id": (row.get("model_creator_id") or "").strip() or None,
-                "aa_model_creator_name": (row.get("model_creator_name") or "").strip() or None,
+                "aa_model_creator_name": creator_name or None,
+                "aa_model_creator_name_cn": CN_NAME_MAP.get(creator_name),
+                "is_cn_provider": is_cn_provider(creator_name),
                 "aa_release_date": (row.get("release_date") or "").strip() or None,
                 "aa_elo": safe_float(row.get("elo")),
                 "has_aa": True,
@@ -156,19 +216,27 @@ def main():
         print("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.", file=sys.stderr)
         sys.exit(1)
 
-    records = []
-    records.extend(load_llm_records())
+    groups = []
+    llm_records = load_llm_records()
+    groups.append(("llm", llm_records))
     for modality, path in MEDIA_FILES.items():
-        records.extend(load_media_records(modality, path))
+        groups.append((modality, load_media_records(modality, path)))
 
-    print(f"Loaded {len(records)} rows from aa_split_outputs CSVs.")
+    total = sum(len(records) for _, records in groups)
+    print(f"Loaded {total} rows from aa_split_outputs CSVs.")
 
-    for i in range(0, len(records), BATCH_SIZE):
-        batch = records[i:i + BATCH_SIZE]
-        print(f"Upserting batch {i // BATCH_SIZE + 1} ({len(batch)} rows)...")
-        upsert_batch(batch)
+    # Reset non-LLM rows to prevent stale/overlapping data before reinsert.
+    print("Deleting existing non-LLM rows...")
+    delete_non_llm_rows()
 
-    print(f"Done. {len(records)} rows upserted to model_snapshots.")
+    for group_name, records in groups:
+        print(f"Upserting group: {group_name} ({len(records)} rows)")
+        for i in range(0, len(records), BATCH_SIZE):
+            batch = records[i:i + BATCH_SIZE]
+            print(f"  batch {i // BATCH_SIZE + 1} ({len(batch)} rows)...")
+            upsert_batch(batch)
+
+    print(f"Done. {total} rows upserted to model_snapshots.")
 
 
 if __name__ == "__main__":

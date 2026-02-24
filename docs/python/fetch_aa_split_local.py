@@ -76,6 +76,7 @@ MEDIA_ADV_COLUMNS_TEXT_TO_IMAGE = [
 CN_PROVIDERS = {
     "deepseek", "alibaba", "baidu", "bytedance", "zhipu",
     "moonshot", "minimax", "tencent", "01ai", "kimi", "z ai", "xiaomi",
+    "seed", "vidu", "klingai", "pixverse",
 }
 
 CN_NAME_MAP = {
@@ -86,7 +87,13 @@ CN_NAME_MAP = {
     "MiniMax": "Minimax",
     "Xiaomi": "小米",
     "Baidu": "百度",
+    "ByteDance Seed": "字节跳动",
     "Seed": "字节跳动",
+    "ByteDance": "字节跳动",
+    "Tencent": "腾讯",
+    "Vidu": "生数Vidu",
+    "KlingAI": "快手可灵",
+    "PixVerse": "爱诗PixVerse",
 }
 
 

@@ -17,6 +17,11 @@ function fmtNum(n: number | null | undefined, decimals = 1): string {
   return n.toFixed(decimals);
 }
 
+function fmtPct(n: number | null | undefined): string {
+  if (n == null) return '—';
+  return (n * 100).toFixed(1);
+}
+
 function fmtTtft(s: number | null | undefined): string {
   if (s == null) return '—';
   return `${(s * 1000).toFixed(0)} ms`;
@@ -32,54 +37,72 @@ type TabKey =
   | 'image_to_video';
 
 const TAB_LABEL: Record<TabKey, string> = {
-  global: '全球模型',
-  cn: '中国大陆直连',
-  text_to_image: 'Text to Image',
-  image_editing: 'Image Editing',
-  text_to_speech: 'Text to Speech',
-  text_to_video: 'Text to Video',
-  image_to_video: 'Image to Video',
+  global: '全球LLM模型',
+  cn: '中国直连LLM模型',
+  text_to_image: '文生图模型',
+  text_to_video: '文生视频模型',
+  image_editing: '图像编辑模型',
+  image_to_video: '图生视频模型',
+  text_to_speech: '语音合成 / TTS模型',
 };
 
 const LLM_SORT_DEFAULT = { field: 'aa_release_date', order: 'desc' as const };
 const MEDIA_SORT_DEFAULT = { field: 'aa_elo', order: 'desc' as const };
 
-const MEDIA_ADV_FIELDS: Record<TabKey, Array<{ key: keyof ModelSnapshot; label: string }>> = {
+type LlmFieldDef = {
+  key: keyof ModelSnapshot | 'aa_release_date' | 'aa_price_input_usd' | 'aa_price_output_usd';
+  label: string;
+  subLabel?: string;
+  lowerBetter: boolean;
+  format: 'num' | 'pct' | 'cny' | 'ttft' | 'text';
+};
+
+const MEDIA_ADV_FIELDS: Record<TabKey, Array<{ key: keyof ModelSnapshot; label: string; subLabel?: string }>> = {
   global: [],
   cn: [],
   text_to_image: [
-    { key: 'category_style_anime_elo', label: 'Anime' },
-    { key: 'category_style_cartoon_illustration_elo', label: 'Cartoon/Illustration' },
-    { key: 'category_style_general_photorealistic_elo', label: 'General & Photorealistic' },
-    { key: 'category_style_graphic_design_digital_rendering_elo', label: 'Graphic Design' },
-    { key: 'category_style_traditional_art_elo', label: 'Traditional Art' },
-    { key: 'category_subject_commercial_elo', label: 'Commercial' },
+    { key: 'category_style_anime_elo', label: 'Anime', subLabel: '动漫风评分' },
+    { key: 'category_style_cartoon_illustration_elo', label: 'Cartoon/Illustration', subLabel: '卡通/插画评分' },
+    { key: 'category_style_general_photorealistic_elo', label: 'General & Photorealistic', subLabel: '通用 & 写实评分' },
+    { key: 'category_style_graphic_design_digital_rendering_elo', label: 'Graphic Design', subLabel: '平面设计评分' },
+    { key: 'category_style_traditional_art_elo', label: 'Traditional Art', subLabel: '传统艺术评分' },
+    { key: 'category_subject_commercial_elo', label: 'Commercial', subLabel: '商业视觉评分' },
   ],
   image_editing: [],
   text_to_speech: [],
   text_to_video: [
-    { key: 'category_format_short_prompt_elo', label: 'Short Prompt' },
-    { key: 'category_format_long_prompt_elo', label: 'Long Prompt' },
-    { key: 'category_format_moving_camera_elo', label: 'Moving Camera' },
-    { key: 'category_format_multi_scene_elo', label: 'Multi-Scene' },
-    { key: 'category_style_photorealistic_elo', label: 'Photorealistic' },
-    { key: 'category_style_cartoon_and_anime_elo', label: 'Cartoon & Anime' },
-    { key: 'category_style_3d_animation_elo', label: '3D Animation' },
+    { key: 'category_format_short_prompt_elo', label: 'Short Prompt', subLabel: '短提示词评分' },
+    { key: 'category_format_long_prompt_elo', label: 'Long Prompt', subLabel: '长提示词评分' },
+    { key: 'category_format_moving_camera_elo', label: 'Moving Camera', subLabel: '运镜评分' },
+    { key: 'category_format_multi_scene_elo', label: 'Multi-Scene', subLabel: '多场景评分' },
+    { key: 'category_style_photorealistic_elo', label: 'Photorealistic', subLabel: '写实/照片级真实评分' },
+    { key: 'category_style_cartoon_and_anime_elo', label: 'Cartoon & Anime', subLabel: '卡通/动漫评分' },
+    { key: 'category_style_3d_animation_elo', label: '3D Animation', subLabel: '3D 动画/CG 风评分' },
   ],
   image_to_video: [
-    { key: 'category_format_short_prompt_elo', label: 'Short Prompt' },
-    { key: 'category_format_long_prompt_elo', label: 'Long Prompt' },
-    { key: 'category_format_moving_camera_elo', label: 'Moving Camera' },
-    { key: 'category_format_multi_scene_elo', label: 'Multi-Scene' },
-    { key: 'category_style_photorealistic_elo', label: 'Photorealistic' },
-    { key: 'category_style_cartoon_and_anime_elo', label: 'Cartoon & Anime' },
-    { key: 'category_style_3d_animation_elo', label: '3D Animation' },
+    { key: 'category_format_short_prompt_elo', label: 'Short Prompt', subLabel: '短提示词评分' },
+    { key: 'category_format_long_prompt_elo', label: 'Long Prompt', subLabel: '长提示词评分' },
+    { key: 'category_format_moving_camera_elo', label: 'Moving Camera', subLabel: '运镜评分' },
+    { key: 'category_format_multi_scene_elo', label: 'Multi-Scene', subLabel: '多场景评分' },
+    { key: 'category_style_photorealistic_elo', label: 'Photorealistic', subLabel: '写实/照片级真实评分' },
+    { key: 'category_style_cartoon_and_anime_elo', label: 'Cartoon & Anime', subLabel: '卡通/动漫评分' },
+    { key: 'category_style_3d_animation_elo', label: '3D Animation', subLabel: '3D 动画/CG 风评分' },
   ],
 };
 
 function isLlmTab(tab: TabKey): boolean {
   return tab === 'global' || tab === 'cn';
 }
+
+const TAB_ORDER: TabKey[] = [
+  'global',
+  'cn',
+  'text_to_image',
+  'text_to_video',
+  'image_editing',
+  'image_to_video',
+  'text_to_speech',
+];
 
 export const Leaderboard = () => {
   const [models, setModels] = useState<ModelSnapshot[]>([]);
@@ -94,6 +117,7 @@ export const Leaderboard = () => {
 
   const isLlm = isLlmTab(tab);
   const mediaAdvFields = MEDIA_ADV_FIELDS[tab];
+  const showMediaReleaseDate = tab !== 'text_to_speech';
 
   const setTabAndDefaultSort = (nextTab: TabKey) => {
     setTab(nextTab);
@@ -124,9 +148,14 @@ export const Leaderboard = () => {
       .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false });
 
     if (tab === 'global') {
-      query = query.eq('aa_modality', 'llm');
+      query = query
+        .eq('aa_modality', 'llm')
+        .or('reasoning_type.is.null,reasoning_type.neq.Non Reasoning');
     } else if (tab === 'cn') {
-      query = query.eq('aa_modality', 'llm').eq('is_cn_provider', true);
+      query = query
+        .eq('aa_modality', 'llm')
+        .eq('is_cn_provider', true)
+        .or('reasoning_type.is.null,reasoning_type.neq.Non Reasoning');
     } else {
       query = query.eq('aa_modality', tab);
     }
@@ -167,27 +196,50 @@ export const Leaderboard = () => {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const llmColSpan = 11;
-  const mediaColSpan = 9 + mediaAdvFields.length;
-
-  const llmHeaders = useMemo(
+  const llmHeaders = useMemo<LlmFieldDef[]>(
     () => [
-      { key: 'aa_release_date', label: '发布日期', lowerBetter: false },
-      { key: 'aa_price_input_usd', label: '输入价 (¥/1M)', lowerBetter: true },
-      { key: 'aa_price_output_usd', label: '输出价 (¥/1M)', lowerBetter: true },
-      { key: 'aa_intelligence_index', label: 'Intelligence', lowerBetter: false },
-      { key: 'aa_coding_index', label: 'Coding', lowerBetter: false },
-      { key: 'aa_ttft_seconds', label: '首字延迟', lowerBetter: true },
-      { key: 'aa_tps', label: '吞吐 (tps)', lowerBetter: false },
+      { key: 'aa_release_date', label: '发布日期', lowerBetter: false, format: 'text' },
+      { key: 'aa_price_input_usd', label: '输入价 (¥/1M)', lowerBetter: true, format: 'cny' },
+      { key: 'aa_price_output_usd', label: '输出价 (¥/1M)', lowerBetter: true, format: 'cny' },
+      { key: 'aa_intelligence_index', label: 'Intelligence Index', subLabel: '综合智力', lowerBetter: false, format: 'num' },
+      { key: 'aa_coding_index', label: 'Coding Index', subLabel: '代码', lowerBetter: false, format: 'num' },
+      { key: 'aa_gpqa', label: 'GQPA Diamond Benchmark', subLabel: '研究生科学', lowerBetter: false, format: 'pct' },
+      { key: 'aa_hle', label: "Humanity's Last Exam Benchmark", subLabel: '硬逻辑', lowerBetter: false, format: 'pct' },
+      { key: 'aa_ifbench', label: 'IFBench Benchmark', subLabel: '指令遵循', lowerBetter: false, format: 'pct' },
+      { key: 'aa_lcr', label: 'LiveCodeBench Benchmark', subLabel: '长文召回', lowerBetter: false, format: 'pct' },
+      { key: 'aa_scicode', label: 'SciCode Benchmark', subLabel: '科学计算', lowerBetter: false, format: 'pct' },
+      { key: 'aa_terminalbench_hard', label: 'Terminal-Bench Hard Benchmark', subLabel: '命令行', lowerBetter: false, format: 'pct' },
+      { key: 'aa_tau2', label: 'tau2 Bench Telecom Benchmark', subLabel: '工具调用', lowerBetter: false, format: 'num' },
+      { key: 'aa_ttft_seconds', label: '首字延迟', lowerBetter: true, format: 'ttft' },
+      { key: 'aa_tps', label: '吞吐 (tps)', lowerBetter: false, format: 'num' },
     ],
     []
   );
+
+  const llmColSpan = 4 + llmHeaders.length;
+  const mediaColSpan = 8 + mediaAdvFields.length + (showMediaReleaseDate ? 1 : 0);
+
+  const renderLlmValue = (model: ModelSnapshot, field: LlmFieldDef): string => {
+    const raw = model[field.key as keyof ModelSnapshot] as number | string | null | undefined;
+    if (field.format === 'text') return (raw as string | null | undefined) ?? '—';
+    if (field.format === 'cny') return fmtCny(raw as number | null | undefined);
+    if (field.format === 'ttft') return fmtTtft(raw as number | null | undefined);
+    if (field.format === 'pct') return fmtPct(raw as number | null | undefined);
+    return fmtNum(raw as number | null | undefined);
+  };
+
+  const displayCreatorName = (model: ModelSnapshot): string => {
+    if (model.is_cn_provider) {
+      return (model.aa_model_creator_name_cn ?? model.aa_model_creator_name ?? '—') as string;
+    }
+    return (model.aa_model_creator_name ?? '—') as string;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-10 gap-4 flex-wrap">
         <div className="flex p-1.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex-wrap">
-          {(Object.keys(TAB_LABEL) as TabKey[]).map((k) => (
+          {TAB_ORDER.map((k) => (
             <button
               key={k}
               onClick={() => setTabAndDefaultSort(k)}
@@ -238,9 +290,12 @@ export const Leaderboard = () => {
                   <th className="px-6 py-4">厂商</th>
                   {llmHeaders.map((h) => (
                     <th key={h.key} className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort(h.key, h.lowerBetter)}>
-                      <div className="flex items-center justify-center gap-1">
-                        {h.label}
-                        {sortField === h.key ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <div className="flex items-center justify-center gap-1">
+                          {h.label}
+                          {sortField === h.key ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                        </div>
+                        {h.subLabel ? <span className="text-[9px] font-normal text-slate-400 normal-case">{h.subLabel}</span> : null}
                       </div>
                     </th>
                   ))}
@@ -251,15 +306,27 @@ export const Leaderboard = () => {
                   <th className="px-6 py-4">#</th>
                   <th className="px-6 py-4">模型名称</th>
                   <th className="px-6 py-4">厂商</th>
-                  <th className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort('aa_release_date')}>
-                    <div className="flex items-center justify-center gap-1">发布日期{sortField === 'aa_release_date' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}</div>
-                  </th>
+                  {showMediaReleaseDate ? (
+                    <th className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort('aa_release_date')}>
+                      <div className="flex items-center justify-center gap-1">发布日期{sortField === 'aa_release_date' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}</div>
+                    </th>
+                  ) : null}
                   <th className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort('aa_elo')}>
-                    <div className="flex items-center justify-center gap-1">ELO{sortField === 'aa_elo' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}</div>
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      <div className="flex items-center justify-center gap-1">
+                        ELO{sortField === 'aa_elo' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                      </div>
+                      <span className="text-[9px] font-normal text-slate-400 normal-case">综合 ELO评分</span>
+                    </div>
                   </th>
                   {mediaAdvFields.map((f) => (
                     <th key={String(f.key)} className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort(String(f.key))}>
-                      <div className="flex items-center justify-center gap-1">{f.label}{sortField === f.key ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}</div>
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <div className="flex items-center justify-center gap-1">
+                          {f.label}{sortField === f.key ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                        </div>
+                        {f.subLabel ? <span className="text-[9px] font-normal text-slate-400 normal-case">{f.subLabel}</span> : null}
+                      </div>
                     </th>
                   ))}
                   <th className="px-6 py-4 text-center">操作</th>
@@ -290,21 +357,21 @@ export const Leaderboard = () => {
                           {m.aa_name?.replace(/\s*\(.*?\)\s*/g, '')}
                         </Link>
                       </td>
-                      <td className="px-6 py-5 text-sm font-bold text-slate-600">{m.aa_model_creator_name ?? '—'}</td>
+                      <td className="px-6 py-5 text-sm font-bold text-slate-600">{displayCreatorName(m)}</td>
 
                       {isLlm ? (
                         <>
-                          <td className="px-6 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? '—'}</td>
-                          <td className="px-6 py-5 text-center text-sm font-black text-emerald-600">{fmtCny(m.aa_price_input_usd)}</td>
-                          <td className="px-6 py-5 text-center text-sm font-black text-emerald-600">{fmtCny(m.aa_price_output_usd)}</td>
-                          <td className="px-6 py-5 text-center text-sm font-black text-indigo-600">{fmtNum(m.aa_intelligence_index)}</td>
-                          <td className="px-6 py-5 text-center text-sm font-black text-slate-600">{fmtNum(m.aa_coding_index)}</td>
-                          <td className="px-6 py-5 text-center text-sm font-black text-slate-600">{fmtTtft(m.aa_ttft_seconds)}</td>
-                          <td className="px-6 py-5 text-center text-sm font-black text-primary">{fmtNum(m.aa_tps)}</td>
+                          {llmHeaders.map((h) => (
+                            <td key={`${m.aa_slug}:${String(h.key)}`} className="px-6 py-5 text-center text-sm font-black text-slate-600">
+                              {renderLlmValue(m, h)}
+                            </td>
+                          ))}
                         </>
                       ) : (
                         <>
-                          <td className="px-6 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? '—'}</td>
+                          {showMediaReleaseDate ? (
+                            <td className="px-6 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? '—'}</td>
+                          ) : null}
                           <td className="px-6 py-5 text-center text-sm font-black text-indigo-600">{fmtNum(m.aa_elo)}</td>
                           {mediaAdvFields.map((f) => (
                             <td key={`${m.aa_slug}:${String(f.key)}`} className="px-6 py-5 text-center text-sm font-black text-slate-600">

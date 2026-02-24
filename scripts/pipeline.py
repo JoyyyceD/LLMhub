@@ -41,6 +41,7 @@ AA_ENDPOINTS = {
 CN_PROVIDERS = {
     "deepseek", "alibaba", "baidu", "bytedance", "zhipu",
     "moonshot", "minimax", "tencent", "01ai", "kimi", "z ai", "xiaomi", "seed",
+    "vidu", "klingai", "pixverse",
 }
 
 CN_NAME_MAP = {
@@ -51,7 +52,13 @@ CN_NAME_MAP = {
     "MiniMax": "Minimax",
     "Xiaomi": "小米",
     "Baidu": "百度",
+    "ByteDance Seed": "字节跳动",
     "Seed": "字节跳动",
+    "ByteDance": "字节跳动",
+    "Tencent": "腾讯",
+    "Vidu": "生数Vidu",
+    "KlingAI": "快手可灵",
+    "PixVerse": "爱诗PixVerse",
 }
 
 
@@ -259,8 +266,10 @@ def build_media_rows(records, modality):
         cn = is_cn_provider(creator_name)
         categories = rec.get("categories") or []
 
+        source_slug = rec.get("slug") or ""
         row = {
-            "aa_slug": rec.get("slug") or "",
+            # Prefix non-LLM slug to avoid PK collision with LLM aa_slug.
+            "aa_slug": f"{modality}::{source_slug}" if source_slug else "",
             "aa_id": rec.get("id"),
             "aa_name": rec.get("name") or "",
             "aa_modality": modality,

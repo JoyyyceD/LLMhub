@@ -3,8 +3,8 @@ ae424391-721f-4df7-bf24-a8bef3c4c46c,Riverflow 2.0,sourceful_riverflow-2,1285,20
 a1ee4d6f-d136-434b-bb1d-066fe5f9bf6f,GPT Image 1.5 (high),openai-gpt_image-1-5,1270,2025-12,e67e56e3-15cd-43db-b679-da4660a69f41,OpenAI
 6a5056eb-6854-43c4-bf18-01d185ce9e2f,Nano Banana Pro (Gemini 3 Pro Image),gemini_nano-banana-pro,1254,2025-11,faddc6d9-2c14-445f-9b28-56726f59c793,Google
 bcc5b88d-1bb0-45e6-9940-2f8b99567b40,grok-imagine-image,grok-imagine-image,1222,2026-01,a1e3ddcf-d3e4-44a5-9e8f-029a69850875,xAI
-ba07faac-d296-472d-8249-9a0b6f78184a,HunyuanImage 3.0 Instruct (Fal),tencent_hunyuanimage-3-0-instruct--fal,1220,2026-01,a4e5bd55-a6cd-4dcf-8d4a-1d9643cd3826,Tencent
-b29f787a-5542-4920-9949-2fb5c3d05fd4,grok-imagine-image-pro,grok-imagine-image-pro,1212,2026-02,a1e3ddcf-d3e4-44a5-9e8f-029a69850875,xAI
+ba07faac-d296-472d-8249-9a0b6f78184a,HunyuanImage 3.0 Instruct (Fal),tencent_hunyuanimage-3-0-instruct--fal,1221,2026-01,a4e5bd55-a6cd-4dcf-8d4a-1d9643cd3826,Tencent
+b29f787a-5542-4920-9949-2fb5c3d05fd4,grok-imagine-image-pro,grok-imagine-image-pro,1211,2026-02,a1e3ddcf-d3e4-44a5-9e8f-029a69850875,xAI
 08f19008-675e-4d70-98b2-49ad3178c1f0,Seedream 4.5,seedream-4-5,1197,2025-12,2354746c-4775-4a06-b64d-0ba4137785b8,ByteDance Seed
 6a398b55-7f36-4039-bbbf-2045ef8ab525,FLUX.2 [max],black_forest_labs_flux-2-max,1196,2025-12,d427ad30-eba3-4945-857a-4eb0ead82e87,Black Forest Labs
 c8a7698c-a595-476d-a56b-8b3ef4f239b7,Wan 2.6 Image,wan_wan-2-6,1191,2025-12,d874d370-74d3-4fa0-ba00-5272f92f946b,Alibaba
@@ -14,13 +14,13 @@ a8202647-0cab-4d53-8929-683b91583a2f,Reve V1 (December),reve_reve-v1--december,1
 ead01c00-8518-4f8d-8033-76fcaef910fd,Nano Banana (Gemini 2.5 Flash Image),google_gemini-2-5-flash,1182,2025-08,faddc6d9-2c14-445f-9b28-56726f59c793,Google
 18874791-11a3-4cb7-bc0e-6ca10138eec7,FLUX.2 [pro],flux_flux-2--pro,1174,2025-11,d427ad30-eba3-4945-857a-4eb0ead82e87,Black Forest Labs
 e2201d15-3e29-48c6-89ba-e63ccf3dde15,FLUX.2 [flex],flux_flux-2--flex,1171,2025-11,d427ad30-eba3-4945-857a-4eb0ead82e87,Black Forest Labs
-3a03722d-32c0-44f3-adde-188c51b639f1,FLUX.2 [klein] 9B,flux_flux-2-klein-9b,1167,2026-01,d427ad30-eba3-4945-857a-4eb0ead82e87,Black Forest Labs
+3a03722d-32c0-44f3-adde-188c51b639f1,FLUX.2 [klein] 9B,flux_flux-2-klein-9b,1166,2026-01,d427ad30-eba3-4945-857a-4eb0ead82e87,Black Forest Labs
 878746c7-f8e0-48c0-941e-d8262608ca1a,Qwen Image Edit Plus 2511,qwen_qwen-image-edit-2511,1160,2025-11,d874d370-74d3-4fa0-ba00-5272f92f946b,Alibaba
-db7a9087-0b50-41f8-ac41-fb48db3aa459,FLUX.2 [dev] Turbo,fal_flux-2-dev-turbo,1154,2025-12,d3f67dc4-ba4d-4103-ba79-ee321ca99b40,Fal
 edba6b24-40ec-47ee-9afd-ddad6135da46,Eigen Image,eigenai_eigen-image,1154,2026-01,db6e00a6-8552-4235-b26f-f89dc2bcba4f,Eigen AI
+db7a9087-0b50-41f8-ac41-fb48db3aa459,FLUX.2 [dev] Turbo,fal_flux-2-dev-turbo,1154,2025-12,d3f67dc4-ba4d-4103-ba79-ee321ca99b40,Fal
 9284721d-5dc9-4eec-ab5a-235aa6fdcc9f,P-Image-Edit,pruna_p-image-edit,1150,2025-11,a98e0396-4ef1-4a39-bb12-b004c7590bee,Pruna AI
 0413f436-9aa3-4f92-aa34-9432841c1830,FLUX.2 [dev] Flash,fal_flux-2-dev-flash,1148,2025-12,d3f67dc4-ba4d-4103-ba79-ee321ca99b40,Fal
-84c2ccfc-80f0-440c-91f5-0efe11afa535,Qwen Image Edit Max 2601,qwen-image-edit-max-2601,1146,2026-01,d874d370-74d3-4fa0-ba00-5272f92f946b,Alibaba
+84c2ccfc-80f0-440c-91f5-0efe11afa535,Qwen Image Edit Max 2601,qwen-image-edit-max-2601,1147,2026-01,d874d370-74d3-4fa0-ba00-5272f92f946b,Alibaba
 2f5ebb1e-6d5f-48b0-95bf-3b590fd45971,GPT Image 1 (high),openai-gpt_gpt-image-1--high,1143,2025-04,e67e56e3-15cd-43db-b679-da4660a69f41,OpenAI
 c64add40-5964-4a33-b25f-26eb1c990f27,Qwen Image Edit Plus 2509,qwen_qwen-image-edit-2509,1138,2025-09,d874d370-74d3-4fa0-ba00-5272f92f946b,Alibaba
 29714890-0638-4648-a1df-3fdc2a4b42fa,Vidu Q2,vidu_vidu_q2,1137,2025-11,e3a5ba75-0127-45b0-8bcc-2864b8dd404d,Vidu

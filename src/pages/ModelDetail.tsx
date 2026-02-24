@@ -93,7 +93,7 @@ export const ModelDetail = () => {
   const [model, setModel] = useState<ModelSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'details' | 'providers'>('providers');
+  const [activeTab, setActiveTab] = useState<'details' | 'providers'>('details');
 
   useEffect(() => {
     if (!id) return;
@@ -133,6 +133,25 @@ export const ModelDetail = () => {
     );
   }
 
+  const isLlm = (model.aa_modality ?? 'llm') === 'llm';
+  const isTts = model.aa_modality === 'text_to_speech';
+  const modalityLabelMap: Record<string, string> = {
+    llm: 'LLM模型',
+    text_to_image: '文生图模型',
+    image_editing: '图像编辑模型',
+    text_to_speech: '语音合成 / TTS模型',
+    text_to_video: '文生视频模型',
+    image_to_video: '图生视频模型',
+  };
+  const modalityLabel = modalityLabelMap[model.aa_modality ?? 'llm'] ?? (model.aa_modality ?? 'LLM模型');
+  const creatorDisplay = model.is_cn_provider
+    ? (model.aa_model_creator_name_cn ?? model.aa_model_creator_name ?? 'N/A')
+    : (model.aa_model_creator_name ?? 'N/A');
+  const hasPricing =
+    model.aa_price_input_usd != null ||
+    model.aa_price_output_usd != null ||
+    model.aa_price_blended_usd != null;
+
   const benchmarks = [
     { name: 'Intelligence Index', desc: '综合智力', value: fmtNum(model.aa_intelligence_index) },
     { name: 'Coding Index', desc: '代码', value: fmtNum(model.aa_coding_index) },
@@ -144,6 +163,34 @@ export const ModelDetail = () => {
     { name: 'Terminal-Bench Hard Benchmark', desc: '命令行', value: fmtPct(model.aa_terminalbench_hard) },
     { name: 'tau2 Bench Telecom Benchmark', desc: '工具调用', value: fmtNum(model.aa_tau2) },
   ].filter(({ value }) => value !== 'N/A');
+
+  const multimodalMetrics: Array<{ name: string; desc: string; value: string }> = (() => {
+    const rows: Array<{ key: keyof ModelSnapshot; name: string; desc: string }> = [{ key: 'aa_elo', name: 'ELO', desc: '综合 ELO评分' }];
+    if (model.aa_modality === 'text_to_image') {
+      rows.push(
+        { key: 'category_style_anime_elo', name: 'Anime', desc: '动漫风评分' },
+        { key: 'category_style_cartoon_illustration_elo', name: 'Cartoon/Illustration', desc: '卡通/插画评分' },
+        { key: 'category_style_general_photorealistic_elo', name: 'General & Photorealistic', desc: '通用 & 写实评分' },
+        { key: 'category_style_graphic_design_digital_rendering_elo', name: 'Graphic Design', desc: '平面设计评分' },
+        { key: 'category_style_traditional_art_elo', name: 'Traditional Art', desc: '传统艺术评分' },
+        { key: 'category_subject_commercial_elo', name: 'Commercial', desc: '商业视觉评分' }
+      );
+    }
+    if (model.aa_modality === 'text_to_video' || model.aa_modality === 'image_to_video') {
+      rows.push(
+        { key: 'category_format_short_prompt_elo', name: 'Short Prompt', desc: '短提示词评分' },
+        { key: 'category_format_long_prompt_elo', name: 'Long Prompt', desc: '长提示词评分' },
+        { key: 'category_format_moving_camera_elo', name: 'Moving Camera', desc: '运镜评分' },
+        { key: 'category_format_multi_scene_elo', name: 'Multi-Scene', desc: '多场景评分' },
+        { key: 'category_style_photorealistic_elo', name: 'Photorealistic', desc: '写实/照片级真实评分' },
+        { key: 'category_style_cartoon_and_anime_elo', name: 'Cartoon & Anime', desc: '卡通/动漫评分' },
+        { key: 'category_style_3d_animation_elo', name: '3D Animation', desc: '3D 动画/CG 风评分' }
+      );
+    }
+    return rows
+      .map((r) => ({ name: r.name, desc: r.desc, value: fmtNum(model[r.key] as number | null | undefined) }))
+      .filter((r) => r.value !== 'N/A');
+  })();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -176,9 +223,9 @@ export const ModelDetail = () => {
               )}
             </div>
             <div className="flex items-center gap-5 text-slate-500 dark:text-slate-400 text-sm flex-wrap">
-              {model.aa_model_creator_name && (
+              {creatorDisplay && (
                 <span className="flex items-center gap-1.5">
-                  <Verified className="w-4 h-4 text-blue-500" /> {model.aa_model_creator_name}
+                  <Verified className="w-4 h-4 text-blue-500" /> {creatorDisplay}
                 </span>
               )}
               {model.aa_context_length && (
@@ -206,10 +253,10 @@ export const ModelDetail = () => {
             <Star className="w-5 h-5 text-primary" /> 点评
           </Link>
           <button
-            onClick={() => setActiveTab('providers')}
+            onClick={() => setActiveTab('details')}
             className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
           >
-            <Rocket className="w-5 h-5" /> 快速接入
+            <Rocket className="w-5 h-5" /> 查看模型
           </button>
         </div>
       </div>
@@ -218,8 +265,8 @@ export const ModelDetail = () => {
       <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
         <nav className="flex gap-10">
           {[
-            { key: 'providers', label: 'API 供应商' },
             { key: 'details', label: '模型详情' },
+            { key: 'providers', label: 'API 供应商' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -241,45 +288,70 @@ export const ModelDetail = () => {
         <div className="lg:col-span-3 space-y-8">
           {activeTab === 'details' ? (
             <>
-              {/* Key speed metrics */}
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2.5">
-                  <Cpu className="w-6 h-6 text-primary" /> 性能指标
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> 首字延迟
-                    </p>
-                    <p className="text-2xl font-black text-primary font-display">{fmtTtft(model.aa_ttft_seconds)}</p>
+              {!isLlm && (
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8">
+                  <h2 className="text-xl font-bold mb-6 flex items-center gap-2.5">
+                    <Cpu className="w-6 h-6 text-primary" /> 模型信息
+                  </h2>
+                  <div className={`grid grid-cols-1 ${isTts ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">厂商</p>
+                      <p className="text-lg font-black text-slate-800 dark:text-slate-100">{creatorDisplay}</p>
+                    </div>
+                    {!isTts && (
+                      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">更新日期</p>
+                        <p className="text-lg font-black text-slate-800 dark:text-slate-100">{model.aa_release_date ?? 'N/A'}</p>
+                      </div>
+                    )}
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">模型类型</p>
+                      <p className="text-lg font-black text-slate-800 dark:text-slate-100">{modalityLabel}</p>
+                    </div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> 吞吐量
-                    </p>
-                    <p className="text-2xl font-black text-primary font-display">{fmtTps(model.aa_tps)}</p>
+                </section>
+              )}
+
+              {isLlm && (
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8">
+                  <h2 className="text-xl font-bold mb-6 flex items-center gap-2.5">
+                    <Cpu className="w-6 h-6 text-primary" /> 性能指标
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> 首字延迟
+                      </p>
+                      <p className="text-2xl font-black text-primary font-display">{fmtTtft(model.aa_ttft_seconds)}</p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" /> 吞吐量
+                      </p>
+                      <p className="text-2xl font-black text-primary font-display">{fmtTps(model.aa_tps)}</p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Terminal className="w-3 h-3" /> 智力指数
+                      </p>
+                      <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-display">
+                        {fmtNum(model.aa_intelligence_index)}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Zap className="w-3 h-3" /> 代码指数
+                      </p>
+                      <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-display">
+                        {fmtNum(model.aa_coding_index)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <Terminal className="w-3 h-3" /> 智力指数
-                    </p>
-                    <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-display">
-                      {fmtNum(model.aa_intelligence_index)}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <Zap className="w-3 h-3" /> 代码指数
-                    </p>
-                    <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-display">
-                      {fmtNum(model.aa_coding_index)}
-                    </p>
-                  </div>
-                </div>
-              </section>
+                </section>
+              )}
 
               {/* Benchmarks table */}
-              {benchmarks.length > 0 && (
+              {isLlm && benchmarks.length > 0 && (
                 <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                   <div className="p-6 border-b border-slate-100 dark:border-slate-800">
                     <h2 className="text-lg font-bold flex items-center gap-2">
@@ -296,6 +368,39 @@ export const ModelDetail = () => {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {benchmarks.map(({ name, desc, value }) => (
+                          <tr key={name}>
+                            <td className="px-8 py-5">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{name}</span>
+                                <span className="text-xs text-slate-400 font-normal mt-0.5">{desc}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5 font-bold text-primary">{value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+
+              {!isLlm && multimodalMetrics.length > 0 && (
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-primary" /> 品类性能指标
+                    </h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-slate-500">
+                        <tr>
+                          <th className="px-8 py-4 font-semibold">指标</th>
+                          <th className="px-8 py-4 font-bold text-primary">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {multimodalMetrics.map(({ name, desc, value }) => (
                           <tr key={name}>
                             <td className="px-8 py-5">
                               <div className="flex flex-col">
@@ -381,34 +486,36 @@ export const ModelDetail = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Pricing */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <h3 className="font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
-              <CreditCard className="w-5 h-5 text-primary" /> 计费明细
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500">输入 (Input)</span>
-                <div className="text-right">
-                  <p className="font-bold text-slate-800 dark:text-white">{fmtCny(model.aa_price_input_usd)} / 1M</p>
-                  <p className="text-[10px] text-slate-400">{fmtUsd(model.aa_price_input_usd)}</p>
+          {hasPricing && (
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <h3 className="font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                <CreditCard className="w-5 h-5 text-primary" /> 计费明细
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">输入 (Input)</span>
+                  <div className="text-right">
+                    <p className="font-bold text-slate-800 dark:text-white">{fmtCny(model.aa_price_input_usd)} / 1M</p>
+                    <p className="text-[10px] text-slate-400">{fmtUsd(model.aa_price_input_usd)}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500">输出 (Output)</span>
-                <div className="text-right">
-                  <p className="font-bold text-slate-800 dark:text-white">{fmtCny(model.aa_price_output_usd)} / 1M</p>
-                  <p className="text-[10px] text-slate-400">{fmtUsd(model.aa_price_output_usd)}</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">输出 (Output)</span>
+                  <div className="text-right">
+                    <p className="font-bold text-slate-800 dark:text-white">{fmtCny(model.aa_price_output_usd)} / 1M</p>
+                    <p className="text-[10px] text-slate-400">{fmtUsd(model.aa_price_output_usd)}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500">混合 (Blended)</span>
-                <div className="text-right">
-                  <p className="font-bold text-emerald-600 dark:text-emerald-400">{fmtCny(model.aa_price_blended_usd)} / 1M</p>
-                  <p className="text-[10px] text-slate-400">{fmtUsd(model.aa_price_blended_usd)}</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">混合 (Blended)</span>
+                  <div className="text-right">
+                    <p className="font-bold text-emerald-600 dark:text-emerald-400">{fmtCny(model.aa_price_blended_usd)} / 1M</p>
+                    <p className="text-[10px] text-slate-400">{fmtUsd(model.aa_price_blended_usd)}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* CTA */}
           <div className="bg-indigo-950 dark:bg-indigo-900/40 text-white p-6 rounded-xl border border-indigo-900/50 shadow-lg">

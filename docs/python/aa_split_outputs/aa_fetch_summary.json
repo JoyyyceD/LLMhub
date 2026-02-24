@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-24T04:05:19.650986+00:00",
+  "generated_at": "2026-02-24T05:02:01.372734+00:00",
   "endpoints": {
     "llm_models": {
       "endpoint": "llms/models",
