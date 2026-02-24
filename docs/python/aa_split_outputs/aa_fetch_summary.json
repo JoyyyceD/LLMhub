@@ -1,0 +1,86 @@
+{
+  "generated_at": "2026-02-24T04:05:19.650986+00:00",
+  "endpoints": {
+    "llm_models": {
+      "endpoint": "llms/models",
+      "count": 407,
+      "error": null
+    },
+    "text_to_image": {
+      "endpoint": "media/text-to-image",
+      "count": 115,
+      "error": null
+    },
+    "image_editing": {
+      "endpoint": "media/image-editing",
+      "count": 49,
+      "error": null
+    },
+    "text_to_speech": {
+      "endpoint": "media/text-to-speech",
+      "count": 62,
+      "error": null
+    },
+    "text_to_video": {
+      "endpoint": "media/text-to-video",
+      "count": 70,
+      "error": null
+    },
+    "image_to_video": {
+      "endpoint": "media/image-to-video",
+      "count": 64,
+      "error": null
+    },
+    "openrouter_models": {
+      "endpoint": "https://openrouter.ai/api/v1/models",
+      "count": 337,
+      "error": null
+    }
+  },
+  "outputs": {
+    "aa_llm_models_raw.csv": {
+      "rows": 407,
+      "cols": 28
+    },
+    "aa_text_to_image_raw.csv": {
+      "rows": 115,
+      "cols": 13
+    },
+    "aa_text_to_image_categories_wide.csv": {
+      "rows": 115,
+      "cols": 13
+    },
+    "aa_image_editing_raw.csv": {
+      "rows": 49,
+      "cols": 7
+    },
+    "aa_text_to_speech_raw.csv": {
+      "rows": 62,
+      "cols": 6
+    },
+    "aa_text_to_video_raw.csv": {
+      "rows": 70,
+      "cols": 14
+    },
+    "aa_text_to_video_categories_wide.csv": {
+      "rows": 70,
+      "cols": 14
+    },
+    "aa_image_to_video_raw.csv": {
+      "rows": 64,
+      "cols": 14
+    },
+    "aa_image_to_video_categories_wide.csv": {
+      "rows": 64,
+      "cols": 14
+    },
+    "aa_llm_models_processed.csv": {
+      "rows": 407,
+      "cols": 25
+    },
+    "aa_llm_models_processed_current.csv": {
+      "rows": 407,
+      "cols": 25
+    }
+  }
+}

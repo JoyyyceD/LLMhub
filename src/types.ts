@@ -5,9 +5,15 @@
 /** Row from the model_snapshots Supabase table */
 export interface ModelSnapshot {
   aa_slug: string;
+  aa_id?: string | null;
   aa_name: string;
+  aa_modality?: 'llm' | 'text_to_image' | 'image_editing' | 'text_to_speech' | 'text_to_video' | 'image_to_video' | string;
+  aa_model_creator_id?: string | null;
   aa_model_creator_name: string | null;
+  aa_model_creator_name_cn?: string | null;
   is_cn_provider: boolean;
+  reasoning_type?: 'Reasoning' | 'Non Reasoning' | 'unknown' | string | null;
+  aa_elo?: number | null;
 
   // Quality benchmarks
   aa_intelligence_index: number | null;
@@ -34,6 +40,19 @@ export interface ModelSnapshot {
   or_context_length: number | null;
   or_architecture_input_modalities: string[] | null;
   aa_release_date: string | null;
+  category_style_anime_elo?: number | null;
+  category_style_cartoon_illustration_elo?: number | null;
+  category_style_general_photorealistic_elo?: number | null;
+  category_style_graphic_design_digital_rendering_elo?: number | null;
+  category_style_traditional_art_elo?: number | null;
+  category_subject_commercial_elo?: number | null;
+  category_format_short_prompt_elo?: number | null;
+  category_format_long_prompt_elo?: number | null;
+  category_format_moving_camera_elo?: number | null;
+  category_format_multi_scene_elo?: number | null;
+  category_style_photorealistic_elo?: number | null;
+  category_style_cartoon_and_anime_elo?: number | null;
+  category_style_3d_animation_elo?: number | null;
 
   // Source flags
   has_aa: boolean;
