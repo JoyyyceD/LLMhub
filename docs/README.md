@@ -8,6 +8,7 @@
 - `docs/product/overview.md`：产品目标、范围与非目标
 - `docs/product/user-flows.md`：用户流程与关键交互
 - `docs/product/frontend-handoff.md`：前端对接规范（字段与边界态）
+- `docs/product/developer-ecosystem-copy.md`：开发者生态页面对外文案包
 - `docs/data/sources.md`：数据源说明（AA + OR）
 - `docs/data/schema.md`：字段映射与核心字段定义
 - `docs/data/data-dictionary.md`：字段字典（类型、单位、缺失策略）
@@ -23,6 +24,7 @@
 - `docs/recommendation/explainability.md`：推荐解释规则
 - `docs/community/ratings-comments.md`：社区评分帖与互动机制
 - `docs/community/data-model.md`：评分评论数据模型与约束
+- `docs/api/quickstart.md`：模型推荐 API 快速上手（5 分钟）
 - `docs/api/contract.md`：API 契约（示例与错误语义）
 - `docs/ops/acceptance.md`：验收与运维指标
 

@@ -9,11 +9,11 @@
 
 ## 2. 推荐接口
 
-### 2.1 `POST /api/recommendations`
+### 2.1 `POST /api/recommendations` 或 `POST /v1/model-recommendation`
 
 用途：根据用户偏好返回推荐结果（最多 4 条，可不足 4）。
 
-请求体：
+请求体（`candidates` 可选；不传则服务端从 Supabase `model_snapshots` 自动加载）：
 
 ```json
 {

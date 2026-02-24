@@ -1,0 +1,39 @@
+{
+  "weights_normalized": {
+    "quality": 0.35,
+    "cost": 0.25,
+    "latency": 0.2,
+    "reliability": 0.1,
+    "integration_fit": 0.1
+  },
+  "ranking": [
+    {
+      "name": "provider-x/model-a",
+      "provider": "provider-x",
+      "weighted_score_0_10": 8.24,
+      "dimension_scores_0_10": {
+        "quality": 8.9,
+        "cost": 7.2,
+        "latency": 8.0,
+        "reliability": 8.1,
+        "integration_fit": 8.3
+      },
+      "estimated_cost_per_1k_usd": 0.00543
+    }
+  ],
+  "rejected": [
+    {
+      "name": "provider-y/model-b",
+      "reasons": ["context_window_too_small"]
+    }
+  ],
+  "assumptions": [
+    "Latency score based on p95 target and model latency estimates."
+  ],
+  "source": {
+    "source": "supabase:model_snapshots",
+    "snapshot_date": "2026-02-24",
+    "total_rows": 196,
+    "filtered_rows": 74
+  }
+}

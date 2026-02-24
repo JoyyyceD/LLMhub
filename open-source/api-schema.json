@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/model-recommendation-v1.schema.json",
+  "title": "Model Recommendation API v1",
+  "type": "object",
+  "required": ["scenario"],
+  "properties": {
+    "scenario": {
+      "type": "object",
+      "required": ["task_type"],
+      "properties": {
+        "task_type": { "type": "string" },
+        "context_window_min_tokens": { "type": "integer", "minimum": 1 },
+        "p95_latency_ms_target": { "type": "number", "minimum": 1 },
+        "max_cost_per_1k_tokens_usd": { "type": "number", "minimum": 0 },
+        "must_support_tools": { "type": "boolean" },
+        "must_support_json_schema": { "type": "boolean" },
+        "must_support_multimodal": { "type": "boolean" },
+        "input_tokens_p50": { "type": "number", "minimum": 0 },
+        "output_tokens_p50": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "weights": {
+      "type": "object",
+      "properties": {
+        "quality": { "type": "number", "minimum": 0 },
+        "cost": { "type": "number", "minimum": 0 },
+        "latency": { "type": "number", "minimum": 0 },
+        "reliability": { "type": "number", "minimum": 0 },
+        "integration_fit": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "performance", "pricing", "limits", "capabilities"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "provider": { "type": "string" },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "tools": { "type": "boolean" },
+              "json_schema": { "type": "boolean" },
+              "multimodal": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "context_window_tokens": { "type": "integer", "minimum": 1 }
+            },
+            "additionalProperties": true
+          },
+          "pricing": {
+            "type": "object",
+            "properties": {
+              "input_per_1k_usd": { "type": "number", "minimum": 0 },
+              "output_per_1k_usd": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": true
+          },
+          "performance": {
+            "type": "object",
+            "properties": {
+              "quality_0_10": { "type": "number", "minimum": 0, "maximum": 10 },
+              "p95_latency_ms": { "type": "number", "minimum": 1 },
+              "reliability_0_10": { "type": "number", "minimum": 0, "maximum": 10 }
+            },
+            "additionalProperties": true
+          },
+          "integration_fit_0_10": { "type": "number", "minimum": 0, "maximum": 10 }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

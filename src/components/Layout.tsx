@@ -25,6 +25,7 @@ export const Header = () => {
     { name: '性能榜单', path: '/leaderboard' },
     { name: '性能对比', path: '/compare' },
     { name: '社区', path: '/community' },
+    { name: '开发者生态', path: '/ecosystem' },
     { name: '关于我们', path: '/about' },
   ];
 
@@ -130,6 +131,7 @@ export const Footer = () => {
               <li><Link to="/resources#benchmarks" className="text-sm text-slate-600 hover:text-primary transition-colors">行业评测基准</Link></li>
               <li><Link to="/resources#status" className="text-sm text-slate-600 hover:text-primary transition-colors">厂商 API 状态</Link></li>
               <li><Link to="/resources#docs" className="text-sm text-slate-600 hover:text-primary transition-colors">接入文档指南</Link></li>
+              <li><Link to="/ecosystem" className="text-sm text-slate-600 hover:text-primary transition-colors">开发者生态入口</Link></li>
             </ul>
           </div>
           <div className="hidden md:block">

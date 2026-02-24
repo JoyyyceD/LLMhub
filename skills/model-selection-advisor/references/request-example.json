@@ -1,0 +1,92 @@
+{
+  "scenario": {
+    "task_type": "rag_qa",
+    "success_criteria": [
+      "factual_accuracy",
+      "grounded_citations"
+    ],
+    "context_window_min_tokens": 64000,
+    "p95_latency_ms_target": 2200,
+    "must_support_tools": true,
+    "must_support_json_schema": true,
+    "must_support_multimodal": false,
+    "max_cost_per_1k_tokens_usd": 0.018,
+    "input_tokens_p50": 2800,
+    "output_tokens_p50": 600
+  },
+  "weights": {
+    "quality": 40,
+    "cost": 20,
+    "latency": 20,
+    "reliability": 10,
+    "integration_fit": 10
+  },
+  "candidates": [
+    {
+      "name": "provider-a/model-pro",
+      "provider": "provider-a",
+      "capabilities": {
+        "tools": true,
+        "json_schema": true,
+        "multimodal": false
+      },
+      "limits": {
+        "context_window_tokens": 128000
+      },
+      "pricing": {
+        "input_per_1k_usd": 0.0045,
+        "output_per_1k_usd": 0.0105
+      },
+      "performance": {
+        "quality_0_10": 8.9,
+        "p95_latency_ms": 1800,
+        "reliability_0_10": 8.4
+      },
+      "integration_fit_0_10": 8.1
+    },
+    {
+      "name": "provider-b/model-fast",
+      "provider": "provider-b",
+      "capabilities": {
+        "tools": true,
+        "json_schema": true,
+        "multimodal": false
+      },
+      "limits": {
+        "context_window_tokens": 64000
+      },
+      "pricing": {
+        "input_per_1k_usd": 0.002,
+        "output_per_1k_usd": 0.004
+      },
+      "performance": {
+        "quality_0_10": 7.9,
+        "p95_latency_ms": 1200,
+        "reliability_0_10": 7.8
+      },
+      "integration_fit_0_10": 7.5
+    },
+    {
+      "name": "provider-c/model-legacy",
+      "provider": "provider-c",
+      "capabilities": {
+        "tools": false,
+        "json_schema": false,
+        "multimodal": false
+      },
+      "limits": {
+        "context_window_tokens": 32000
+      },
+      "pricing": {
+        "input_per_1k_usd": 0.0012,
+        "output_per_1k_usd": 0.0024
+      },
+      "performance": {
+        "quality_0_10": 6.8,
+        "p95_latency_ms": 1000,
+        "reliability_0_10": 7.1
+      },
+      "integration_fit_0_10": 6.5
+    }
+  ]
+}

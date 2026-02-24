@@ -1,0 +1,19 @@
+{
+  "scenario": {
+    "task_type": "rag_qa",
+    "context_window_min_tokens": 64000,
+    "p95_latency_ms_target": 2000,
+    "max_cost_per_1k_tokens_usd": 0.02,
+    "must_support_tools": true,
+    "must_support_json_schema": true,
+    "input_tokens_p50": 2500,
+    "output_tokens_p50": 600
+  },
+  "weights": {
+    "quality": 35,
+    "cost": 25,
+    "latency": 20,
+    "reliability": 10,
+    "integration_fit": 10
+  }
+}

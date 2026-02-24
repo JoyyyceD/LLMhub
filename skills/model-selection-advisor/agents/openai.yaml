@@ -1,0 +1,4 @@
+interface:
+  display_name: "Model Selection Advisor"
+  short_description: "Constraint-driven LLM selection with explicit tradeoffs."
+  default_prompt: "Given my constraints, rank top model options with risks, assumptions, and an A/B validation plan."
