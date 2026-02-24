@@ -30,6 +30,7 @@ import {
   SUB_SCENARIO_LABELS,
   SCENARIO_SUB_SCENARIOS,
 } from '../lib/qualityConfig';
+import { ProviderLogo } from '../components/ProviderLogo';
 import type {
   ModelSnapshot,
   ScenarioKey,
@@ -224,7 +225,7 @@ export const Home = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* ── Hero & Filters ─────────────────────────────────────────────── */}
-      <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800 p-10 mb-10">
+      <section className="bg-white rounded-3xl border border-slate-200 p-10 mb-10">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
             为您的业务寻找最强 LLM
@@ -256,7 +257,7 @@ export const Home = () => {
 
         {/* 1. Scenario */}
         <div className="mb-12">
-          <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
+          <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-6 flex items-center gap-2">
             <Star className="w-4 h-4" /> 1. 主场景选择
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -266,16 +267,16 @@ export const Home = () => {
                 <button
                   key={id}
                   onClick={() => setScenario(id)}
-                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all group h-32 ${
+                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all group h-32 ${
                     scenario === id
-                      ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/10'
-                      : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/30'
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-slate-200 bg-white hover:border-primary/30'
                   }`}
                 >
                   <Icon className={`w-10 h-10 mb-3 transition-colors ${
                     scenario === id ? 'text-primary' : 'text-slate-300 group-hover:text-primary/50'
                   }`} />
-                  <span className={`text-xs ${scenario === id ? 'font-black' : 'font-bold text-slate-500'}`}>
+                  <span className={`text-xs ${scenario === id ? 'font-semibold' : 'font-medium text-slate-500'}`}>
                     {label}
                   </span>
                 </button>
@@ -288,15 +289,15 @@ export const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* Region */}
           <div>
-            <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-4 flex items-center gap-2">
               <Globe className="w-4 h-4" /> 2. 地区可用性
             </h2>
-            <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+            <div className="flex p-1.5 bg-slate-100 rounded-2xl">
               <button
                 onClick={() => setRegion('cn')}
                 className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
                   region === 'cn'
-                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                    ? 'bg-white text-slate-900'
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
@@ -306,7 +307,7 @@ export const Home = () => {
                 onClick={() => setRegion('global')}
                 className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
                   region === 'global'
-                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                    ? 'bg-white text-slate-900'
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
@@ -317,10 +318,10 @@ export const Home = () => {
 
           {/* Budget profile */}
           <div>
-            <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-4 flex items-center gap-2">
               <CreditCard className="w-4 h-4" /> 3. 预算偏好
             </h2>
-            <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+            <div className="flex p-1.5 bg-slate-100 rounded-2xl">
               {([['best_value', '性价比'], ['cheapest', '省钱'], ['best_quality', '质量优先']] as [ProfileKey, string][]).map(([key, label]) => (
                 <button
                   key={key}
@@ -328,8 +329,8 @@ export const Home = () => {
                   disabled={isMultimodal}
                   className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
                     profile === key
-                      ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                      : 'text-slate-400 hover:text-slate-600'
+                    ? 'bg-white text-slate-900'
+                    : 'text-slate-400 hover:text-slate-600'
                   } ${isMultimodal ? 'opacity-40 cursor-not-allowed hover:text-slate-400' : ''}`}
                 >
                   {label}
@@ -340,10 +341,10 @@ export const Home = () => {
 
           {/* Speed profile */}
           <div>
-            <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-4 flex items-center gap-2">
               <Zap className="w-4 h-4" /> 4. 速度偏好
             </h2>
-            <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+            <div className="flex p-1.5 bg-slate-100 rounded-2xl">
               {([['low_latency', '低延迟'], ['balanced_speed', '均衡'], ['high_throughput', '高吞吐']] as [SpeedProfileKey, string][]).map(([key, label]) => (
                 <button
                   key={key}
@@ -351,8 +352,8 @@ export const Home = () => {
                   disabled={isMultimodal}
                   className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
                     speedProfile === key
-                      ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                      : 'text-slate-400 hover:text-slate-600'
+                    ? 'bg-white text-slate-900'
+                    : 'text-slate-400 hover:text-slate-600'
                   } ${isMultimodal ? 'opacity-40 cursor-not-allowed hover:text-slate-400' : ''}`}
                 >
                   {label}
@@ -367,7 +368,7 @@ export const Home = () => {
       <section className="mb-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4 overflow-x-auto pb-2 w-full md:w-auto">
-            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 whitespace-nowrap uppercase tracking-widest">
+            <span className="text-xs font-semibold text-slate-500 whitespace-nowrap tracking-wide">
               {isMultimodal ? '多模态类别:' : `${currentScenarioLabel}细分:`}
             </span>
             {subScenarios.map((sub) => (
@@ -386,10 +387,10 @@ export const Home = () => {
                     return [...prev, sub];
                   });
                 }}
-                className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-6 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                   selectedSubScenarios.includes(sub)
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary'
+                    ? 'bg-primary text-white'
+                    : 'bg-white border border-slate-200 text-slate-500 hover:border-primary'
                 }`}
               >
                 {SUB_SCENARIO_LABELS[sub] ?? sub}
@@ -399,7 +400,7 @@ export const Home = () => {
           <button
             onClick={handleRecommend}
             disabled={loadingModels || computing}
-            className="w-full md:w-auto bg-gradient-to-r from-primary to-indigo-600 text-white px-12 py-3 rounded-full font-black text-sm shadow-2xl shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 ring-4 ring-primary/10 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full md:w-auto bg-primary text-white px-10 py-3 rounded-2xl font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             {computing
               ? <><Loader2 className="w-5 h-5 animate-spin" /> 计算中...</>
@@ -416,7 +417,7 @@ export const Home = () => {
             if (isMultimodal) return;
             setIsAdvancedExpanded(!isAdvancedExpanded);
           }}
-          className={`flex items-center gap-2 text-xs font-black group uppercase tracking-widest ${isMultimodal ? 'text-slate-400 cursor-not-allowed' : 'text-primary'}`}
+          className={`flex items-center gap-2 text-xs font-semibold group tracking-wide ${isMultimodal ? 'text-slate-400 cursor-not-allowed' : 'text-primary'}`}
         >
           <span className="material-symbols-outlined text-lg">tune</span>
           <span>高级筛选与约束</span>
@@ -432,11 +433,11 @@ export const Home = () => {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-white rounded-3xl border border-slate-200">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">输入类型支持</label>
+                  <label className="block text-[11px] font-semibold text-slate-500 tracking-wide mb-4">输入类型支持</label>
                   <div className="flex items-center gap-6">
-                    <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <input
                         type="checkbox"
                         checked={requirePdfInput}
@@ -445,7 +446,7 @@ export const Home = () => {
                       />
                       PDF/文档
                     </label>
-                    <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <input
                         type="checkbox"
                         checked={requireImageInput}
@@ -457,7 +458,7 @@ export const Home = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  <label className="block text-[11px] font-semibold text-slate-500 tracking-wide mb-3">
                     上下文长度: <span className="text-primary">&gt; {Math.round(minContextTokens / 1024)}K TOKENS</span>
                   </label>
                   <input
@@ -499,7 +500,7 @@ export const Home = () => {
           <div className="flex gap-3">
               <Link
                 to={`/leaderboard?scenario=${encodeURIComponent(scenario)}&subs=${encodeURIComponent(selectedSubScenarios.join(','))}&region=${encodeURIComponent(region)}&profile=${encodeURIComponent(profile)}&speed=${encodeURIComponent(speedProfile)}`}
-                className="flex items-center gap-2 text-sm font-bold px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-primary hover:text-primary transition-all shadow-sm text-slate-600 dark:text-slate-300"
+                className="flex items-center gap-2 text-sm font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl hover:border-primary hover:text-primary transition-colors text-slate-600"
               >
                 <BarChart3 className="w-4 h-4" /> 查看排行榜
               </Link>
@@ -507,7 +508,7 @@ export const Home = () => {
           </div>
 
           {results.length === 0 ? (
-            <div className="text-center py-16 text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+            <div className="text-center py-16 text-slate-400 bg-white rounded-3xl border border-slate-200">
               <AlertCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
               <p className="font-bold">暂无符合条件的模型</p>
               <p className="text-sm mt-1">请尝试调整地区或偏好设置</p>
@@ -520,12 +521,12 @@ export const Home = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.08 }}
-                  className={`relative group bg-white dark:bg-slate-900 border-2 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all ${
+                  className={`relative group bg-white border rounded-2xl overflow-hidden transition-colors ${
                     idx === 0 ? 'border-primary' : 'border-slate-200 dark:border-slate-800'
                   }`}
                 >
                   {idx === 0 && (
-                    <div className="absolute top-0 right-0 bg-primary text-white text-[11px] font-black uppercase px-4 py-1.5 rounded-bl-xl tracking-widest flex items-center gap-1">
+                    <div className="absolute top-0 right-0 bg-primary text-white text-[11px] font-semibold px-4 py-1.5 rounded-bl-xl tracking-wide flex items-center gap-1">
                       <Star className="w-3 h-3 fill-white" /> 最优匹配
                     </div>
                   )}
@@ -533,13 +534,12 @@ export const Home = () => {
                   <div className="p-6">
                     {/* Header */}
                     <div className="flex items-start gap-4 mb-5">
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-lg font-black ${
-                        idx % 2 === 0
-                          ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600'
-                          : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600'
-                      }`}>
-                        {result.model.aa_name.substring(0, 2)}
-                      </div>
+                      <ProviderLogo
+                        name={result.model.aa_model_creator_name ?? result.model.aa_model_creator_name_cn ?? result.model.aa_name}
+                        sizeClassName="w-14 h-14"
+                        textClassName="text-lg font-semibold"
+                        roundedClassName="rounded-xl"
+                      />
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">
                           {result.model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
@@ -550,7 +550,7 @@ export const Home = () => {
                             : (result.model.aa_model_creator_name ?? '—')}
                         </p>
                       </div>
-                      <span className="text-2xl font-black text-primary font-display">#{result.rank}</span>
+                          <span className="text-2xl font-bold text-primary font-display">#{result.rank}</span>
                     </div>
 
                     {/* Key metrics */}
@@ -558,7 +558,7 @@ export const Home = () => {
                       <div className="grid grid-cols-2 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 mb-5">
                         {getMultimodalRows(result.model).slice(0, 8).map((row) => (
                           <div key={row.label}>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">{row.label}</p>
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1">{row.label}</p>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{Math.round(row.value)}</p>
                           </div>
                         ))}
@@ -567,13 +567,13 @@ export const Home = () => {
                       <>
                         <div className="grid grid-cols-3 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 mb-5">
                           <div>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">价格 (混合/1M)</p>
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1">价格 (混合/1M)</p>
                             <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-display">
                               {fmtPrice(result.model.aa_price_blended_usd)}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1 flex items-center gap-1">
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1 flex items-center gap-1">
                               <Clock className="w-2.5 h-2.5" /> TTFT
                             </p>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
@@ -581,7 +581,7 @@ export const Home = () => {
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1 flex items-center gap-1">
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1 flex items-center gap-1">
                               <TrendingUp className="w-2.5 h-2.5" /> TPS
                             </p>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
@@ -592,15 +592,15 @@ export const Home = () => {
 
                         <div className="grid grid-cols-3 gap-3 py-4 border-b border-slate-100 dark:border-slate-800 mb-5">
                           <div>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合评分</p>
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1">综合评分</p>
                             <p className="text-sm font-bold text-primary font-display">{result.scores.total}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">场景质量评分</p>
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1">场景质量评分</p>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{result.scores.quality}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">综合智力评分</p>
+                            <p className="text-[10px] text-slate-400 font-semibold mb-1">综合智力评分</p>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">
                               {result.model.aa_intelligence_index == null ? 'N/A' : result.model.aa_intelligence_index.toFixed(1)}
                             </p>
@@ -611,18 +611,18 @@ export const Home = () => {
 
                     {/* Explanations */}
                     <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-xl border border-primary/10 mb-4">
-                      <div className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-1">
+                      <div className="text-[11px] font-semibold text-primary tracking-wide mb-2 flex items-center gap-1">
                         <Star className="w-3 h-3 fill-primary" /> 推荐理由
                       </div>
                       <ul className="space-y-1.5">
                         {result.explanations.slice(0, 3).map((exp, i) => (
                           <li key={i} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed flex items-start gap-1.5">
-                            <span className="text-primary font-black mt-0.5">·</span> {exp}
+                            <span className="text-primary font-semibold mt-0.5">·</span> {exp}
                           </li>
                         ))}
                         {result.tradeoffs[0] && (
                           <li className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed flex items-start gap-1.5">
-                            <span className="text-primary font-black mt-0.5">·</span> {result.tradeoffs[0]}
+                            <span className="text-primary font-semibold mt-0.5">·</span> {result.tradeoffs[0]}
                           </li>
                         )}
                       </ul>
@@ -632,10 +632,10 @@ export const Home = () => {
                     <div className="flex gap-3">
                       <Link
                         to={`/model/${result.model.aa_slug}`}
-                        className={`w-full flex items-center justify-center font-bold py-2.5 rounded-lg text-sm transition-all ${
+                        className={`w-full flex items-center justify-center font-semibold py-2.5 rounded-lg text-sm transition-colors ${
                           idx === 0
-                            ? 'bg-primary text-white hover:shadow-lg hover:shadow-primary/20'
-                            : 'bg-slate-900 dark:bg-white dark:text-slate-900 text-white hover:opacity-90'
+                            ? 'bg-primary text-white hover:bg-primary/90'
+                            : 'bg-slate-900 text-white hover:opacity-90'
                         }`}
                       >
                         查看详情
@@ -651,7 +651,7 @@ export const Home = () => {
 
       {/* Empty state before first recommendation */}
       {!hasRecommended && !loadingModels && (
-        <section className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 border-dashed">
+        <section className="text-center py-20 bg-white rounded-3xl border border-slate-200 border-dashed">
           <Rocket className="w-12 h-12 mx-auto mb-4 text-slate-200 dark:text-slate-700" />
           <p className="font-bold text-slate-500">选择场景和偏好后，点击「立即推荐最优模型」</p>
           <p className="text-sm text-slate-400 mt-1">基于 {allModels.length} 个真实测评模型计算</p>

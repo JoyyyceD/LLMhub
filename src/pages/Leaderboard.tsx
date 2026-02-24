@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, MessageSquarePlus, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ModelSnapshot } from '../types';
+import { ProviderLogo } from '../components/ProviderLogo';
 
 const USD_TO_CNY = 7.25;
 const PAGE_SIZE = 20;
@@ -247,17 +248,20 @@ export const Leaderboard = () => {
     return `/provider/${encodeURIComponent(model.aa_model_creator_name)}`;
   };
 
+  const providerLogoMatchName = (model: ModelSnapshot): string =>
+    (model.aa_model_creator_name ?? displayCreatorName(model)) as string;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-10 gap-4 flex-wrap">
-        <div className="flex p-1.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex-wrap">
+        <div className="flex p-1.5 bg-white rounded-2xl border border-slate-200 flex-wrap">
           {TAB_ORDER.map((k) => (
             <button
               key={k}
               onClick={() => setTabAndDefaultSort(k)}
-              className={`px-5 py-2.5 text-sm font-black transition-colors rounded-xl ${
+              className={`px-5 py-2.5 text-sm font-semibold transition-colors rounded-xl ${
                 tab === k
-                  ? 'bg-slate-100 dark:bg-slate-700 text-primary shadow-sm'
+                  ? 'bg-slate-100 text-primary'
                   : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -265,12 +269,12 @@ export const Leaderboard = () => {
             </button>
           ))}
         </div>
-        <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="text-xs font-semibold text-slate-500 tracking-wide">
           当前视图: <span className="text-primary">{TAB_LABEL[tab]}</span>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none mb-10 overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 mb-10 overflow-hidden">
         <div className="px-8 py-6 flex flex-wrap items-center justify-between gap-6">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -284,7 +288,7 @@ export const Leaderboard = () => {
           </div>
           <Link
             to={`/review/new?modality=${encodeURIComponent(currentReviewModality)}`}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white border border-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-primary/20"
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white border border-primary rounded-xl text-xs font-semibold tracking-wide hover:bg-primary/90 transition-colors"
           >
             <MessageSquarePlus className="w-4 h-4" /> 发表点评
           </Link>
@@ -296,7 +300,7 @@ export const Leaderboard = () => {
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               {isLlm ? (
-                <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/30 border-y border-slate-100">
+                <tr className="text-[10px] font-semibold tracking-wide text-slate-500 bg-slate-50/50 border-y border-slate-100">
                   <th className="px-6 py-4">#</th>
                   <th className="px-6 py-4">模型名称</th>
                   <th className="px-6 py-4">厂商</th>
@@ -314,7 +318,7 @@ export const Leaderboard = () => {
                   <th className="px-6 py-4 text-center">操作</th>
                 </tr>
               ) : (
-                <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/30 border-y border-slate-100">
+                <tr className="text-[10px] font-semibold tracking-wide text-slate-500 bg-slate-50/50 border-y border-slate-100">
                   <th className="px-6 py-4">#</th>
                   <th className="px-6 py-4">模型名称</th>
                   <th className="px-6 py-4">厂商</th>
@@ -364,26 +368,30 @@ export const Leaderboard = () => {
                   const link = providerLink(m);
                   return (
                     <tr key={`${m.aa_modality || 'llm'}:${m.aa_slug}`} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-5 text-sm font-black text-slate-400">{rank}</td>
+                      <td className="px-6 py-5 text-sm font-semibold text-slate-400">{rank}</td>
                       <td className="px-6 py-5">
-                        <Link to={`/model/${m.aa_slug}`} className="font-black text-sm text-slate-900 group-hover:text-primary transition-colors">
+                        <Link to={`/model/${m.aa_slug}`} className="font-semibold text-sm text-slate-900 group-hover:text-primary transition-colors">
                           {m.aa_name?.replace(/\s*\(.*?\)\s*/g, '')}
                         </Link>
                       </td>
                       <td className="px-6 py-5 text-sm font-bold text-slate-600">
                         {link ? (
-                          <Link to={link} className="hover:text-primary hover:underline transition-colors">
-                            {displayCreatorName(m)}
+                          <Link to={link} className="hover:text-primary transition-colors inline-flex items-center gap-2">
+                            <ProviderLogo name={providerLogoMatchName(m)} sizeClassName="w-6 h-6" textClassName="text-[10px] font-semibold" />
+                            <span className="hover:underline">{displayCreatorName(m)}</span>
                           </Link>
                         ) : (
-                          displayCreatorName(m)
+                          <span className="inline-flex items-center gap-2">
+                            <ProviderLogo name={providerLogoMatchName(m)} sizeClassName="w-6 h-6" textClassName="text-[10px] font-semibold" />
+                            <span>{displayCreatorName(m)}</span>
+                          </span>
                         )}
                       </td>
 
                       {isLlm ? (
                         <>
                           {llmHeaders.map((h) => (
-                            <td key={`${m.aa_slug}:${String(h.key)}`} className="px-6 py-5 text-center text-sm font-black text-slate-600">
+                            <td key={`${m.aa_slug}:${String(h.key)}`} className="px-6 py-5 text-center text-sm font-semibold text-slate-600">
                               {renderLlmValue(m, h)}
                             </td>
                           ))}
@@ -393,9 +401,9 @@ export const Leaderboard = () => {
                           {showMediaReleaseDate ? (
                             <td className="px-6 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? '—'}</td>
                           ) : null}
-                          <td className="px-6 py-5 text-center text-sm font-black text-indigo-600">{fmtNum(m.aa_elo, 0)}</td>
+                          <td className="px-6 py-5 text-center text-sm font-semibold text-indigo-600">{fmtNum(m.aa_elo, 0)}</td>
                           {mediaAdvFields.map((f) => (
-                            <td key={`${m.aa_slug}:${String(f.key)}`} className="px-6 py-5 text-center text-sm font-black text-slate-600">
+                            <td key={`${m.aa_slug}:${String(f.key)}`} className="px-6 py-5 text-center text-sm font-semibold text-slate-600">
                               {fmtNum(m[f.key] as number | null | undefined, 0)}
                             </td>
                           ))}
@@ -403,7 +411,7 @@ export const Leaderboard = () => {
                       )}
 
                       <td className="px-6 py-5 text-center">
-                        <Link to={`/model/${m.aa_slug}`} className="text-primary text-sm font-black hover:underline">
+                        <Link to={`/model/${m.aa_slug}`} className="text-primary text-sm font-semibold hover:underline">
                           详情
                         </Link>
                       </td>
@@ -416,7 +424,7 @@ export const Leaderboard = () => {
         </div>
 
         <div className="px-8 py-6 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <p className="text-[10px] font-semibold text-slate-500 tracking-wide">
             显示第 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} 个（共 {totalCount} 个）
           </p>
           <div className="flex items-center gap-2">
@@ -427,8 +435,8 @@ export const Leaderboard = () => {
               <button
                 key={p}
                 onClick={() => loadPage(p)}
-                className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${
-                  p === page ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-white text-slate-500'
+                className={`w-10 h-10 rounded-xl font-semibold text-sm transition-colors ${
+                  p === page ? 'bg-primary text-white' : 'hover:bg-white text-slate-500'
                 }`}
               >
                 {p}

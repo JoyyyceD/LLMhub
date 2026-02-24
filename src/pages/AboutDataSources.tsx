@@ -16,17 +16,17 @@ export const AboutDataSources = () => {
       </div>
 
       <div className="mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 text-xs font-black uppercase tracking-widest mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 text-xs font-semibold tracking-wide mb-4">
           <Database className="w-3 h-3" /> Data Sources
         </div>
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-3">数据来源与更新机制</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">数据来源与更新机制</h1>
         <p className="text-slate-500">
           本页解释平台的数据来自哪里、如何更新、以及哪些字段不应被过度解读。更新时间基准：2026 年 2 月 24 日。
         </p>
       </div>
 
       <div className="space-y-8">
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
+        <section className="bg-white border border-slate-200 rounded-3xl p-8">
           <h2 className="text-xl font-bold mb-4">1) 数据来源</h2>
           <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
             <li>平台核心评测字段基于公开接口数据做结构化整理。</li>
@@ -35,7 +35,7 @@ export const AboutDataSources = () => {
           </ul>
         </section>
 
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
+        <section className="bg-white border border-slate-200 rounded-3xl p-8">
           <h2 className="text-xl font-bold mb-4">2) 更新与快照</h2>
           <div className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
             <RefreshCw className="w-4 h-4 text-primary mt-0.5" />
@@ -45,7 +45,7 @@ export const AboutDataSources = () => {
           </div>
         </section>
 
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
+        <section className="bg-white border border-slate-200 rounded-3xl p-8">
           <h2 className="text-xl font-bold mb-4">3) 缺失值与 0 值处理原则</h2>
           <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
             <li>当字段缺失或为 0（在该字段语义下表示不可用）时，页面显示 N/A，不参与对比计算。</li>
@@ -54,7 +54,7 @@ export const AboutDataSources = () => {
           </ul>
         </section>
 
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
+        <section className="bg-white border border-slate-200 rounded-3xl p-8">
           <h2 className="text-xl font-bold mb-4">4) 人工智能分析基准测试方法（引用）</h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
             以下是我们当前用到的 Intelligence 相关核心口径的中文整理（基于公开方法页）。其中字段映射为我们的实现口径：`aa_intelligence_index`、`aa_gpqa`、`aa_hle`、`aa_ifbench`、`aa_lcr`、`aa_scicode`、`aa_terminalbench_hard`、`aa_tau2`。
@@ -77,7 +77,7 @@ export const AboutDataSources = () => {
           </p>
           <Link
             to="/about/data-sources/intelligence-benchmarking"
-            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-primary hover:text-primary transition-all text-sm font-bold text-slate-700 dark:text-slate-200"
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-primary hover:text-primary transition-colors text-sm font-semibold text-slate-700"
           >
             查看单独文档（含论文 / GitHub / Dataset 全引用）
           </Link>

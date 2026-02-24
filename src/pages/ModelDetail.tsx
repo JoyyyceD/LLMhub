@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
-  Verified,
   Database,
   Globe,
   Star,
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ModelSnapshot } from '../types';
+import { ProviderLogo } from '../components/ProviderLogo';
 
 const USD_TO_CNY = 7.25;
 
@@ -69,7 +69,6 @@ const STATIC_PROVIDERS = [
   {
     id: 'openrouter',
     name: 'OpenRouter',
-    logo: 'OR',
     pricing: null as null | string,
     features: ['聚合网关', '多模型支持', '按量计费'],
     status: 'stable',
@@ -79,7 +78,6 @@ const STATIC_PROVIDERS = [
   {
     id: 'siliconflow',
     name: 'SiliconFlow (硅基流动)',
-    logo: 'SF',
     pricing: null,
     features: ['高并发', '大陆直连', '赠送额度'],
     status: 'stable',
@@ -147,6 +145,7 @@ export const ModelDetail = () => {
   const creatorDisplay = model.is_cn_provider
     ? (model.aa_model_creator_name_cn ?? model.aa_model_creator_name ?? 'N/A')
     : (model.aa_model_creator_name ?? 'N/A');
+  const creatorLogoMatchName = model.aa_model_creator_name ?? creatorDisplay;
   const providerLink = model.aa_model_creator_name
     ? `/provider/${encodeURIComponent(model.aa_model_creator_name)}`
     : null;
@@ -212,9 +211,12 @@ export const ModelDetail = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-slate-900 flex items-center justify-center shadow-xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
-            <div className="text-white font-bold text-2xl">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '').substring(0, 2)}</div>
-          </div>
+          <ProviderLogo
+            name={creatorLogoMatchName}
+            sizeClassName="w-20 h-20"
+            textClassName="text-2xl font-semibold"
+            roundedClassName="rounded-2xl"
+          />
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -229,7 +231,7 @@ export const ModelDetail = () => {
             <div className="flex items-center gap-5 text-slate-500 dark:text-slate-400 text-sm flex-wrap">
               {creatorDisplay && (
                 <span className="flex items-center gap-1.5">
-                  <Verified className="w-4 h-4 text-blue-500" />
+                  <ProviderLogo name={creatorLogoMatchName} sizeClassName="w-5 h-5" textClassName="text-[9px] font-semibold" />
                   {providerLink ? (
                     <Link to={providerLink} className="hover:text-primary hover:underline transition-colors">
                       {creatorDisplay}
@@ -457,9 +459,12 @@ export const ModelDetail = () => {
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl font-black text-slate-400 group-hover:text-primary transition-colors">
-                          {provider.logo}
-                        </div>
+                        <ProviderLogo
+                          name={provider.name}
+                          sizeClassName="w-14 h-14"
+                          textClassName="text-base font-semibold"
+                          roundedClassName="rounded-xl"
+                        />
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">{provider.name}</h3>

@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Building2, ChevronRight, Home as HomeIcon, Loader2, PackageSearch } from 'lucide-react';
+import { ChevronRight, Home as HomeIcon, Loader2, PackageSearch } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ModelSnapshot } from '../types';
+import { ProviderLogo } from '../components/ProviderLogo';
 
 const MODALITY_LABEL: Record<string, string> = {
   llm: 'LLM模型',
@@ -79,7 +80,12 @@ export const ProviderDetail = () => {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <Building2 className="w-6 h-6 text-primary" />
+            <ProviderLogo
+              name={models[0]?.aa_model_creator_name ?? providerName ?? providerDisplayName}
+              sizeClassName="w-10 h-10"
+              textClassName="text-sm font-semibold"
+              roundedClassName="rounded-xl"
+            />
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white">{providerDisplayName}</h1>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -132,4 +138,3 @@ export const ProviderDetail = () => {
     </div>
   );
 };
-

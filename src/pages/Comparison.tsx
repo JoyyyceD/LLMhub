@@ -296,8 +296,8 @@ export const Comparison = () => {
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 flex gap-8">
       <aside className="w-80 flex-shrink-0 flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar pr-2">
-        <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">模型种类</h3>
+        <div className="border-t border-slate-200 pt-6">
+          <h3 className="text-xs font-semibold tracking-wide text-slate-500 mb-3">模型种类</h3>
           <div className="grid grid-cols-2 gap-2 mb-5">
             {(Object.keys(MODALITY_LABEL) as ComparisonModality[]).map((m) => (
               <button
@@ -306,10 +306,10 @@ export const Comparison = () => {
                   setModality(m);
                   setSearchQuery('');
                 }}
-                className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
                   modality === m
                     ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 {MODALITY_LABEL[m]}
@@ -318,8 +318,8 @@ export const Comparison = () => {
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">选择对比模型</h3>
-            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{selectedSlugs.length}/4</span>
+            <h3 className="text-xs font-semibold tracking-wide text-slate-500">选择对比模型</h3>
+            <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{selectedSlugs.length}/4</span>
           </div>
 
           <div className="relative mb-4">
@@ -356,7 +356,7 @@ export const Comparison = () => {
                     className="rounded border-slate-300 text-primary focus:ring-primary disabled:opacity-30"
                   />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold truncate">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
+                    <span className="text-sm font-semibold truncate">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
                     <span className="text-[10px] text-slate-400 truncate">{model.aa_model_creator_name ?? '—'}</span>
                   </div>
                 </label>
@@ -366,13 +366,13 @@ export const Comparison = () => {
           )}
         </div>
 
-        <div className="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800">
+        <div className="mt-auto pt-6 border-t border-slate-200">
           <button
             onClick={() => {
               setSearchQuery('');
               setSelectedSlugs(allModels.slice(0, 4).map((m) => m.aa_slug));
             }}
-            className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 py-3 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-slate-100 text-slate-600 py-3 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
           >
             <RefreshCcw className="w-4 h-4" />
             重置所有选项
@@ -382,10 +382,10 @@ export const Comparison = () => {
 
       <div className="flex-1 flex flex-col gap-6 min-w-0">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6">
+          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold">模型多维度对比</h2>
+                <h2 className="text-xl font-semibold">模型多维度对比</h2>
                 <p className="text-sm text-slate-500">
                   当前种类：{MODALITY_LABEL[modality]}。按同类指标做鲁棒归一化（0-100），最多对比 4 个模型。
                 </p>
@@ -394,7 +394,7 @@ export const Comparison = () => {
                 {selectedModels.map((model, idx) => (
                   <div key={model.aa_slug} className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[idx] }} />
-                    <span className="text-xs font-bold">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
+                    <span className="text-xs font-semibold">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
                   </div>
                 ))}
               </div>
@@ -432,11 +432,11 @@ export const Comparison = () => {
             </div>
           </div>
 
-          <div className="bg-primary text-white rounded-2xl p-8 flex flex-col justify-between overflow-hidden relative shadow-xl shadow-primary/20">
+          <div className="bg-slate-900 text-white rounded-2xl p-8 flex flex-col justify-between overflow-hidden relative">
             <div className="relative z-10">
               <div className="flex items-center gap-2 opacity-80 mb-2">
                 <TrendingUp className="w-5 h-5" />
-                <span className="text-sm font-medium">对比分析概览</span>
+                <span className="text-sm font-medium text-slate-300">对比分析概览</span>
               </div>
               <h3 className="text-3xl font-bold leading-tight">
                 {selectedModelsSorted.length > 0 ? selectedModelsSorted[0].aa_name.replace(/\s*\(.*?\)\s*/g, '') : 'N/A'}
@@ -446,8 +446,8 @@ export const Comparison = () => {
                 <div className="mt-8 space-y-4">
                   <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10">
                     <div className="flex items-center gap-2 mb-1">
-                      <Info className="w-4 h-4 text-sky-300" />
-                      <span className="text-xs font-bold uppercase tracking-wider">标准化核心数据</span>
+                      <Info className="w-4 h-4 text-slate-300" />
+                      <span className="text-xs font-semibold tracking-wide">标准化核心数据</span>
                     </div>
                     <p className="text-sm opacity-90 leading-relaxed">
                       {visibleMetricDefs.slice(0, 3).map((m, i) => (
@@ -466,30 +466,30 @@ export const Comparison = () => {
               )}
             </div>
             <div className="mt-8 relative z-10">
-              <button className="w-full bg-white text-primary py-3.5 rounded-xl text-sm font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg">
+              <button className="w-full bg-white text-slate-900 py-3.5 rounded-xl text-sm font-semibold transition-colors hover:bg-slate-100">
                 生成详细对比报告
               </button>
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-sky-400/20 rounded-full -ml-24 -mb-24 blur-2xl" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-slate-200/10 rounded-full -ml-24 -mb-24 blur-2xl" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-            <h3 className="font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+            <h3 className="font-semibold flex items-center gap-2 text-slate-800">
               <List className="w-5 h-5 text-primary" />
               对比模型详细数据
             </h3>
           </div>
-          <div className="px-6 py-3 text-xs text-slate-500 border-b border-slate-100 dark:border-slate-800">
+          <div className="px-6 py-3 text-xs text-slate-500 border-b border-slate-100">
             说明：当前按{MODALITY_LABEL[modality]}指标做均一化（0-100），用于同类模型横向对比。
           </div>
 
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[11px] font-black tracking-widest text-slate-500 bg-slate-50 dark:bg-slate-800/50">
+                <tr className="text-[11px] font-semibold tracking-wide text-slate-500 bg-slate-50">
                   <th className="px-6 py-4 min-w-[220px]">模型名称</th>
                   <th className="px-6 py-4">厂商</th>
                   {visibleMetricDefs.map((m) => (
@@ -500,23 +500,23 @@ export const Comparison = () => {
                   ) : null}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {selectedModels.map((model, idx) => (
-                  <tr key={model.aa_slug} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
+                  <tr key={model.aa_slug} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[idx] }} />
                         <div className="flex flex-col">
-                          <Link to={`/model/${model.aa_slug}`} className="font-bold text-sm group-hover:text-primary transition-colors hover:underline">
+                          <Link to={`/model/${model.aa_slug}`} className="font-semibold text-sm group-hover:text-primary transition-colors hover:underline">
                             {model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
                           </Link>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <span className="text-[10px] font-semibold text-slate-400 tracking-wide">
                             {(model.aa_modality ?? 'llm').replaceAll('_', ' ')}
                           </span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <td className="px-6 py-5 text-xs font-medium text-slate-600">
                       {model.aa_model_creator_name ? (
                         <Link to={`/provider/${encodeURIComponent(model.aa_model_creator_name)}`} className="hover:text-primary hover:underline transition-colors">
                           {model.aa_model_creator_name}
@@ -526,7 +526,7 @@ export const Comparison = () => {
                       )}
                     </td>
                     {visibleMetricDefs.map((m) => (
-                      <td key={m.code} className="px-4 py-5 text-center text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <td key={m.code} className="px-4 py-5 text-center text-sm font-semibold text-slate-700">
                         {(() => {
                           const v = normalizedBySlug.get(model.aa_slug)?.[m.key];
                           return v == null ? 'N/A' : Math.round(v);
