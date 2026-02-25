@@ -41,7 +41,7 @@ export const Header = () => {
           <div className="flex items-center gap-4 md:gap-12">
             <Link to="/" className="flex items-center gap-2.5 group">
               <div className="bg-white p-2 rounded-xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                <img src="/favicon.svg" alt="Token Galaxy logo" className="w-6 h-6 scale-[1.3]" />
+                <img src="/favicon.svg" alt="Token Galaxy logo" className="h-[31px] w-auto block" />
               </div>
               <span className="text-lg sm:text-2xl font-black tracking-tighter text-slate-900">Token Galaxy</span>
             </Link>
@@ -185,7 +185,7 @@ export const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-white p-1.5 rounded-lg shadow-lg shadow-primary/15">
-                <img src="/favicon.svg" alt="Token Galaxy logo" className="w-6 h-6 scale-[1.3]" />
+                <img src="/favicon.svg" alt="Token Galaxy logo" className="h-[31px] w-auto block" />
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">Token Galaxy</span>
             </div>
