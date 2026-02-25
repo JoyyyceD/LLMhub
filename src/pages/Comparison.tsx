@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { TrendingUp, List, RefreshCcw, Search, Info, Loader2 } from 'lucide-react';
 import {
   Radar,
@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { buildRobustStats, metricValueForScoring, robustScore } from '../lib/scoring';
+import { useAuth } from '../context/AuthContext';
 import type { ModelSnapshot } from '../types';
 
 type ComparisonModality = 'llm_global' | 'llm_cn' | 'text_to_image' | 'text_to_video' | 'image_to_video';
@@ -119,12 +120,15 @@ const METRIC_DEFS_BY_MODALITY: Record<ComparisonModality, MetricDef[]> = {
 
 export const Comparison = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [allModels, setAllModels] = useState<ModelSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [modality, setModality] = useState<ComparisonModality>('llm_global');
+  const [compareGateError, setCompareGateError] = useState('');
 
   const metricDefs = METRIC_DEFS_BY_MODALITY[modality];
   const showRawTailCol = modality !== 'llm_global' && modality !== 'llm_cn';
@@ -212,6 +216,12 @@ export const Comparison = () => {
   }, [allModels, searchQuery]);
 
   const toggleModel = (slug: string) => {
+    if (!user) {
+      setCompareGateError('更换对比模型需要登录后使用。');
+      navigate('/login');
+      return;
+    }
+    setCompareGateError('');
     setSelectedSlugs((prev) => {
       if (prev.includes(slug)) return prev.filter((s) => s !== slug);
       if (prev.length >= 4) return prev;
@@ -321,6 +331,9 @@ export const Comparison = () => {
             <h3 className="text-xs font-semibold tracking-wide text-slate-500">选择对比模型</h3>
             <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{selectedSlugs.length}/4</span>
           </div>
+          {compareGateError && (
+            <p className="text-[11px] text-amber-600 font-semibold mb-3">{compareGateError}</p>
+          )}
 
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

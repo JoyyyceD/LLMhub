@@ -24,7 +24,7 @@
 不传 `candidates`，服务端会自动从 Supabase `model_snapshots` 加载候选模型。
 
 ```bash
-curl -X POST "https://YOUR_DOMAIN/v1/model-recommendation" \
+curl -X POST "https://www.tokengalaxy.cn/v1/model-recommendation" \
   -H "Content-Type: application/json" \
   -d '{
     "scenario": {

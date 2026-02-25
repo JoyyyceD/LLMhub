@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
   Database,
@@ -23,10 +23,13 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import type { ModelSnapshot } from '../types';
 import { ProviderLogo } from '../components/ProviderLogo';
 
 const USD_TO_CNY = 7.25;
+const ANON_MODEL_DETAIL_VISITED_KEY = 'llmhub_anon_model_detail_visited_slugs';
+const ANON_MODEL_DETAIL_VISIT_LIMIT = 3;
 
 function fmtCny(usd: number | null | undefined): string {
   if (usd == null) return 'N/A';
@@ -88,6 +91,8 @@ const STATIC_PROVIDERS = [
 
 export const ModelDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [model, setModel] = useState<ModelSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -95,6 +100,27 @@ export const ModelDetail = () => {
 
   useEffect(() => {
     if (!id) return;
+
+    if (!user) {
+      let visited: string[] = [];
+      try {
+        const raw = localStorage.getItem(ANON_MODEL_DETAIL_VISITED_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        visited = Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
+      } catch {
+        visited = [];
+      }
+
+      const hasVisitedCurrent = visited.includes(id);
+      if (!hasVisitedCurrent && visited.length >= ANON_MODEL_DETAIL_VISIT_LIMIT) {
+        navigate('/login');
+        return;
+      }
+      if (!hasVisitedCurrent) {
+        localStorage.setItem(ANON_MODEL_DETAIL_VISITED_KEY, JSON.stringify([...visited, id]));
+      }
+    }
+
     setLoading(true);
     supabase
       .from('model_snapshots')
@@ -109,7 +135,7 @@ export const ModelDetail = () => {
         }
         setLoading(false);
       });
-  }, [id]);
+  }, [id, user, navigate]);
 
   if (loading) {
     return (

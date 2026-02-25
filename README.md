@@ -6,7 +6,7 @@
 
 This contains everything you need to run your app locally.
 
-View your app in AI Studio: https://ai.studio/apps/4170b112-291e-47d4-ad25-bb6f5c81a75a
+Production site: https://www.tokengalaxy.cn
 
 ## Run Locally
 

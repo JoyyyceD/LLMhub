@@ -195,7 +195,7 @@ const data = await res.json();`}</pre>
             <pre className="text-xs text-slate-700 p-4 overflow-x-auto">{`import requests
 
 resp = requests.post(
-    "https://YOUR_DOMAIN/v1/model-recommendation",
+    "https://www.tokengalaxy.cn/v1/model-recommendation",
     json={"scenario": {"task_type": "rag_qa"}},
     timeout=30,
 )

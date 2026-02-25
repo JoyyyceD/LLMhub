@@ -122,6 +122,7 @@ export const Leaderboard = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(LLM_SORT_DEFAULT.order);
 
   const isLlm = isLlmTab(tab);
+  const isImageEditingTab = tab === 'image_editing';
   const mediaAdvFields = MEDIA_ADV_FIELDS[tab];
   const showMediaReleaseDate = tab !== 'text_to_speech';
 
@@ -251,6 +252,13 @@ export const Leaderboard = () => {
   const providerLogoMatchName = (model: ModelSnapshot): string =>
     (model.aa_model_creator_name ?? displayCreatorName(model)) as string;
 
+  const modelNameColClass = isImageEditingTab
+    ? 'w-[140px] sm:w-[180px]'
+    : 'w-[180px] sm:w-[240px]';
+  const modelNameCellClass = isImageEditingTab
+    ? 'max-w-[140px] sm:max-w-[180px]'
+    : 'max-w-[180px] sm:max-w-[240px]';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 sm:mb-10 gap-4">
@@ -304,10 +312,14 @@ export const Leaderboard = () => {
               {isLlm ? (
                 <tr className="text-[10px] font-semibold tracking-wide text-slate-500 bg-slate-50/50 border-y border-slate-100">
                   <th className="px-6 py-4">#</th>
-                  <th className="px-6 py-4">模型名称</th>
+                  <th className={`px-6 py-4 whitespace-nowrap ${modelNameColClass}`}>模型名称</th>
                   <th className="px-6 py-4">厂商</th>
                   {llmHeaders.map((h) => (
-                    <th key={h.key} className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort(h.key, h.lowerBetter)}>
+                    <th
+                      key={h.key}
+                      className={`px-6 py-4 text-center cursor-pointer hover:text-primary ${h.key === 'aa_release_date' ? 'whitespace-nowrap' : ''}`}
+                      onClick={() => handleSort(h.key, h.lowerBetter)}
+                    >
                       <div className="flex flex-col items-center justify-center gap-0.5">
                         <div className="flex items-center justify-center gap-1">
                           {h.label}
@@ -322,10 +334,10 @@ export const Leaderboard = () => {
               ) : (
                 <tr className="text-[10px] font-semibold tracking-wide text-slate-500 bg-slate-50/50 border-y border-slate-100">
                   <th className="px-6 py-4">#</th>
-                  <th className="px-6 py-4">模型名称</th>
+                  <th className={`px-6 py-4 whitespace-nowrap ${modelNameColClass}`}>模型名称</th>
                   <th className="px-6 py-4">厂商</th>
                   {showMediaReleaseDate ? (
-                    <th className="px-6 py-4 text-center cursor-pointer hover:text-primary" onClick={() => handleSort('aa_release_date')}>
+                    <th className="px-6 py-4 text-center cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => handleSort('aa_release_date')}>
                       <div className="flex items-center justify-center gap-1">发布日期{sortField === 'aa_release_date' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-40" />}</div>
                     </th>
                   ) : null}
@@ -371,8 +383,11 @@ export const Leaderboard = () => {
                   return (
                     <tr key={`${m.aa_modality || 'llm'}:${m.aa_slug}`} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-5 text-sm font-semibold text-slate-400">{rank}</td>
-                      <td className="px-6 py-5">
-                        <Link to={`/model/${m.aa_slug}`} className="font-semibold text-sm text-slate-900 group-hover:text-primary transition-colors">
+                      <td className={`px-6 py-5 ${modelNameCellClass}`}>
+                        <Link
+                          to={`/model/${m.aa_slug}`}
+                          className="block truncate whitespace-nowrap font-semibold text-sm text-slate-900 group-hover:text-primary transition-colors"
+                        >
                           {m.aa_name?.replace(/\s*\(.*?\)\s*/g, '')}
                         </Link>
                       </td>
@@ -393,7 +408,10 @@ export const Leaderboard = () => {
                       {isLlm ? (
                         <>
                           {llmHeaders.map((h) => (
-                            <td key={`${m.aa_slug}:${String(h.key)}`} className="px-6 py-5 text-center text-sm font-semibold text-slate-600">
+                            <td
+                              key={`${m.aa_slug}:${String(h.key)}`}
+                              className={`px-6 py-5 text-center text-sm font-semibold text-slate-600 ${h.key === 'aa_release_date' ? 'whitespace-nowrap' : ''}`}
+                            >
                               {renderLlmValue(m, h)}
                             </td>
                           ))}
@@ -401,7 +419,7 @@ export const Leaderboard = () => {
                       ) : (
                         <>
                           {showMediaReleaseDate ? (
-                            <td className="px-6 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? '—'}</td>
+                            <td className="px-6 py-5 text-center text-sm font-bold text-slate-500 whitespace-nowrap">{m.aa_release_date ?? '—'}</td>
                           ) : null}
                           <td className="px-6 py-5 text-center text-sm font-semibold text-indigo-600">{fmtNum(m.aa_elo, 0)}</td>
                           {mediaAdvFields.map((f) => (
