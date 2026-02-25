@@ -123,37 +123,69 @@ export async function loadCandidatesFromSupabase(payload) {
   }
 
   const client = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
-  const { data, error } = await client
+  const fullSelect = [
+    "aa_slug",
+    "aa_name",
+    "aa_model_creator_name",
+    "is_cn_provider",
+    "aa_modality",
+    "aa_intelligence_index",
+    "aa_coding_index",
+    "aa_gpqa",
+    "aa_hle",
+    "aa_ifbench",
+    "aa_lcr",
+    "aa_tau2",
+    "aa_ttft_seconds",
+    "aa_tps",
+    "aa_price_input_usd",
+    "aa_price_output_usd",
+    "aa_context_length",
+    "or_context_length",
+    "or_architecture_input_modalities",
+    "has_aa",
+    "has_or",
+    "record_date",
+  ].join(",");
+
+  const fallbackSelect = [
+    "aa_slug",
+    "aa_name",
+    "aa_model_creator_name",
+    "is_cn_provider",
+    "aa_modality",
+    "aa_intelligence_index",
+    "aa_coding_index",
+    "aa_gpqa",
+    "aa_hle",
+    "aa_ifbench",
+    "aa_lcr",
+    "aa_tau2",
+    "aa_ttft_seconds",
+    "aa_tps",
+    "aa_price_input_usd",
+    "aa_price_output_usd",
+    "aa_context_length",
+    "has_aa",
+    "has_or",
+    "record_date",
+  ].join(",");
+
+  let queryResult = await client
     .from("model_snapshots")
-    .select(
-      [
-        "aa_slug",
-        "aa_name",
-        "aa_model_creator_name",
-        "is_cn_provider",
-        "aa_modality",
-        "aa_intelligence_index",
-        "aa_coding_index",
-        "aa_gpqa",
-        "aa_hle",
-        "aa_ifbench",
-        "aa_lcr",
-        "aa_tau2",
-        "aa_ttft_seconds",
-        "aa_tps",
-        "aa_price_input_usd",
-        "aa_price_output_usd",
-        "aa_context_length",
-        "or_context_length",
-        "or_architecture_input_modalities",
-        "has_aa",
-        "has_or",
-        "record_date",
-      ].join(",")
-    )
+    .select(fullSelect)
     .order("record_date", { ascending: false })
     .limit(1000);
 
+  if (queryResult.error && /or_context_length|or_architecture_input_modalities/i.test(queryResult.error.message || "")) {
+    queryResult = await client
+      .from("model_snapshots")
+      .select(fallbackSelect)
+      .order("record_date", { ascending: false })
+      .limit(1000);
+  }
+
+  const { data, error } = queryResult;
   if (error) {
     throw new Error(`Supabase query failed: ${error.message}`);
   }

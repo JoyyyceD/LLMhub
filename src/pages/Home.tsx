@@ -213,6 +213,12 @@ export const Home = () => {
   const contextIndex = Math.max(0, CONTEXT_OPTIONS.indexOf(minContextTokens as (typeof CONTEXT_OPTIONS)[number]));
   const contextThresholdPct = (contextIndex / (CONTEXT_OPTIONS.length - 1)) * 100;
   const isMultimodal = scenario === 'multimodal';
+  const latestDataDate = allModels.reduce<string | null>((latest, model) => {
+    const candidate = model.record_date ?? (model.updated_at ? model.updated_at.split('T')[0] : null);
+    if (!candidate) return latest;
+    if (!latest) return candidate;
+    return candidate > latest ? candidate : latest;
+  }, null);
 
   const getMultimodalRows = (model: ModelSnapshot): Array<{ label: string; value: number }> => {
     const modality = (model.aa_modality ?? 'llm').toString();
@@ -250,7 +256,7 @@ export const Home = () => {
           )}
           {!loadingModels && !fetchError && (
             <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
-              最新更新时间: {new Date().toISOString().split('T')[0]}
+              最新更新时间: {latestDataDate ?? '未知'}
             </p>
           )}
         </div>

@@ -61,6 +61,11 @@ CN_NAME_MAP = {
     "PixVerse": "爱诗PixVerse",
 }
 
+MISSING_COLUMN_PATTERNS = [
+    re.compile(r"Could not find the '([a-zA-Z0-9_]+)' column", re.IGNORECASE),
+    re.compile(r'column "?([a-zA-Z0-9_]+)"? of relation', re.IGNORECASE),
+]
+
 
 def build_session():
     session = requests.Session()
@@ -315,17 +320,74 @@ def upsert_batch(records):
         "Prefer": "resolution=merge-duplicates,return=minimal",
     }
     resp = requests.post(url, headers=headers, json=records, timeout=60)
-    if not resp.ok:
-        print(f"Upsert ERROR {resp.status_code}: {resp.text[:400]}", file=sys.stderr)
-        resp.raise_for_status()
+    return resp
+
+
+def extract_missing_columns(error_text: str):
+    missing = set()
+    if not error_text:
+        return missing
+    for pattern in MISSING_COLUMN_PATTERNS:
+        for match in pattern.findall(error_text):
+            col = (match or "").strip()
+            if col:
+                missing.add(col)
+    return missing
+
+
+def prune_columns(records, ignored_columns):
+    if not ignored_columns:
+        return records
+    return [{k: v for k, v in row.items() if k not in ignored_columns} for row in records]
+
+
+def normalize_record_keys(records):
+    if not records:
+        return records
+    all_keys = set()
+    for row in records:
+        all_keys.update(row.keys())
+    ordered_keys = sorted(all_keys)
+    normalized = []
+    for row in records:
+        normalized.append({k: row.get(k, None) for k in ordered_keys})
+    return normalized
 
 
 def upsert_all(records):
     total = len(records)
+    ignored_columns = set()
     for i in range(0, total, BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
-        print(f"Upserting batch {i // BATCH_SIZE + 1} ({len(batch)} rows)")
-        upsert_batch(batch)
+        batch_num = i // BATCH_SIZE + 1
+        attempt = 0
+
+        while True:
+            attempt += 1
+            batch_payload = prune_columns(batch, ignored_columns)
+            batch_payload = normalize_record_keys(batch_payload)
+            print(f"Upserting batch {batch_num} ({len(batch_payload)} rows), attempt {attempt}")
+            resp = upsert_batch(batch_payload)
+
+            if resp.ok:
+                break
+
+            text = resp.text or ""
+            missing = extract_missing_columns(text)
+            newly_missing = missing - ignored_columns
+            if newly_missing:
+                ignored_columns.update(newly_missing)
+                print(
+                    f"Schema drift detected; dropping missing columns and retrying: {sorted(newly_missing)}",
+                    file=sys.stderr,
+                )
+                continue
+
+            print(f"Upsert ERROR {resp.status_code}: {text[:400]}", file=sys.stderr)
+            resp.raise_for_status()
+
+    if ignored_columns:
+        print(f"Upsert completed with schema fallback. Ignored columns: {sorted(ignored_columns)}")
     print(f"Done. {total} rows upserted.")
 
 
