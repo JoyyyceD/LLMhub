@@ -72,13 +72,15 @@ export function filterCandidates(
 
     const af = input.advanced_filters;
     if (af) {
-      const modalities = parseInputModalities(m.or_architecture_input_modalities);
-      if (af.require_image && !modalities.has('image')) return false;
-      if (af.require_pdf && !modalities.has('file')) return false;
+      const modalities = parseInputModalitiesOrNull(m.or_architecture_input_modalities);
+      // Field missing => pass. Field present but not containing required modality => filter out.
+      if (af.require_image && modalities && !modalities.has('image')) return false;
+      if (af.require_pdf && modalities && !modalities.has('file')) return false;
 
       if (af.min_context_tokens != null) {
-        const ctx = m.or_context_length ?? m.aa_context_length ?? 0;
-        if (!(ctx > af.min_context_tokens)) return false;
+        const ctx = m.or_context_length ?? m.aa_context_length;
+        // Field missing => pass. Field present and lower than threshold => filter out.
+        if (ctx != null && Number.isFinite(ctx) && ctx < af.min_context_tokens) return false;
       }
     }
 
@@ -92,8 +94,8 @@ function getSelectedMultimodalModality(input: RecommendationInput): string | nul
   return MULTIMODAL_SUB_TO_MODALITY[selected] ?? null;
 }
 
-function parseInputModalities(raw: ModelSnapshot['or_architecture_input_modalities']): Set<string> {
-  if (!raw) return new Set();
+function parseInputModalitiesOrNull(raw: ModelSnapshot['or_architecture_input_modalities']): Set<string> | null {
+  if (raw == null) return null;
   if (Array.isArray(raw)) {
     return new Set(raw.map((v) => String(v).toLowerCase()));
   }
@@ -103,11 +105,12 @@ function parseInputModalities(raw: ModelSnapshot['or_architecture_input_modaliti
       if (Array.isArray(parsed)) {
         return new Set(parsed.map((v) => String(v).toLowerCase()));
       }
+      return null;
     } catch {
-      return new Set();
+      return null;
     }
   }
-  return new Set();
+  return null;
 }
 
 function filterBaseCandidates(models: ModelSnapshot[]): ModelSnapshot[] {
