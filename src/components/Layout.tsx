@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Rocket, LogOut, User } from 'lucide-react';
+import { Rocket, LogOut, User, Menu, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,11 @@ export const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,12 +38,12 @@ export const Header = () => {
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div className="flex items-center gap-12">
+          <div className="flex items-center gap-4 md:gap-12">
             <Link to="/" className="flex items-center gap-2.5 group">
               <div className="bg-primary p-2 rounded-xl text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                 <Rocket className="w-6 h-6" />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-slate-900">Token Galaxy</span>
+              <span className="text-lg sm:text-2xl font-black tracking-tighter text-slate-900">Token Galaxy</span>
             </Link>
             <div className="hidden md:flex items-center gap-10">
               {navLinks.map((link) => (
@@ -63,7 +68,7 @@ export const Header = () => {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6">
             {user ? (
               <div className="flex items-center gap-3">
                 <Link
@@ -103,7 +108,70 @@ export const Header = () => {
               </div>
             )}
           </div>
+          <button
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label={mobileMenuOpen ? '关闭菜单' : '打开菜单'}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden pb-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-200/60 space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    'block px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+                    location.pathname === link.path
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  )}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <div className="pt-2 mt-2 border-t border-slate-100 space-y-2">
+                <Link
+                  to="/review/new"
+                  className="block w-full text-center bg-primary text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all"
+                >
+                  写点评
+                </Link>
+                {user ? (
+                  <div className="space-y-2">
+                    <Link
+                      to="/account"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+                    >
+                      <User className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm font-semibold text-slate-700 max-w-[170px] truncate">
+                        {user.user_metadata?.username ?? user.email?.split('@')[0]}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      退出登录
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="block w-full text-center bg-slate-900 text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-all"
+                  >
+                    登录/注册
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -252,14 +252,15 @@ export const Leaderboard = () => {
     (model.aa_model_creator_name ?? displayCreatorName(model)) as string;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-10 gap-4 flex-wrap">
-        <div className="flex p-1.5 bg-white rounded-2xl border border-slate-200 flex-wrap">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 sm:mb-10 gap-4">
+        <div className="w-full sm:w-auto overflow-x-auto custom-scrollbar">
+          <div className="flex p-1.5 bg-white rounded-2xl border border-slate-200 w-max min-w-full sm:min-w-0">
           {TAB_ORDER.map((k) => (
             <button
               key={k}
               onClick={() => setTabAndDefaultSort(k)}
-              className={`px-5 py-2.5 text-sm font-semibold transition-colors rounded-xl ${
+              className={`px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold transition-colors rounded-xl whitespace-nowrap ${
                 tab === k
                   ? 'bg-slate-100 text-primary'
                   : 'text-slate-400 hover:text-slate-600'
@@ -268,6 +269,7 @@ export const Leaderboard = () => {
               {TAB_LABEL[k]}
             </button>
           ))}
+          </div>
         </div>
         <div className="text-xs font-semibold text-slate-500 tracking-wide">
           当前视图: <span className="text-primary">{TAB_LABEL[tab]}</span>
@@ -275,29 +277,29 @@ export const Leaderboard = () => {
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-200 mb-10 overflow-hidden">
-        <div className="px-8 py-6 flex flex-wrap items-center justify-between gap-6">
-          <div className="relative">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="搜索模型名称..."
-              className="pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
+              className="w-full sm:w-auto pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
             />
           </div>
           <Link
             to={`/review/new?modality=${encodeURIComponent(currentReviewModality)}`}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white border border-primary rounded-xl text-xs font-semibold tracking-wide hover:bg-primary/90 transition-colors"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 px-5 py-2.5 bg-primary text-white border border-primary rounded-xl text-xs font-semibold tracking-wide hover:bg-primary/90 transition-colors"
           >
             <MessageSquarePlus className="w-4 h-4" /> 发表点评
           </Link>
         </div>
 
-        {error && <div className="mx-8 mb-4 text-rose-500 text-sm font-medium">{error}</div>}
+        {error && <div className="mx-4 sm:mx-8 mb-4 text-rose-500 text-sm font-medium">{error}</div>}
 
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
+          <table className="w-full text-left border-collapse min-w-[960px]">
             <thead>
               {isLlm ? (
                 <tr className="text-[10px] font-semibold tracking-wide text-slate-500 bg-slate-50/50 border-y border-slate-100">
@@ -423,11 +425,11 @@ export const Leaderboard = () => {
           </table>
         </div>
 
-        <div className="px-8 py-6 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 bg-slate-50/30 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p className="text-[10px] font-semibold text-slate-500 tracking-wide">
             显示第 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} 个（共 {totalCount} 个）
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button onClick={() => loadPage(page - 1)} disabled={page === 1 || loading} className="p-2.5 rounded-xl text-slate-300 disabled:opacity-40">
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -435,7 +437,7 @@ export const Leaderboard = () => {
               <button
                 key={p}
                 onClick={() => loadPage(p)}
-                className={`w-10 h-10 rounded-xl font-semibold text-sm transition-colors ${
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-semibold text-sm transition-colors ${
                   p === page ? 'bg-primary text-white' : 'hover:bg-white text-slate-500'
                 }`}
               >

@@ -223,14 +223,14 @@ export const Home = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* ── Hero & Filters ─────────────────────────────────────────────── */}
-      <section className="bg-white rounded-3xl border border-slate-200 p-10 mb-10">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+      <section className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-10 mb-8 sm:mb-10">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
             为您的业务寻找最强 LLM
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-lg">
+          <p className="text-slate-500 dark:text-slate-400 text-base sm:text-lg">
             基于真实测评数据，按场景、地区和偏好精准匹配最优模型。
           </p>
           {loadingModels && (
@@ -260,20 +260,20 @@ export const Home = () => {
           <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-6 flex items-center gap-2">
             <Star className="w-4 h-4" /> 1. 主场景选择
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
             {SCENARIOS.map(([id, label]) => {
               const Icon = SCENARIO_ICONS[id];
               return (
                 <button
                   key={id}
                   onClick={() => setScenario(id)}
-                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all group h-32 ${
+                  className={`flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border transition-all group h-28 sm:h-32 ${
                     scenario === id
                       ? 'border-primary bg-primary/5 text-primary'
                       : 'border-slate-200 bg-white hover:border-primary/30'
                   }`}
                 >
-                  <Icon className={`w-10 h-10 mb-3 transition-colors ${
+                  <Icon className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 sm:mb-3 transition-colors ${
                     scenario === id ? 'text-primary' : 'text-slate-300 group-hover:text-primary/50'
                   }`} />
                   <span className={`text-xs ${scenario === id ? 'font-semibold' : 'font-medium text-slate-500'}`}>
@@ -292,7 +292,7 @@ export const Home = () => {
             <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-4 flex items-center gap-2">
               <Globe className="w-4 h-4" /> 2. 地区可用性
             </h2>
-            <div className="flex p-1.5 bg-slate-100 rounded-2xl">
+            <div className="flex flex-col sm:flex-row p-1.5 bg-slate-100 rounded-2xl gap-1 sm:gap-0">
               <button
                 onClick={() => setRegion('cn')}
                 className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
@@ -321,7 +321,7 @@ export const Home = () => {
             <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-4 flex items-center gap-2">
               <CreditCard className="w-4 h-4" /> 3. 预算偏好
             </h2>
-            <div className="flex p-1.5 bg-slate-100 rounded-2xl">
+            <div className="flex flex-col sm:flex-row p-1.5 bg-slate-100 rounded-2xl gap-1 sm:gap-0">
               {([['best_value', '性价比'], ['cheapest', '省钱'], ['best_quality', '质量优先']] as [ProfileKey, string][]).map(([key, label]) => (
                 <button
                   key={key}
@@ -344,7 +344,7 @@ export const Home = () => {
             <h2 className="text-xs font-semibold tracking-wide text-slate-500 mb-4 flex items-center gap-2">
               <Zap className="w-4 h-4" /> 4. 速度偏好
             </h2>
-            <div className="flex p-1.5 bg-slate-100 rounded-2xl">
+            <div className="flex flex-col sm:flex-row p-1.5 bg-slate-100 rounded-2xl gap-1 sm:gap-0">
               {([['low_latency', '低延迟'], ['balanced_speed', '均衡'], ['high_throughput', '高吞吐']] as [SpeedProfileKey, string][]).map(([key, label]) => (
                 <button
                   key={key}
@@ -433,10 +433,10 @@ export const Home = () => {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-white rounded-3xl border border-slate-200">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 p-5 sm:p-8 bg-white rounded-3xl border border-slate-200">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-500 tracking-wide mb-4">输入类型支持</label>
-                  <div className="flex items-center gap-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                     <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <input
                         type="checkbox"
@@ -489,7 +489,7 @@ export const Home = () => {
       {/* ── Recommended Models ───────────────────────────────────────────── */}
       {hasRecommended && (
         <section>
-          <div className="flex justify-between items-end mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-6 gap-4">
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">推荐模型</h2>
               <p className="text-slate-500 text-sm mt-1">
@@ -500,7 +500,7 @@ export const Home = () => {
           <div className="flex gap-3">
               <Link
                 to={`/leaderboard?scenario=${encodeURIComponent(scenario)}&subs=${encodeURIComponent(selectedSubScenarios.join(','))}&region=${encodeURIComponent(region)}&profile=${encodeURIComponent(profile)}&speed=${encodeURIComponent(speedProfile)}`}
-                className="flex items-center gap-2 text-sm font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl hover:border-primary hover:text-primary transition-colors text-slate-600"
+                className="w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl hover:border-primary hover:text-primary transition-colors text-slate-600"
               >
                 <BarChart3 className="w-4 h-4" /> 查看排行榜
               </Link>

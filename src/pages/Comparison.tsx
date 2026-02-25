@@ -294,8 +294,8 @@ export const Comparison = () => {
   const colors = ['#137fec', '#10b981', '#8b5cf6', '#f59e0b'];
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-8 flex gap-8">
-      <aside className="w-80 flex-shrink-0 flex flex-col gap-6 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar pr-2">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col xl:flex-row gap-6 xl:gap-8">
+      <aside className="w-full xl:w-80 flex-shrink-0 flex flex-col gap-6 xl:sticky xl:top-24 xl:h-[calc(100vh-120px)] xl:overflow-y-auto custom-scrollbar xl:pr-2">
         <div className="border-t border-slate-200 pt-6">
           <h3 className="text-xs font-semibold tracking-wide text-slate-500 mb-3">模型种类</h3>
           <div className="grid grid-cols-2 gap-2 mb-5">
@@ -382,24 +382,24 @@ export const Comparison = () => {
 
       <div className="flex-1 flex flex-col gap-6 min-w-0">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-6">
-            <div className="flex items-center justify-between">
+          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold">模型多维度对比</h2>
-                <p className="text-sm text-slate-500">
+                <h2 className="text-lg sm:text-xl font-semibold">模型多维度对比</h2>
+                <p className="text-xs sm:text-sm text-slate-500">
                   当前种类：{MODALITY_LABEL[modality]}。按同类指标做鲁棒归一化（0-100），最多对比 4 个模型。
                 </p>
               </div>
-              <div className="flex flex-wrap gap-4 justify-end">
+              <div className="flex flex-wrap gap-2 sm:gap-4 sm:justify-end">
                 {selectedModels.map((model, idx) => (
                   <div key={model.aa_slug} className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[idx] }} />
-                    <span className="text-xs font-semibold">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
+                    <span className="text-[11px] sm:text-xs font-semibold">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="h-[350px] w-full">
+            <div className="h-[300px] sm:h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                   <PolarGrid stroke="#e2e8f0" />
@@ -432,13 +432,13 @@ export const Comparison = () => {
             </div>
           </div>
 
-          <div className="bg-slate-900 text-white rounded-2xl p-8 flex flex-col justify-between overflow-hidden relative">
+          <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-8 flex flex-col justify-between overflow-hidden relative">
             <div className="relative z-10">
               <div className="flex items-center gap-2 opacity-80 mb-2">
                 <TrendingUp className="w-5 h-5" />
                 <span className="text-sm font-medium text-slate-300">对比分析概览</span>
               </div>
-              <h3 className="text-3xl font-bold leading-tight">
+              <h3 className="text-2xl sm:text-3xl font-bold leading-tight">
                 {selectedModelsSorted.length > 0 ? selectedModelsSorted[0].aa_name.replace(/\s*\(.*?\)\s*/g, '') : 'N/A'}
                 <span className="block text-lg font-medium opacity-70 mt-1">在当前选择中综合指数最高</span>
               </h3>
@@ -476,18 +476,18 @@ export const Comparison = () => {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
             <h3 className="font-semibold flex items-center gap-2 text-slate-800">
               <List className="w-5 h-5 text-primary" />
               对比模型详细数据
             </h3>
           </div>
-          <div className="px-6 py-3 text-xs text-slate-500 border-b border-slate-100">
+          <div className="px-4 sm:px-6 py-3 text-xs text-slate-500 border-b border-slate-100">
             说明：当前按{MODALITY_LABEL[modality]}指标做均一化（0-100），用于同类模型横向对比。
           </div>
 
           <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[780px]">
               <thead>
                 <tr className="text-[11px] font-semibold tracking-wide text-slate-500 bg-slate-50">
                   <th className="px-6 py-4 min-w-[220px]">模型名称</th>
