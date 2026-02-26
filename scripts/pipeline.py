@@ -323,6 +323,17 @@ def upsert_batch(records):
     return resp
 
 
+def call_rpc(function_name, payload=None):
+    url = f"{SUPABASE_URL}/rest/v1/rpc/{function_name}"
+    headers = {
+        "apikey": SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SERVICE_ROLE_KEY}",
+        "Content-Type": "application/json",
+    }
+    resp = requests.post(url, headers=headers, json=(payload or {}), timeout=60)
+    return resp
+
+
 def extract_missing_columns(error_text: str):
     missing = set()
     if not error_text:
@@ -422,6 +433,17 @@ def main():
     print(f"Total rows prepared: {len(all_rows)}")
 
     upsert_all(all_rows)
+
+    # Keep product->provider model coverage in sync with latest daily snapshot data.
+    refresh_resp = call_rpc("refresh_product_supported_models")
+    if refresh_resp.ok:
+        print(f"refresh_product_supported_models OK: {refresh_resp.text[:200]}")
+    else:
+        print(
+            f"refresh_product_supported_models ERROR {refresh_resp.status_code}: {refresh_resp.text[:400]}",
+            file=sys.stderr,
+        )
+        refresh_resp.raise_for_status()
 
 
 if __name__ == "__main__":

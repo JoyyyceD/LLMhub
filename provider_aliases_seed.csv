@@ -1,0 +1,70 @@
+provider_canonical,alias_name,alias_source,normalized_alias
+alibaba,Alibaba,aa_model_creator_name,alibaba
+alibaba,Alibaba Cloud,product_vendor,alibabacloud
+alibaba,alibabacloud,manual_seed_normalized_key,alibabacloud
+alibaba,qwen,manual_seed_normalized_key,qwen
+amazon,Amazon,aa_model_creator_name,amazon
+amazon,aws,manual_seed_normalized_key,aws
+amazon,bedrock,manual_seed_normalized_key,bedrock
+anthropic,Anthropic,aa_model_creator_name,anthropic
+baidu,Baidu,aa_model_creator_name,baidu
+baidu,Baidu Cloud,product_vendor,baiducloud
+baidu,baiducloud,manual_seed_normalized_key,baiducloud
+baidu,qianfan,manual_seed_normalized_key,qianfan
+bytedance,bytedance,manual_seed_normalized_key,bytedance
+bytedance,ByteDance Seed,aa_model_creator_name,bytedanceseed
+bytedance,bytedanceseed,manual_seed_normalized_key,bytedanceseed
+bytedance,ByteDance (Volcengine),product_vendor,bytedancevolcengine
+bytedance,doubao,manual_seed_normalized_key,doubao
+bytedance,Volcengine,product_vendor,volcengine
+cline,Cline,product_vendor,cline
+cohere,Cohere,aa_model_creator_name,cohere
+continue,Continue,product_vendor,continue
+cursor,Cursor,product_vendor,cursor
+deepseek,DeepSeek,aa_model_creator_name,deepseek
+fireworks,fireworks,manual_seed_normalized_key,fireworks
+fireworks,Fireworks AI,product_vendor,fireworksai
+fireworks,fireworksai,manual_seed_normalized_key,fireworksai
+github,GitHub,product_vendor,github
+google,gemini,manual_seed_normalized_key,gemini
+google,Google,aa_model_creator_name,google
+groq,Groq,product_vendor,groq
+jetbrains,JetBrains,product_vendor,jetbrains
+meta,Meta,aa_model_creator_name,meta
+microsoft_azure,azure,manual_seed_normalized_key,azure
+microsoft_azure,azureaifoundry,manual_seed_normalized_key,azureaifoundry
+microsoft_azure,Microsoft,product_vendor,microsoft
+microsoft_azure,Microsoft Azure,aa_model_creator_name,microsoftazure
+microsoft_azure,microsoftazure,manual_seed_normalized_key,microsoftazure
+minimax,MiniMax,aa_model_creator_name,minimax
+mistral,Mistral,aa_model_creator_name,mistral
+mistral,Mistral AI,product_vendor,mistralai
+mistral,mistralai,manual_seed_normalized_key,mistralai
+moonshot,Kimi,aa_model_creator_name,kimi
+moonshot,moonshot,manual_seed_normalized_key,moonshot
+moonshot,Moonshot AI,product_vendor,moonshotai
+moonshot,moonshotai,manual_seed_normalized_key,moonshotai
+nvidia,NVIDIA,aa_model_creator_name,nvidia
+openai,OpenAI,aa_model_creator_name,openai
+opencode,OpenCode,product_vendor,opencode
+openrouter,OpenRouter,product_vendor,openrouter
+replit,Replit,product_vendor,replit
+roo_code,Roo Code,product_vendor,roocode
+roo_code,roocode,manual_seed_normalized_key,roocode
+siliconflow,SiliconFlow,product_vendor,siliconflow
+tabnine,Tabnine,product_vendor,tabnine
+tencent,hunyuan,manual_seed_normalized_key,hunyuan
+tencent,tencent,manual_seed_normalized_key,tencent
+tencent,Tencent Cloud,product_vendor,tencentcloud
+tencent,tencentcloud,manual_seed_normalized_key,tencentcloud
+together,together,manual_seed_normalized_key,together
+together,Together AI,product_vendor,togetherai
+together,togetherai,manual_seed_normalized_key,togetherai
+windsurf,Windsurf,product_vendor,windsurf
+xai,xAI,aa_model_creator_name,xai
+z_ai,glm,manual_seed_normalized_key,glm
+z_ai,Z AI,aa_model_creator_name,zai
+z_ai,Z.ai,product_vendor,zai
+z_ai,zai,manual_seed_normalized_key,zai
+z_ai,Z.ai (GLM),product_vendor,zaiglm
+z_ai,zhipu,manual_seed_normalized_key,zhipu

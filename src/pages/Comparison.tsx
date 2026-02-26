@@ -12,7 +12,7 @@ import {
   Tooltip as RechartsTooltip,
 } from 'recharts';
 import { supabase } from '../lib/supabase';
-import { buildRobustStats, metricValueForScoring, robustScore } from '../lib/scoring';
+import { buildRobustStats, metricValueForScoring, robustScore, type RobustStats } from '../lib/scoring';
 import { useAuth } from '../context/AuthContext';
 import type { ModelSnapshot } from '../types';
 
@@ -302,6 +302,12 @@ export const Comparison = () => {
   }, [selectedModels, normalizedBySlug, radarMetricDefs, modality]);
 
   const colors = ['#137fec', '#10b981', '#8b5cf6', '#f59e0b'];
+  const displayCreatorName = (model: ModelSnapshot): string => {
+    if (model.is_cn_provider) {
+      return (model.aa_model_creator_name_cn ?? model.aa_model_creator_name ?? '—') as string;
+    }
+    return (model.aa_model_creator_name ?? '—') as string;
+  };
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col xl:flex-row gap-6 xl:gap-8">
@@ -370,7 +376,7 @@ export const Comparison = () => {
                   />
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-semibold truncate">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</span>
-                    <span className="text-[10px] text-slate-400 truncate">{model.aa_model_creator_name ?? '—'}</span>
+                    <span className="text-[10px] text-slate-400 truncate">{displayCreatorName(model)}</span>
                   </div>
                 </label>
               ))}
@@ -532,7 +538,7 @@ export const Comparison = () => {
                     <td className="px-6 py-5 text-xs font-medium text-slate-600">
                       {model.aa_model_creator_name ? (
                         <Link to={`/provider/${encodeURIComponent(model.aa_model_creator_name)}`} className="hover:text-primary hover:underline transition-colors">
-                          {model.aa_model_creator_name}
+                          {displayCreatorName(model)}
                         </Link>
                       ) : (
                         '—'

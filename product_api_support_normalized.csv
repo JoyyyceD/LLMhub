@@ -1,0 +1,147 @@
+product_vendor,product_name,product_canonical,api_provider_canonical,support_scope,rule_basis,product_url
+Amazon,AWS Bedrock,amazon,amazon,own_all_models,own=all;other>= 2025-08-26,https://docs.aws.amazon.com/bedrock/
+Amazon,AWS Bedrock,amazon,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.aws.amazon.com/bedrock/
+Amazon,AWS Bedrock,amazon,cohere,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.aws.amazon.com/bedrock/
+Amazon,AWS Bedrock,amazon,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.aws.amazon.com/bedrock/
+Amazon,AWS Bedrock,amazon,meta,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.aws.amazon.com/bedrock/
+Amazon,AWS Bedrock,amazon,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.aws.amazon.com/bedrock/
+Anthropic,Anthropic API,anthropic,anthropic,own_all_models,own=all;other>= 2025-08-26,https://docs.anthropic.com/
+Volcengine,Ark API,bytedance,bytedance,own_all_models,own=all;other>= 2025-08-26,https://www.volcengine.com/docs/82379
+Volcengine,Ark Coding Plan,bytedance,bytedance,own_all_models,own=all;other>= 2025-08-26,https://www.volcengine.com/docs/82379/1925115
+Volcengine,Ark Coding Plan,bytedance,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://www.volcengine.com/docs/82379/1925115
+Volcengine,Ark Coding Plan,bytedance,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://www.volcengine.com/docs/82379/1925115
+Volcengine,Ark Coding Plan,bytedance,z_ai,recent_6_months_models,own=all;other>= 2025-08-26,https://www.volcengine.com/docs/82379/1925115
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,cohere,recent_6_months_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,meta,recent_6_months_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,microsoft_azure,own_all_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Microsoft,Azure AI Foundry / Azure OpenAI,microsoft_azure,xai,recent_6_months_models,own=all;other>= 2025-08-26,https://learn.microsoft.com/azure/ai-foundry/
+Anthropic,Claude Code,anthropic,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.claude.com/en/docs/claude-code/bedrock-vertex-proxies
+Anthropic,Claude Code,anthropic,anthropic,own_all_models,own=all;other>= 2025-08-26,https://docs.claude.com/en/docs/claude-code/bedrock-vertex-proxies
+Anthropic,Claude Code,anthropic,google,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.claude.com/en/docs/claude-code/bedrock-vertex-proxies
+Anthropic,Claude Code,anthropic,microsoft_azure,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.claude.com/en/docs/claude-code/bedrock-vertex-proxies
+Cline,Cline,cline,alibaba,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,cline,own_all_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,google,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,openrouter,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cline,Cline,cline,xai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cline.bot/cline-cli/getting-started
+Cohere,Cohere API,cohere,cohere,own_all_models,own=all;other>= 2025-08-26,https://docs.cohere.com/
+Continue,Continue,continue,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Continue,Continue,continue,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Continue,Continue,continue,continue,own_all_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Continue,Continue,continue,microsoft_azure,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Continue,Continue,continue,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Continue,Continue,continue,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Continue,Continue,continue,openrouter,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.continue.dev/customize/model-providers
+Cursor,Cursor,cursor,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cursor.com/advanced/api-keys
+Cursor,Cursor,cursor,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cursor.com/advanced/api-keys
+Cursor,Cursor,cursor,cursor,own_all_models,own=all;other>= 2025-08-26,https://docs.cursor.com/advanced/api-keys
+Cursor,Cursor,cursor,google,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cursor.com/advanced/api-keys
+Cursor,Cursor,cursor,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.cursor.com/advanced/api-keys
+Alibaba Cloud,DashScope API,alibaba,alibaba,own_all_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/getting-started/what-is-model-studio
+Alibaba Cloud,DashScope API,alibaba,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/getting-started/what-is-model-studio
+DeepSeek,DeepSeek API,deepseek,deepseek,own_all_models,own=all;other>= 2025-08-26,https://api-docs.deepseek.com/
+Fireworks AI,Fireworks API,fireworks,alibaba,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.fireworks.ai/
+Fireworks AI,Fireworks API,fireworks,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.fireworks.ai/
+Fireworks AI,Fireworks API,fireworks,fireworks,own_all_models,own=all;other>= 2025-08-26,https://docs.fireworks.ai/
+Fireworks AI,Fireworks API,fireworks,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.fireworks.ai/
+Fireworks AI,Fireworks API,fireworks,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.fireworks.ai/
+Fireworks AI,Fireworks API,fireworks,z_ai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.fireworks.ai/
+Z.ai (GLM),GLM Coding Plan,z_ai,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.bigmodel.cn/cn/coding-plan/overview
+Z.ai (GLM),GLM Coding Plan,z_ai,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.bigmodel.cn/cn/coding-plan/overview
+Z.ai (GLM),GLM Coding Plan,z_ai,z_ai,own_all_models,own=all;other>= 2025-08-26,https://docs.bigmodel.cn/cn/coding-plan/overview
+Google,Gemini API,google,google,own_all_models,own=all;other>= 2025-08-26,https://ai.google.dev/gemini-api/docs
+GitHub,GitHub Copilot,github,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+GitHub,GitHub Copilot,github,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+GitHub,GitHub Copilot,github,github,own_all_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+GitHub,GitHub Copilot,github,google,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+GitHub,GitHub Copilot,github,microsoft_azure,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+GitHub,GitHub Copilot,github,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+GitHub,GitHub Copilot,github,xai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+Groq,Groq API,groq,groq,own_all_models,own=all;other>= 2025-08-26,https://console.groq.com/docs/models
+Groq,Groq API,groq,meta,recent_6_months_models,own=all;other>= 2025-08-26,https://console.groq.com/docs/models
+JetBrains,JetBrains AI Assistant,jetbrains,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://www.jetbrains.com/help/ai-assistant/licensing-and-subscriptions.html
+JetBrains,JetBrains AI Assistant,jetbrains,google,recent_6_months_models,own=all;other>= 2025-08-26,https://www.jetbrains.com/help/ai-assistant/licensing-and-subscriptions.html
+JetBrains,JetBrains AI Assistant,jetbrains,jetbrains,own_all_models,own=all;other>= 2025-08-26,https://www.jetbrains.com/help/ai-assistant/licensing-and-subscriptions.html
+JetBrains,JetBrains AI Assistant,jetbrains,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://www.jetbrains.com/help/ai-assistant/licensing-and-subscriptions.html
+Moonshot AI,Kimi Code,moonshot,moonshot,own_all_models,own=all;other>= 2025-08-26,https://www.kimi.com/code/docs/
+Moonshot AI,Kimi Code,moonshot,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://www.kimi.com/code/docs/
+MiniMax,MiniMax API,minimax,minimax,own_all_models,own=all;other>= 2025-08-26,https://platform.minimaxi.com/docs/guides/quickstart
+MiniMax,MiniMax Coding Plan,minimax,minimax,own_all_models,own=all;other>= 2025-08-26,https://platform.minimaxi.com/docs/coding-plan/intro
+Mistral AI,Mistral API,mistral,mistral,own_all_models,own=all;other>= 2025-08-26,https://docs.mistral.ai/
+Alibaba Cloud,Model Studio Coding Plan,alibaba,alibaba,own_all_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/coding-plan
+Alibaba Cloud,Model Studio Coding Plan,alibaba,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/coding-plan
+Alibaba Cloud,Model Studio Coding Plan,alibaba,minimax,recent_6_months_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/coding-plan
+Alibaba Cloud,Model Studio Coding Plan,alibaba,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/coding-plan
+Alibaba Cloud,Model Studio Coding Plan,alibaba,z_ai,recent_6_months_models,own=all;other>= 2025-08-26,https://help.aliyun.com/zh/model-studio/coding-plan
+Moonshot AI,Moonshot API,moonshot,moonshot,own_all_models,own=all;other>= 2025-08-26,https://platform.moonshot.ai/docs/
+NVIDIA,NVIDIA API Catalog (NIM),nvidia,nvidia,own_all_models,own=all;other>= 2025-08-26,https://docs.api.nvidia.com/nim/docs/overview
+OpenAI,OpenAI API,openai,openai,own_all_models,own=all;other>= 2025-08-26,https://platform.openai.com/docs
+OpenCode,OpenCode,opencode,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,google,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,groq,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,minimax,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,opencode,own_all_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,openrouter,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenCode,OpenCode,opencode,z_ai,recent_6_months_models,own=all;other>= 2025-08-26,https://open-code.ai/en/docs/providers
+OpenRouter,OpenRouter,openrouter,alibaba,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,cohere,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,google,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,meta,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,microsoft_azure,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,minimax,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,nvidia,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,openrouter,own_all_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,xai,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+OpenRouter,OpenRouter,openrouter,z_ai,recent_6_months_models,own=all;other>= 2025-08-26,https://openrouter.ai/providers
+Baidu Cloud,Qianfan API,baidu,baidu,own_all_models,own=all;other>= 2025-08-26,https://cloud.baidu.com/doc/qianfan-api/
+Replit,Replit Agent,replit,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.replit.com/replitai/replit-ai-integrations
+Replit,Replit Agent,replit,google,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.replit.com/replitai/replit-ai-integrations
+Replit,Replit Agent,replit,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.replit.com/replitai/replit-ai-integrations
+Replit,Replit Agent,replit,openrouter,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.replit.com/replitai/replit-ai-integrations
+Replit,Replit Agent,replit,replit,own_all_models,own=all;other>= 2025-08-26,https://docs.replit.com/replitai/replit-ai-integrations
+Roo Code,Roo Code,roo_code,amazon,recent_6_months_models,own=all;other>= 2025-08-26,https://roocode.com/
+Roo Code,Roo Code,roo_code,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://roocode.com/
+Roo Code,Roo Code,roo_code,google,recent_6_months_models,own=all;other>= 2025-08-26,https://roocode.com/
+Roo Code,Roo Code,roo_code,microsoft_azure,recent_6_months_models,own=all;other>= 2025-08-26,https://roocode.com/
+Roo Code,Roo Code,roo_code,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://roocode.com/
+Roo Code,Roo Code,roo_code,openrouter,recent_6_months_models,own=all;other>= 2025-08-26,https://roocode.com/
+Roo Code,Roo Code,roo_code,roo_code,own_all_models,own=all;other>= 2025-08-26,https://roocode.com/
+Tabnine,Tabnine,tabnine,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://www.tabnine.com/pricing/
+Tabnine,Tabnine,tabnine,google,recent_6_months_models,own=all;other>= 2025-08-26,https://www.tabnine.com/pricing/
+Tabnine,Tabnine,tabnine,meta,recent_6_months_models,own=all;other>= 2025-08-26,https://www.tabnine.com/pricing/
+Tabnine,Tabnine,tabnine,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://www.tabnine.com/pricing/
+Tabnine,Tabnine,tabnine,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://www.tabnine.com/pricing/
+Tabnine,Tabnine,tabnine,tabnine,own_all_models,own=all;other>= 2025-08-26,https://www.tabnine.com/pricing/
+Tencent Cloud,Tencent Hunyuan API,tencent,openai,recent_6_months_models,own=all;other>= 2025-08-26,https://cloud.tencent.com/document/product/1729/97730
+Tencent Cloud,Tencent Hunyuan API,tencent,tencent,own_all_models,own=all;other>= 2025-08-26,https://cloud.tencent.com/document/product/1729/97730
+Together AI,Together API,together,alibaba,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.together.ai/
+Together AI,Together API,together,deepseek,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.together.ai/
+Together AI,Together API,together,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.together.ai/
+Together AI,Together API,together,moonshot,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.together.ai/
+Together AI,Together API,together,together,own_all_models,own=all;other>= 2025-08-26,https://docs.together.ai/
+Google,Vertex AI,google,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://cloud.google.com/vertex-ai
+Google,Vertex AI,google,google,own_all_models,own=all;other>= 2025-08-26,https://cloud.google.com/vertex-ai
+Google,Vertex AI,google,meta,recent_6_months_models,own=all;other>= 2025-08-26,https://cloud.google.com/vertex-ai
+Google,Vertex AI,google,mistral,recent_6_months_models,own=all;other>= 2025-08-26,https://cloud.google.com/vertex-ai
+Windsurf,Windsurf,windsurf,anthropic,recent_6_months_models,own=all;other>= 2025-08-26,https://docs.windsurf.com/windsurf/accounts/usage
+Windsurf,Windsurf,windsurf,windsurf,own_all_models,own=all;other>= 2025-08-26,https://docs.windsurf.com/windsurf/accounts/usage
+Z.ai,Z.ai API,z_ai,z_ai,own_all_models,own=all;other>= 2025-08-26,https://docs.z.ai/
+xAI,xAI API,xai,xai,own_all_models,own=all;other>= 2025-08-26,https://docs.x.ai/

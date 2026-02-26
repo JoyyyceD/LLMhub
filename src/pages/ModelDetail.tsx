@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
   Database,
-  Globe,
   Star,
   Rocket,
   BarChart3,
@@ -68,26 +67,114 @@ function fmtCtx(n: number | null | undefined): string {
   return String(n);
 }
 
-const STATIC_PROVIDERS = [
-  {
-    id: 'openrouter',
-    name: 'OpenRouter',
-    pricing: null as null | string,
-    features: ['聚合网关', '多模型支持', '按量计费'],
-    status: 'stable',
-    latency: '~350ms',
-    isOfficial: false,
-  },
-  {
-    id: 'siliconflow',
-    name: 'SiliconFlow (硅基流动)',
-    pricing: null,
-    features: ['高并发', '大陆直连', '赠送额度'],
-    status: 'stable',
-    latency: '~120ms',
-    isOfficial: false,
-  },
+type ProductSupportedModelRow = {
+  product_id: number;
+  product_name: string;
+  product_vendor: string;
+  product_canonical: string | null;
+  api_provider_canonical: string;
+  support_scope: 'own_all_models' | 'recent_6_months_models' | string;
+};
+
+type ProductApiSupportRow = {
+  product_id: number;
+  api_provider_canonical: string;
+};
+
+type CodingProductRow = {
+  id: number;
+  product_url: string | null;
+};
+
+type ProviderAliasRow = {
+  provider_canonical: string;
+};
+
+type ProviderCard = {
+  productId: number;
+  productName: string;
+  productVendor: string;
+  productVendorDisplay: string;
+  productCanonical: string | null;
+  productUrl: string | null;
+  supportedApiCanonicals: string[];
+  supportedApiCount: number;
+  isOfficial: boolean;
+};
+
+type BenchmarkMetricKey =
+  | 'aa_intelligence_index'
+  | 'aa_coding_index'
+  | 'aa_gpqa'
+  | 'aa_hle'
+  | 'aa_ifbench'
+  | 'aa_lcr'
+  | 'aa_scicode'
+  | 'aa_terminalbench_hard'
+  | 'aa_tau2';
+
+const BENCHMARK_METRICS: Array<{ key: BenchmarkMetricKey; name: string; desc: string; fmt: 'num' | 'pct' }> = [
+  { key: 'aa_intelligence_index', name: 'Intelligence Index', desc: '综合智力', fmt: 'num' },
+  { key: 'aa_coding_index', name: 'Coding Index', desc: '代码', fmt: 'num' },
+  { key: 'aa_gpqa', name: 'GQPA Diamond Benchmark', desc: '研究生科学', fmt: 'pct' },
+  { key: 'aa_hle', name: "Humanity's Last Exam Benchmark", desc: '硬逻辑', fmt: 'pct' },
+  { key: 'aa_ifbench', name: 'IFBench Benchmark', desc: '指令遵循', fmt: 'pct' },
+  { key: 'aa_lcr', name: 'LiveCodeBench Benchmark', desc: '长文召回', fmt: 'pct' },
+  { key: 'aa_scicode', name: 'SciCode Benchmark', desc: '科学计算', fmt: 'pct' },
+  { key: 'aa_terminalbench_hard', name: 'Terminal-Bench Hard Benchmark', desc: '命令行', fmt: 'pct' },
+  { key: 'aa_tau2', name: 'tau2 Bench Telecom Benchmark', desc: '工具调用', fmt: 'num' },
 ];
+
+type BenchmarkRankStat = {
+  rank: number;
+  total: number;
+  topPct: number;
+};
+
+const CN_VENDOR_DISPLAY_MAP: Record<string, string> = {
+  'Z.ai': '智谱',
+  'Z.ai (GLM)': '智谱',
+  'Tencent Cloud': '腾讯云',
+  SiliconFlow: '硅基流动',
+  'Baidu Cloud': '百度云',
+  'Alibaba Cloud': '阿里云',
+  MiniMax: 'MiniMax',
+  'Moonshot AI': '月之暗面Kimi',
+  Volcengine: '火山引擎',
+};
+
+const API_PROVIDER_DISPLAY_MAP: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  google: 'Google',
+  amazon: 'Amazon',
+  microsoft_azure: 'Azure',
+  xai: 'xAI',
+  meta: 'Meta',
+  mistral: 'Mistral',
+  cohere: 'Cohere',
+  deepseek: 'DeepSeek',
+  moonshot: 'Moonshot/Kimi',
+  minimax: 'MiniMax',
+  z_ai: 'Z.ai/GLM',
+  alibaba: 'Qwen/Alibaba',
+  bytedance: 'Doubao/ByteDance',
+  nvidia: 'NVIDIA',
+  baidu: 'Baidu',
+  tencent: 'Tencent',
+  openrouter: 'OpenRouter',
+  groq: 'Groq',
+  together: 'Together',
+  fireworks: 'Fireworks',
+};
+
+function normalizeName(value: string | null | undefined): string {
+  return (value ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function displayVendorName(vendor: string): string {
+  return CN_VENDOR_DISPLAY_MAP[vendor] ?? vendor;
+}
 
 export const ModelDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -97,6 +184,10 @@ export const ModelDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'details' | 'providers'>('details');
+  const [providerCards, setProviderCards] = useState<ProviderCard[]>([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+  const [providersError, setProvidersError] = useState('');
+  const [benchmarkRankMap, setBenchmarkRankMap] = useState<Partial<Record<BenchmarkMetricKey, BenchmarkRankStat | null>>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -136,6 +227,171 @@ export const ModelDetail = () => {
         setLoading(false);
       });
   }, [id, user, navigate]);
+
+  useEffect(() => {
+    if (!model?.aa_slug) return;
+
+    setProvidersLoading(true);
+    setProvidersError('');
+
+    const loadProviders = async () => {
+      const creatorName = model.aa_model_creator_name ?? '';
+
+      const { data: creatorAliasData } = await supabase
+        .from('provider_aliases')
+        .select('provider_canonical')
+        .eq('alias_name', creatorName)
+        .limit(1);
+
+      const creatorCanonical = (creatorAliasData?.[0] as ProviderAliasRow | undefined)?.provider_canonical ?? null;
+
+      const { data: rows, error: rowsError } = await supabase
+        .from('product_supported_models')
+        .select('product_id,product_name,product_vendor,product_canonical,api_provider_canonical,support_scope')
+        .eq('model_slug', model.aa_slug);
+
+      if (rowsError) {
+        setProvidersError('加载 API 供应商失败，请稍后重试。');
+        setProviderCards([]);
+        setProvidersLoading(false);
+        return;
+      }
+
+      const supportRows = (rows ?? []) as ProductSupportedModelRow[];
+      if (!supportRows.length) {
+        setProviderCards([]);
+        setProvidersLoading(false);
+        return;
+      }
+
+      const productIds = Array.from(new Set(supportRows.map((r) => Number(r.product_id)))).filter((id) => Number.isFinite(id));
+
+      const [{ data: productApiRows }, { data: productRows }] = await Promise.all([
+        supabase
+          .from('product_api_support')
+          .select('product_id,api_provider_canonical')
+          .in('product_id', productIds),
+        supabase
+          .from('coding_products')
+          .select('id,product_url')
+          .in('id', productIds),
+      ]);
+
+      const productApiSupportRows = (productApiRows ?? []) as ProductApiSupportRow[];
+      const productMetaRows = (productRows ?? []) as CodingProductRow[];
+      const productUrlMap = new Map<number, string | null>(
+        productMetaRows.map((r) => [r.id, r.product_url ?? null])
+      );
+      const productApiMap = new Map<number, Set<string>>();
+      productApiSupportRows.forEach((r) => {
+        const existing = productApiMap.get(r.product_id) ?? new Set<string>();
+        existing.add(r.api_provider_canonical);
+        productApiMap.set(r.product_id, existing);
+      });
+
+      const grouped = new Map<number, ProductSupportedModelRow[]>();
+      supportRows.forEach((r) => {
+        const arr = grouped.get(r.product_id) ?? [];
+        arr.push(r);
+        grouped.set(r.product_id, arr);
+      });
+
+      const cards: ProviderCard[] = Array.from(grouped.entries()).map(([productId, productRowsForModel]) => {
+        const first = productRowsForModel[0];
+        const supportedApiSet = productApiMap.get(productId) ?? new Set<string>();
+        const supportedApiCanonicals = Array.from(supportedApiSet).sort((a, b) => a.localeCompare(b));
+        const fallbackOfficialByName =
+          normalizeName(first.product_vendor) === normalizeName(model.aa_model_creator_name);
+        const isOfficial = creatorCanonical
+          ? first.product_canonical === creatorCanonical
+          : fallbackOfficialByName;
+
+        return {
+          productId,
+          productName: first.product_name,
+          productVendor: first.product_vendor,
+          productVendorDisplay: displayVendorName(first.product_vendor),
+          productCanonical: first.product_canonical,
+          productUrl: productUrlMap.get(productId) ?? null,
+          supportedApiCanonicals,
+          supportedApiCount: supportedApiCanonicals.length,
+          isOfficial,
+        };
+      });
+
+      const filteredCards = cards.filter((c) => (c.productCanonical ?? '') !== 'siliconflow' && normalizeName(c.productVendor) !== normalizeName('SiliconFlow'));
+
+      filteredCards.sort((a, b) => {
+        if (a.isOfficial !== b.isOfficial) return a.isOfficial ? -1 : 1;
+        return a.productName.localeCompare(b.productName, 'zh-CN');
+      });
+
+      setProviderCards(filteredCards);
+      setProvidersLoading(false);
+    };
+
+    loadProviders().catch(() => {
+      setProvidersError('加载 API 供应商失败，请稍后重试。');
+      setProviderCards([]);
+      setProvidersLoading(false);
+    });
+  }, [model?.aa_slug, model?.aa_model_creator_name]);
+
+  useEffect(() => {
+    if (!model || (model.aa_modality ?? 'llm') !== 'llm') {
+      setBenchmarkRankMap({});
+      return;
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+    const cutoff = cutoffDate.toISOString().slice(0, 10);
+
+    const metricKeys = BENCHMARK_METRICS.map((m) => m.key);
+    const selectCols = metricKeys.join(',');
+
+    supabase
+      .from('model_snapshots')
+      .select(selectCols)
+      .eq('aa_modality', 'llm')
+      .gte('aa_release_date', cutoff)
+      .then(({ data, error: queryError }) => {
+        if (queryError || !data) {
+          setBenchmarkRankMap({});
+          return;
+        }
+
+        const rows = data as Array<Partial<Record<BenchmarkMetricKey, number | null>>>;
+        const next: Partial<Record<BenchmarkMetricKey, BenchmarkRankStat | null>> = {};
+
+        metricKeys.forEach((key) => {
+          const current = model[key] as number | null | undefined;
+          if (current == null) {
+            next[key] = null;
+            return;
+          }
+
+          const values = rows
+            .map((r) => r[key])
+            .filter((v): v is number => typeof v === 'number');
+
+          if (!values.length) {
+            next[key] = null;
+            return;
+          }
+
+          const rank = values.filter((v) => v > current).length + 1;
+          const total = values.length;
+          next[key] = {
+            rank,
+            total,
+            topPct: (rank / total) * 100,
+          };
+        });
+
+        setBenchmarkRankMap(next);
+      });
+  }, [model]);
 
   if (loading) {
     return (
@@ -181,17 +437,16 @@ export const ModelDetail = () => {
     model.aa_price_output_usd != null ||
     model.aa_price_blended_usd != null;
 
-  const benchmarks = [
-    { name: 'Intelligence Index', desc: '综合智力', value: fmtNum(model.aa_intelligence_index) },
-    { name: 'Coding Index', desc: '代码', value: fmtNum(model.aa_coding_index) },
-    { name: 'GQPA Diamond Benchmark', desc: '研究生科学', value: fmtPct(model.aa_gpqa) },
-    { name: "Humanity's Last Exam Benchmark", desc: '硬逻辑', value: fmtPct(model.aa_hle) },
-    { name: 'IFBench Benchmark', desc: '指令遵循', value: fmtPct(model.aa_ifbench) },
-    { name: 'LiveCodeBench Benchmark', desc: '长文召回', value: fmtPct(model.aa_lcr) },
-    { name: 'SciCode Benchmark', desc: '科学计算', value: fmtPct(model.aa_scicode) },
-    { name: 'Terminal-Bench Hard Benchmark', desc: '命令行', value: fmtPct(model.aa_terminalbench_hard) },
-    { name: 'tau2 Bench Telecom Benchmark', desc: '工具调用', value: fmtNum(model.aa_tau2) },
-  ].filter(({ value }) => value !== 'N/A');
+  const benchmarks = BENCHMARK_METRICS
+    .map(({ key, name, desc, fmt }) => {
+      const raw = model[key] as number | null | undefined;
+      const value = fmt === 'pct' ? fmtPct(raw) : fmtNum(raw);
+      const rankStat = benchmarkRankMap[key];
+      const rankDisplay = rankStat ? `${rankStat.rank} / ${rankStat.total}` : 'N/A';
+      const topPctDisplay = rankStat ? `前${rankStat.topPct.toFixed(1)}%` : '';
+      return { key, name, desc, value, rankDisplay, topPctDisplay };
+    })
+    .filter(({ value }) => value !== 'N/A');
 
   const multimodalMetrics: Array<{ name: string; desc: string; value: string }> = (() => {
     const rows: Array<{ key: keyof ModelSnapshot; name: string; desc: string }> = [{ key: 'aa_elo', name: 'ELO', desc: '综合 ELO评分' }];
@@ -272,9 +527,6 @@ export const ModelDetail = () => {
                   <Database className="w-4 h-4" /> {fmtCtx(model.aa_context_length)} 上下文
                 </span>
               )}
-              <span className="flex items-center gap-1.5">
-                <Globe className="w-4 h-4" /> {model.has_or ? 'OpenRouter 可用' : 'AA 数据'}
-              </span>
               {model.aa_release_date && (
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" /> {model.aa_release_date}
@@ -381,7 +633,7 @@ export const ModelDetail = () => {
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                         <Terminal className="w-3 h-3" /> 智力指数
                       </p>
-                      <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-display">
+                      <p className="text-2xl font-black text-primary font-display">
                         {fmtNum(model.aa_intelligence_index)}
                       </p>
                     </div>
@@ -389,7 +641,7 @@ export const ModelDetail = () => {
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                         <Zap className="w-3 h-3" /> 代码指数
                       </p>
-                      <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-display">
+                      <p className="text-2xl font-black text-primary font-display">
                         {fmtNum(model.aa_coding_index)}
                       </p>
                     </div>
@@ -411,10 +663,14 @@ export const ModelDetail = () => {
                         <tr>
                           <th className="px-8 py-4 font-semibold">评估基准</th>
                           <th className="px-8 py-4 font-bold text-primary">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</th>
+                          <th className="px-8 py-4 font-semibold">
+                            <div>排名</div>
+                            <div className="text-[10px] font-normal text-slate-400 dark:text-slate-500">仅在近半年发布的该基准有值的 LLM 中计算</div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {benchmarks.map(({ name, desc, value }) => (
+                        {benchmarks.map(({ key, name, desc, value, rankDisplay, topPctDisplay }) => (
                           <tr key={name}>
                             <td className="px-8 py-5">
                               <div className="flex flex-col">
@@ -423,6 +679,12 @@ export const ModelDetail = () => {
                               </div>
                             </td>
                             <td className="px-8 py-5 font-bold text-primary">{value}</td>
+                            <td className="px-8 py-5 font-bold text-slate-700 dark:text-slate-200" data-benchmark-key={key}>
+                              <div>{rankDisplay}</div>
+                              {topPctDisplay ? (
+                                <div className="text-xs font-semibold text-slate-400 dark:text-slate-500">{topPctDisplay}</div>
+                              ) : null}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -471,14 +733,26 @@ export const ModelDetail = () => {
                   <Network className="w-6 h-6 text-primary" /> 可用 API 供应商
                 </h2>
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  示例供应商（详情请前往各平台确认）
+                  实时数据（原厂优先）
                 </span>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
-                {STATIC_PROVIDERS.map((provider) => (
+                {providersLoading && (
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center text-slate-500 dark:text-slate-400">
+                    正在加载供应商列表...
+                  </div>
+                )}
+
+                {!providersLoading && providersError && (
+                  <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl p-6 text-rose-700 dark:text-rose-300 text-sm">
+                    {providersError}
+                  </div>
+                )}
+
+                {!providersLoading && !providersError && providerCards.map((provider) => (
                   <motion.div
-                    key={provider.id}
+                    key={provider.productId}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:shadow-lg transition-all group"
@@ -486,49 +760,64 @@ export const ModelDetail = () => {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div className="flex items-center gap-5">
                         <ProviderLogo
-                          name={provider.name}
+                          name={provider.productVendor}
                           sizeClassName="w-14 h-14"
                           textClassName="text-base font-semibold"
                           roundedClassName="rounded-xl"
                         />
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{provider.name}</h3>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{provider.productVendorDisplay}</h3>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{provider.productName}</span>
                             {provider.isOfficial && (
                               <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded uppercase tracking-widest">官方</span>
                             )}
                           </div>
                           <div className="flex flex-wrap gap-3">
-                            {provider.features.map((f) => (
-                              <span key={f} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                <Zap className="w-3 h-3 text-amber-400" /> {f}
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                              <Zap className="w-3 h-3 text-amber-400" /> 支持 API: {provider.supportedApiCount}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                              <Zap className="w-3 h-3 text-amber-400" /> 覆盖
+                            </span>
+                            {provider.supportedApiCanonicals.slice(0, 4).map((api) => (
+                              <span key={`${provider.productId}_${api}`} className="text-[10px] font-bold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded px-2 py-0.5">
+                                {API_PROVIDER_DISPLAY_MAP[api] ?? api}
                               </span>
                             ))}
+                            {provider.supportedApiCanonicals.length > 4 && (
+                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded px-2 py-0.5">
+                                +{provider.supportedApiCanonicals.length - 4}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-8 md:gap-12">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">平均延迟</span>
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300 font-display">{provider.latency}</span>
-                        </div>
-                        <button className="px-6 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2">
-                          立即接入 <ExternalLink className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {provider.productUrl ? (
+                        <a
+                          href={provider.productUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="shrink-0 px-6 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2"
+                        >
+                          前往产品 <ExternalLink className="w-4 h-4" />
+                        </a>
+                      ) : null}
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-800/30 p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
-                <HelpCircle className="w-8 h-8 text-slate-300 mb-3" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">没有找到合适的供应商？</h4>
-                <p className="text-xs text-slate-500 max-w-md">
-                  我们正在持续收录更多优质 API 供应商。如果您是供应商，欢迎提交您的 API 端点进行评测。
-                </p>
-              </div>
+              {!providersLoading && !providersError && providerCards.length === 0 && (
+                <div className="bg-slate-50 dark:bg-slate-800/30 p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
+                  <HelpCircle className="w-8 h-8 text-slate-300 mb-3" />
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">该模型暂未收录可用供应商</h4>
+                  <p className="text-xs text-slate-500 max-w-md">
+                    请稍后重试，或等待下一次数据刷新。
+                  </p>
+                </div>
+              )}
             </section>
           )}
         </div>

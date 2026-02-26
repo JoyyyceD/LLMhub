@@ -1,0 +1,40 @@
+vendor,product_name,supported_api_vendors,product_url
+MiniMax,MiniMax Coding Plan,"MiniMax(自家);Anthropic-compatible SDK;OpenAI-compatible SDK",https://platform.minimax.io/docs/coding-plan/quickstart
+Moonshot AI,Kimi Code,"Moonshot/Kimi(自家);OpenAI-compatible endpoint(kimi-for-coding)",https://www.kimi.com/code/docs/en/
+Z.ai (GLM),GLM Coding Plan,"GLM/Z.ai(自家);Anthropic-compatible endpoint;OpenAI-compatible coding endpoint",https://docs.z.ai/devpack/overview
+Alibaba Cloud,Model Studio Coding Plan,"Qwen(自家);MiniMax;GLM;Kimi(套餐模型池)",https://www.alibabacloud.com/help/en/model-studio/coding-plan-quickstart
+ByteDance (Volcengine),Ark Coding Plan,"Doubao(自家);GLM;DeepSeek;Kimi(套餐模型池)",https://www.volcengine.com/docs/82379/1925115
+GitHub,GitHub Copilot,"Anthropic;AWS Bedrock;Google AI Studio;Microsoft Foundry;OpenAI;OpenAI-compatible;xAI(BYOK)",https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/use-your-own-api-keys
+Cursor,Cursor,"OpenAI;Anthropic;Google;Azure OpenAI;AWS Bedrock(BYOK)",https://docs.cursor.com/advanced/api-keys
+Windsurf,Windsurf,"官方模型池(多厂商);Anthropic(BYOK)",https://docs.windsurf.com/windsurf/accounts/usage
+Cline,Cline,"Anthropic;OpenAI;OpenAI Codex;OpenRouter;AWS Bedrock;Google Gemini;xAI;Cerebras;DeepSeek;Moonshot;Alibaba Qwen;Ollama;LM Studio;OpenAI-compatible",https://docs.cline.bot/cline-cli/getting-started
+Roo Code,Roo Code,"OpenRouter;Anthropic;OpenAI;Google Gemini;AWS Bedrock;Azure;GCP Vertex;Ollama;LM Studio;OpenAI-compatible",https://roocode.com/
+Continue,Continue,"Anthropic;OpenAI;Azure;Amazon Bedrock;Ollama;Mistral;OpenRouter(及更多)",https://docs.continue.dev/customize/model-providers
+Anthropic,Claude Code,"Anthropic API;Amazon Bedrock;Google Vertex AI",https://docs.claude.com/en/docs/claude-code/bedrock-vertex-proxies
+OpenCode,OpenCode,"Anthropic;OpenAI;GitHub Copilot;Google Vertex AI;Amazon Bedrock;Azure OpenAI;Groq;DeepSeek;OpenRouter;Ollama;LM Studio;MiniMax;Moonshot;Z.ai(及更多)",https://open-code.ai/en/docs/providers
+Replit,Replit Agent,"OpenAI;Anthropic;Google;OpenRouter",https://docs.replit.com/replitai/replit-ai-integrations
+Tabnine,Tabnine,"OpenAI;Anthropic;Google;Meta;Mistral(官方支持多提供商)",https://www.tabnine.com/pricing/
+JetBrains,JetBrains AI Assistant,"OpenAI;Google;Anthropic(通过模型提供商)",https://www.jetbrains.com/help/ai-assistant/licensing-and-subscriptions.html
+Amazon,AWS Bedrock,"Anthropic;AI21;Cohere;Meta;Mistral;Amazon Nova;DeepSeek(及更多)",https://docs.aws.amazon.com/bedrock/
+Microsoft,Azure AI Foundry / Azure OpenAI,"OpenAI;Meta;Mistral;Cohere;xAI;DeepSeek(随区域与上架变化)",https://learn.microsoft.com/azure/ai-foundry/
+Google,Vertex AI,"Google Gemini;Anthropic Claude;Meta Llama;Mistral(及更多)",https://cloud.google.com/vertex-ai
+Google,Gemini API,"Google Gemini(自家)",https://ai.google.dev/gemini-api/docs
+OpenAI,OpenAI API,"OpenAI(自家)",https://platform.openai.com/docs
+Anthropic,Anthropic API,"Anthropic Claude(自家)",https://docs.anthropic.com/
+OpenRouter,OpenRouter,"OpenAI;Anthropic;Google;AWS Bedrock;Azure;xAI;Mistral;Cohere;Meta;DeepSeek;Moonshot;MiniMax;Z.ai;Alibaba Cloud;NVIDIA(及更多)",https://openrouter.ai/providers
+NVIDIA,NVIDIA API Catalog (NIM),"NVIDIA NIM(托管/自部署);多模型家族(如Llama等)",https://docs.api.nvidia.com/nim/docs/overview
+Groq,Groq API,"Groq托管模型(含Meta/Moonshot等模型家族)",https://console.groq.com/docs/models
+Together AI,Together API,"开源模型生态(DeepSeek;Qwen;Llama;Mistral;Kimi等)",https://docs.together.ai/
+Fireworks AI,Fireworks API,"开源模型生态(DeepSeek;Qwen;Kimi;GLM;Llama;Mistral等)",https://docs.fireworks.ai/
+DeepSeek,DeepSeek API,"DeepSeek(自家)",https://api-docs.deepseek.com/
+Mistral AI,Mistral API,"Mistral(自家)",https://docs.mistral.ai/
+Cohere,Cohere API,"Cohere(自家)",https://docs.cohere.com/
+xAI,xAI API,"xAI/Grok(自家)",https://docs.x.ai/
+Tencent Cloud,Tencent Hunyuan API,"腾讯混元(自家);支持OpenAI兼容接口",https://cloud.tencent.com/document/product/1729/97730
+Baidu Cloud,Qianfan API,"文心系列(自家)与平台模型服务",https://cloud.baidu.com/doc/qianfan-api/
+SiliconFlow,SiliconCloud API,"多模型聚合(DeepSeek;Qwen;GLM;Kimi;MiniMax;Hunyuan等)",https://docs.siliconflow.com/en/api-reference/models/get-model-list
+Volcengine,Ark API,"Doubao(自家)与平台模型服务",https://www.volcengine.com/docs/82379
+Alibaba Cloud,DashScope API,"Qwen(自家)与平台模型服务",https://www.alibabacloud.com/help/en/model-studio/developer-reference/getting-started-with-model-studio
+MiniMax,MiniMax API,"MiniMax(自家);Anthropic-compatible;OpenAI-compatible",https://platform.minimaxi.com/docs/guides/quickstart
+Z.ai,Z.ai API,"GLM(自家)",https://docs.z.ai/
+Moonshot AI,Moonshot API,"Kimi/Moonshot(自家)",https://platform.moonshot.ai/docs/

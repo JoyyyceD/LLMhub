@@ -24,14 +24,9 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export const DeveloperEcosystem = () => {
-  const [installLog, setInstallLog] = React.useState('');
   const repoUrl = (import.meta.env.VITE_REPO_URL as string | undefined)?.trim() || 'https://github.com/your-org/LLMhub.git';
   const oneClickInstall = `tmpdir="$(mktemp -d)" && git clone --depth=1 ${repoUrl} "$tmpdir/repo" && mkdir -p "$CODEX_HOME/skills" && cp -R "$tmpdir/repo/skills/model-selection-advisor" "$CODEX_HOME/skills/model-selection-advisor" && echo "Installed: $CODEX_HOME/skills/model-selection-advisor"`;
   const verifyInstall = `ls -la "$CODEX_HOME/skills/model-selection-advisor" && echo '$model-selection-advisor 帮我按预算和延迟目标推荐模型'`;
-  const logText = installLog.toLowerCase();
-  const installed = logText.includes('model-selection-advisor') && (logText.includes('installed:') || logText.includes('skill.md'));
-  const hasError = logText.includes('no such file') || logText.includes('permission denied') || logText.includes('not found');
-  const triggerReady = logText.includes('$model-selection-advisor') || logText.includes('帮我按预算和延迟目标推荐模型');
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -147,30 +142,6 @@ export const DeveloperEcosystem = () => {
         <p className="text-xs text-slate-400 mt-4">
           可通过设置 `VITE_REPO_URL` 指向你的公开仓库，页面会自动生成对应一键安装命令。
         </p>
-      </section>
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-7 mb-8">
-        <h3 className="text-xl font-black text-slate-900 mb-4">安装结果检测器</h3>
-        <p className="text-sm text-slate-500 mb-4">
-          粘贴终端输出，页面会自动判断是否安装成功、是否可触发 Skill。
-        </p>
-        <textarea
-          value={installLog}
-          onChange={(e) => setInstallLog(e.target.value)}
-          placeholder="粘贴安装命令输出，例如：Installed: $CODEX_HOME/skills/model-selection-advisor ..."
-          className="w-full h-36 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-        />
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className={`px-3 py-1.5 rounded-full text-xs font-black ${installed ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-            {installed ? '安装路径已识别' : '未识别安装完成'}
-          </span>
-          <span className={`px-3 py-1.5 rounded-full text-xs font-black ${triggerReady ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
-            {triggerReady ? '触发命令已检测' : '未检测到触发命令'}
-          </span>
-          <span className={`px-3 py-1.5 rounded-full text-xs font-black ${hasError ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}`}>
-            {hasError ? '检测到错误，请重试' : '未检测到明显错误'}
-          </span>
-        </div>
       </section>
 
       <section id="integration" className="rounded-3xl border border-slate-200 bg-white p-7">
