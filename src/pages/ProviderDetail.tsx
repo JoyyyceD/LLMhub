@@ -23,12 +23,46 @@ function decodeName(raw: string | undefined): string {
   }
 }
 
+interface ModelSeriesRow {
+  id: string;
+  display_name: string;
+}
+
+interface SeriesGroup {
+  seriesName: string;
+  models: ModelSnapshot[];
+}
+
+function cleanName(name: string): string {
+  return name.replace(/\s*\(.*?\)\s*/g, '').trim();
+}
+
+function toTimestamp(dateStr: string | null | undefined): number {
+  if (!dateStr) return 0;
+  const t = new Date(dateStr).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+function deriveSeriesName(name: string): string {
+  const cleaned = cleanName(name)
+    .replace(/\s+\d+(\.\d+)?[Bb]\s+[Aa]\d+(\.\d+)?[Bb]/gi, '')
+    .replace(/\s+[Aa]\d+(\.\d+)?[Bb]/gi, '')
+    .replace(/\s+\d+(\.\d+)?[Bb]/gi, '')
+    .replace(/\s+(Instruct|Preview|Experimental|Thinking|Reasoning|Non-reasoning)$/i, '')
+    .trim();
+  const low = cleaned.toLowerCase();
+  const m = low.match(/^(qwen|glm|gpt|gemini|gemma|deepseek|kimi|minimax|claude|granite)\s*[- ]*([0-9]+(?:\.\d+)?)/i);
+  if (m) return `${m[1][0].toUpperCase()}${m[1].slice(1)} ${m[2]}`;
+  return cleaned;
+}
+
 export const ProviderDetail = () => {
   const { name } = useParams<{ name: string }>();
   const providerName = decodeName(name);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [models, setModels] = useState<ModelSnapshot[]>([]);
+  const [seriesMap, setSeriesMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!providerName) {
@@ -39,21 +73,32 @@ export const ProviderDetail = () => {
     setLoading(true);
     setError('');
 
-    supabase
-      .from('model_snapshots')
-      .select('*')
-      .eq('has_aa', true)
-      .eq('aa_model_creator_name', providerName)
-      .order('aa_release_date', { ascending: false, nullsFirst: false })
-      .then(({ data, error: err }) => {
-        if (err) {
-          setError('厂商数据加载失败，请稍后重试。');
-          setModels([]);
-        } else {
-          setModels((data ?? []) as ModelSnapshot[]);
-        }
-        setLoading(false);
+    Promise.all([
+      supabase
+        .from('model_snapshots')
+        .select('*')
+        .eq('has_aa', true)
+        .eq('aa_model_creator_name', providerName)
+        .order('aa_release_date', { ascending: false, nullsFirst: false }),
+      supabase
+        .from('model_series')
+        .select('id, display_name'),
+    ]).then(([snapResp, seriesResp]) => {
+      const { data, error: err } = snapResp;
+      const { data: seriesData } = seriesResp;
+      if (err) {
+        setError('厂商数据加载失败，请稍后重试。');
+        setModels([]);
+      } else {
+        setModels((data ?? []) as ModelSnapshot[]);
+      }
+      const nextSeriesMap: Record<string, string> = {};
+      ((seriesData ?? []) as ModelSeriesRow[]).forEach((s) => {
+        nextSeriesMap[s.id] = s.display_name;
       });
+      setSeriesMap(nextSeriesMap);
+      setLoading(false);
+    });
   }, [providerName]);
 
   const providerDisplayName = useMemo(() => {
@@ -64,6 +109,44 @@ export const ProviderDetail = () => {
     }
     return first.aa_model_creator_name ?? providerName;
   }, [models, providerName]);
+
+  const groupedModels = useMemo<SeriesGroup[]>(() => {
+    const groups = new Map<string, ModelSnapshot[]>();
+    for (const model of models) {
+      const seriesName = model.series_id
+        ? (seriesMap[model.series_id] ?? deriveSeriesName(model.aa_name ?? ''))
+        : deriveSeriesName(model.aa_name ?? '');
+      if (!groups.has(seriesName)) groups.set(seriesName, []);
+      groups.get(seriesName)!.push(model);
+    }
+
+    const result: SeriesGroup[] = [];
+    for (const [seriesName, items] of groups.entries()) {
+      // Dedup same display name within a series (e.g. reasoning/non-reasoning)
+      const dedup = new Map<string, ModelSnapshot>();
+      for (const model of items) {
+        const display = cleanName(model.aa_name ?? '');
+        const prev = dedup.get(display);
+        if (!prev || toTimestamp(model.aa_release_date) > toTimestamp(prev.aa_release_date)) {
+          dedup.set(display, model);
+        }
+      }
+      const modelsInSeries = Array.from(dedup.values()).sort((a, b) => {
+        const ta = toTimestamp(a.aa_release_date);
+        const tb = toTimestamp(b.aa_release_date);
+        if (tb !== ta) return tb - ta;
+        return cleanName(a.aa_name ?? '').localeCompare(cleanName(b.aa_name ?? ''));
+      });
+      result.push({ seriesName, models: modelsInSeries });
+    }
+
+    return result.sort((a, b) => {
+      const aLatest = Math.max(...a.models.map((m) => toTimestamp(m.aa_release_date)), 0);
+      const bLatest = Math.max(...b.models.map((m) => toTimestamp(m.aa_release_date)), 0);
+      if (bLatest !== aLatest) return bLatest - aLatest;
+      return a.seriesName.localeCompare(b.seriesName);
+    });
+  }, [models, seriesMap]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -89,7 +172,7 @@ export const ProviderDetail = () => {
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white">{providerDisplayName}</h1>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                模型总数: {models.length}
+                模型总数: {models.length} · 系列数: {groupedModels.length}
               </p>
             </div>
           </div>
@@ -111,25 +194,36 @@ export const ProviderDetail = () => {
             <table className="w-full text-left border-collapse min-w-[780px]">
               <thead>
                 <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/30 border-y border-slate-100">
+                  <th className="px-8 py-4">模型系列</th>
                   <th className="px-8 py-4">模型名称</th>
                   <th className="px-8 py-4 text-center">发布时间</th>
                   <th className="px-8 py-4 text-center">模型类型</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {models.map((m) => (
-                  <tr key={`${m.aa_modality || 'llm'}:${m.aa_slug}`} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-8 py-5">
-                      <Link to={`/model/${m.aa_slug}`} className="font-black text-sm text-slate-900 group-hover:text-primary transition-colors hover:underline">
-                        {m.aa_name?.replace(/\s*\(.*?\)\s*/g, '')}
-                      </Link>
-                    </td>
-                    <td className="px-8 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? 'N/A'}</td>
-                    <td className="px-8 py-5 text-center text-sm font-black text-indigo-600">
-                      {MODALITY_LABEL[m.aa_modality ?? 'llm'] ?? (m.aa_modality ?? 'LLM模型')}
-                    </td>
-                  </tr>
-                ))}
+                {groupedModels.flatMap((group) =>
+                  group.models.map((m, idx) => (
+                    <tr key={`${group.seriesName}:${m.aa_slug}`} className="hover:bg-slate-50/50 transition-colors group">
+                      {idx === 0 ? (
+                        <td
+                          rowSpan={group.models.length}
+                          className="px-8 py-5 align-top text-sm font-black text-slate-700 bg-slate-50/30 border-r border-slate-100"
+                        >
+                          {group.seriesName}
+                        </td>
+                      ) : null}
+                      <td className="px-8 py-5">
+                        <Link to={`/model/${m.aa_slug}`} className="font-black text-sm text-slate-900 group-hover:text-primary transition-colors hover:underline">
+                          {cleanName(m.aa_name)}
+                        </Link>
+                      </td>
+                      <td className="px-8 py-5 text-center text-sm font-bold text-slate-500">{m.aa_release_date ?? 'N/A'}</td>
+                      <td className="px-8 py-5 text-center text-sm font-black text-indigo-600">
+                        {MODALITY_LABEL[m.aa_modality ?? 'llm'] ?? (m.aa_modality ?? 'LLM模型')}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -15,7 +15,8 @@ interface ProfileRow {
 
 interface MyReview {
   id: string;
-  model_id: string;
+  series_id: string;
+  model_id: string | null;
   rating_overall: number;
   rating_quality: number | null;
   rating_price: number | null;
@@ -60,6 +61,7 @@ export const Account = () => {
   const [form, setForm] = useState({ username: '', avatar_url: '', bio: '' });
   const [reviews, setReviews] = useState<MyReview[]>([]);
   const [modelMap, setModelMap] = useState<Record<string, ModelSnapshot>>({});
+  const [seriesMap, setSeriesMap] = useState<Record<string, string>>({});
   const [detailReviewId, setDetailReviewId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export const Account = () => {
         supabase.from('profiles').select('id, username, avatar_url, bio, level').eq('id', user.id).maybeSingle(),
         supabase
           .from('model_review_posts')
-          .select('id, model_id, rating_overall, rating_quality, rating_price, rating_latency, rating_throughput, rating_stability, provider_name, pros, cons, comment, created_at')
+          .select('id, series_id, model_id, rating_overall, rating_quality, rating_price, rating_latency, rating_throughput, rating_stability, provider_name, pros, cons, comment, created_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false }),
       ]);
@@ -99,7 +101,8 @@ export const Account = () => {
       setReviews(myReviews);
       setDetailReviewId(null);
 
-      const modelIds = Array.from(new Set(myReviews.map((x) => x.model_id)));
+      const modelIds = Array.from(new Set(myReviews.map((x) => x.model_id).filter(Boolean))) as string[];
+      const seriesIds = Array.from(new Set(myReviews.map((x) => x.series_id)));
       if (modelIds.length > 0) {
         const { data: modelsData } = await supabase
           .from('model_snapshots')
@@ -112,6 +115,20 @@ export const Account = () => {
         setModelMap(map);
       } else {
         setModelMap({});
+      }
+
+      if (seriesIds.length > 0) {
+        const { data: seriesData } = await supabase
+          .from('model_series')
+          .select('id, display_name')
+          .in('id', seriesIds);
+        const nextSeriesMap: Record<string, string> = {};
+        (seriesData ?? []).forEach((s) => {
+          nextSeriesMap[s.id] = s.display_name;
+        });
+        setSeriesMap(nextSeriesMap);
+      } else {
+        setSeriesMap({});
       }
 
       setLoading(false);
@@ -260,15 +277,22 @@ export const Account = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {reviews.map((r) => {
-                  const m = modelMap[r.model_id];
+                  const m = r.model_id ? modelMap[r.model_id] : undefined;
+                  const seriesName = seriesMap[r.series_id] ?? '未命名系列';
                   const modality = m?.aa_modality ?? 'llm';
-                  const updateLink = `/review/new?model=${encodeURIComponent(r.model_id)}&modality=${encodeURIComponent(modality)}`;
+                  const updateLink = r.model_id
+                    ? `/review/new?series=${encodeURIComponent(r.series_id)}&model=${encodeURIComponent(r.model_id)}&modality=${encodeURIComponent(modality)}`
+                    : `/review/new?series=${encodeURIComponent(r.series_id)}&modality=${encodeURIComponent(modality)}`;
                   return (
                     <tr key={r.id}>
                       <td className="px-6 py-4 text-sm font-bold">
-                        <Link to={`/model/${r.model_id}`} className="hover:text-primary hover:underline">
-                          {m ? cleanName(m.aa_name) : formatModelIdDisplay(r.model_id)}
-                        </Link>
+                        {r.model_id ? (
+                          <Link to={`/model/${r.model_id}`} className="hover:text-primary hover:underline">
+                            {seriesName} · {m ? cleanName(m.aa_name) : formatModelIdDisplay(r.model_id)}
+                          </Link>
+                        ) : (
+                          <span>{seriesName}</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-center text-sm font-black text-primary">{r.rating_overall}</td>
                       <td className="px-6 py-4 text-center text-sm text-slate-500">{new Date(r.created_at).toLocaleString()}</td>
@@ -319,11 +343,13 @@ export const Account = () => {
             <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <section>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">模型</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">系列 / 型号</label>
                   <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800">
                     {(() => {
+                      const seriesName = seriesMap[detailReview.series_id] ?? '未命名系列';
+                      if (!detailReview.model_id) return seriesName;
                       const m = modelMap[detailReview.model_id];
-                      return m ? cleanName(m.aa_name) : formatModelIdDisplay(detailReview.model_id);
+                      return `${seriesName} · ${m ? cleanName(m.aa_name) : formatModelIdDisplay(detailReview.model_id)}`;
                     })()}
                   </div>
                 </section>

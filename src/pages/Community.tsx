@@ -30,7 +30,8 @@ import type { ModelSnapshot } from '../types';
 interface DbPost {
   id: string;
   user_id: string;
-  model_id: string;
+  series_id: string;
+  model_id: string | null;
   rating_overall: number;
   rating_quality: number | null;
   rating_price: number | null;
@@ -48,6 +49,11 @@ interface DbPost {
     avatar_url: string | null;
     level: number;
   } | null;
+}
+
+interface SeriesRow {
+  id: string;
+  display_name: string;
 }
 
 interface DbReply {
@@ -69,7 +75,9 @@ interface UIPost {
   avatar: string;
   level: string;
   time: string;
-  modelId: string;
+  seriesId: string;
+  seriesName: string;
+  modelId: string | null;
   modelName: string;
   ratingOverall: number;
   ratingQuality: number | null;
@@ -164,9 +172,12 @@ export const Community = () => {
   const [postError, setPostError] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('最新发布');
   const [modelOptions, setModelOptions] = useState<ModelSnapshot[]>([]);
+  const [seriesOptions, setSeriesOptions] = useState<SeriesRow[]>([]);
+  const [seriesMap, setSeriesMap] = useState<Record<string, string>>({});
 
   // Post form state
   const [postForm, setPostForm] = useState({
+    series_id: '',
     model_id: '',
     rating_overall: 5,
     rating_quality: 5,
@@ -215,19 +226,33 @@ export const Community = () => {
 
   // Load model options for the selector
   useEffect(() => {
-    supabase
-      .from('model_snapshots')
-      .select('aa_slug, aa_name, aa_model_creator_name')
-      .eq('has_aa', true)
-      .order('aa_name')
-      .then(({ data }) => {
-        if (data) {
-          setModelOptions(data as ModelSnapshot[]);
-          if (data.length > 0) {
-            setPostForm((prev) => ({ ...prev, model_id: data[0].aa_slug }));
-          }
-        }
+    Promise.all([
+      supabase
+        .from('model_snapshots')
+        .select('aa_slug, aa_name, aa_model_creator_name, series_id')
+        .eq('has_aa', true)
+        .order('aa_name'),
+      supabase
+        .from('model_series')
+        .select('id, display_name')
+        .eq('is_visible', true)
+        .order('display_name'),
+    ]).then(([modelResp, seriesResp]) => {
+      const modelsData = (modelResp.data ?? []) as ModelSnapshot[];
+      const seriesData = (seriesResp.data ?? []) as SeriesRow[];
+      setModelOptions(modelsData);
+      setSeriesOptions(seriesData);
+      const nextSeriesMap: Record<string, string> = {};
+      seriesData.forEach((s) => {
+        nextSeriesMap[s.id] = s.display_name;
       });
+      setSeriesMap(nextSeriesMap);
+      if (seriesData.length > 0) {
+        const firstSeriesId = seriesData[0].id;
+        const firstModel = modelsData.find((m) => m.series_id === firstSeriesId);
+        setPostForm((prev) => ({ ...prev, series_id: firstSeriesId, model_id: firstModel?.aa_slug ?? '' }));
+      }
+    });
   }, []);
 
   // Fetch posts
@@ -268,7 +293,8 @@ export const Community = () => {
     const dbPosts = (postsData ?? []) as DbPost[];
     let mapped: UIPost[] = dbPosts.map((p) => {
       // Try to find model name from options (may not be loaded yet)
-      const matchedModel = modelOptions.find((m) => m.aa_slug === p.model_id);
+      const matchedModel = p.model_id ? modelOptions.find((m) => m.aa_slug === p.model_id) : null;
+      const seriesName = seriesMap[p.series_id] ?? '未命名系列';
       return {
         id: p.id,
         userId: p.user_id,
@@ -276,10 +302,12 @@ export const Community = () => {
         avatar: p.profiles?.avatar_url ?? `https://picsum.photos/seed/${p.user_id}/100/100`,
         level: `LV.${p.profiles?.level ?? 1}`,
         time: timeAgo(p.created_at),
+        seriesId: p.series_id,
+        seriesName,
         modelId: p.model_id,
         modelName: matchedModel
           ? matchedModel.aa_name.replace(/\s*\(.*?\)\s*/g, '')
-          : formatModelIdDisplay(p.model_id),
+          : seriesName,
         ratingOverall: p.rating_overall,
         ratingQuality: p.rating_quality,
         ratingPrice: p.rating_price,
@@ -304,7 +332,7 @@ export const Community = () => {
 
     setPosts(mapped);
     setLoading(false);
-  }, [user, sortBy, modelOptions]);
+  }, [user, sortBy, modelOptions, seriesMap]);
 
   useEffect(() => {
     fetchPosts();
@@ -377,27 +405,40 @@ export const Community = () => {
   const handlePostReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!postForm.series_id) {
+      setPostError('请先选择模型系列');
+      return;
+    }
     setSubmitting(true);
     setPostError('');
 
-    const { error } = await supabase.from('model_review_posts').upsert(
-      {
-        user_id: user.id,
-        model_id: postForm.model_id,
-        rating_overall: postForm.rating_overall,
-        rating_quality: postForm.rating_quality,
-        rating_price: postForm.rating_price,
-        rating_latency: postForm.rating_latency,
-        rating_throughput: postForm.rating_throughput,
-        rating_stability: postForm.rating_stability,
-        provider_name: postForm.provider_name || null,
-        pros: postForm.pros.trim().slice(0, 200) || null,
-        cons: postForm.cons.trim().slice(0, 200) || null,
-        comment: postForm.comment.trim().slice(0, 800) || null,
-        status: 'published',
-      },
-      { onConflict: 'user_id,model_id' }
-    );
+    let existingQuery = supabase
+      .from('model_review_posts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('series_id', postForm.series_id);
+    existingQuery = postForm.model_id ? existingQuery.eq('model_id', postForm.model_id) : existingQuery.is('model_id', null);
+    const { data: existing } = await existingQuery.maybeSingle();
+
+    const payload = {
+      user_id: user.id,
+      series_id: postForm.series_id,
+      model_id: postForm.model_id || null,
+      rating_overall: postForm.rating_overall,
+      rating_quality: postForm.rating_quality,
+      rating_price: postForm.rating_price,
+      rating_latency: postForm.rating_latency,
+      rating_throughput: postForm.rating_throughput,
+      rating_stability: postForm.rating_stability,
+      provider_name: postForm.provider_name || null,
+      pros: postForm.pros.trim().slice(0, 200) || null,
+      cons: postForm.cons.trim().slice(0, 200) || null,
+      comment: postForm.comment.trim().slice(0, 800) || null,
+      status: 'published',
+    };
+    const { error } = existing?.id
+      ? await supabase.from('model_review_posts').update(payload).eq('id', existing.id).eq('user_id', user.id)
+      : await supabase.from('model_review_posts').insert(payload);
 
     setSubmitting(false);
     if (error) {
@@ -493,24 +534,44 @@ export const Community = () => {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Model selector */}
+                  {/* Series selector */}
                   <section>
-                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">选择模型</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">选择模型系列</label>
                     <select
-                      value={postForm.model_id}
-                      onChange={(e) => setPostForm({ ...postForm, model_id: e.target.value })}
+                      value={postForm.series_id}
+                      onChange={(e) => {
+                        const seriesId = e.target.value;
+                        const firstModel = modelOptions.find((m) => m.series_id === seriesId);
+                        setPostForm({ ...postForm, series_id: seriesId, model_id: firstModel?.aa_slug ?? '' });
+                      }}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
                       required
                     >
-                      {modelOptions.map((m) => (
-                        <option key={m.aa_slug} value={m.aa_slug}>
-                          {m.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
-                        </option>
+                      {seriesOptions.map((s) => (
+                        <option key={s.id} value={s.id}>{s.display_name}</option>
                       ))}
                     </select>
                   </section>
 
                   {/* Provider selector */}
+                  <section>
+                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">具体型号（可选）</label>
+                    <select
+                      value={postForm.model_id}
+                      onChange={(e) => setPostForm({ ...postForm, model_id: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
+                    >
+                      <option value="">不指定具体型号（系列级评论）</option>
+                      {modelOptions
+                        .filter((m) => m.series_id === postForm.series_id)
+                        .map((m) => (
+                          <option key={m.aa_slug} value={m.aa_slug}>
+                            {m.aa_name.replace(/\s*\(.*?\)\s*/g, '')}
+                          </option>
+                        ))}
+                    </select>
+                  </section>
+
                   <section>
                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
                     <select
@@ -610,12 +671,12 @@ export const Community = () => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={submitting || !postForm.model_id}
+                    disabled={submitting || !postForm.series_id}
                     className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     {submitting
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> 发布中...</>
-                      : '发布点评（同一模型再次提交将更新）'
+                      : '发布点评（同一系列/型号再次提交将更新）'
                     }
                   </button>
                 </div>
@@ -726,10 +787,15 @@ export const Community = () => {
                         )}
                       </div>
                       <p className="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-widest">
-                        {post.time} · 评测了{' '}
-                        <Link to={`/model/${post.modelId}`} className="text-primary hover:underline">
-                          {post.modelName}
-                        </Link>
+                        {post.time} · 评测了 {post.seriesName}
+                        {post.modelId ? (
+                          <>
+                            {' '}·{' '}
+                            <Link to={`/model/${post.modelId}`} className="text-primary hover:underline">
+                              {post.modelName}
+                            </Link>
+                          </>
+                        ) : null}
                       </p>
                     </div>
                   </div>

@@ -5,6 +5,7 @@
 /** Row from the model_snapshots Supabase table */
 export interface ModelSnapshot {
   aa_slug: string;
+  series_id?: string | null;
   aa_id?: string | null;
   aa_name: string;
   aa_modality?: 'llm' | 'text_to_image' | 'image_editing' | 'text_to_speech' | 'text_to_video' | 'image_to_video' | string;

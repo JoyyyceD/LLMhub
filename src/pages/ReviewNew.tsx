@@ -13,6 +13,14 @@ type ModalityKey =
   | 'image_to_video'
   | 'text_to_speech';
 
+interface ModelSeries {
+  id: string;
+  slug: string;
+  display_name: string;
+  provider: string | null;
+  is_visible: boolean;
+}
+
 const PROVIDERS = [
   'OpenAI', 'Anthropic', 'Google', 'Meta', 'Mistral',
   'DeepSeek', 'Alibaba', 'Baidu', 'ByteDance', 'Zhipu',
@@ -33,16 +41,10 @@ function cleanName(name: string): string {
   return name.replace(/\s*\(.*?\)\s*/g, '');
 }
 
-function pickLatestModelInModality(models: ModelSnapshot[], modality: ModalityKey): ModelSnapshot | null {
-  const inModality = models.filter((m) => (m.aa_modality ?? 'llm') === modality);
-  if (inModality.length === 0) return null;
-  const sorted = [...inModality].sort((a, b) => {
-    const ta = a.aa_release_date ? new Date(a.aa_release_date).getTime() : 0;
-    const tb = b.aa_release_date ? new Date(b.aa_release_date).getTime() : 0;
-    if (tb !== ta) return tb - ta;
-    return (a.aa_name ?? '').localeCompare(b.aa_name ?? '');
-  });
-  return sorted[0] ?? null;
+function toTimestamp(dateStr: string | null | undefined): number {
+  if (!dateStr) return 0;
+  const t = new Date(dateStr).getTime();
+  return Number.isNaN(t) ? 0 : t;
 }
 
 function isModalityKey(v: string | null): v is ModalityKey {
@@ -92,6 +94,7 @@ export const ReviewNew = () => {
 
   const [loadingModels, setLoadingModels] = useState(true);
   const [models, setModels] = useState<ModelSnapshot[]>([]);
+  const [seriesOptions, setSeriesOptions] = useState<ModelSeries[]>([]);
   const [searchText, setSearchText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(false);
@@ -100,6 +103,7 @@ export const ReviewNew = () => {
 
   const [form, setForm] = useState({
     modality: 'llm' as ModalityKey,
+    series_id: '',
     model_id: '',
     rating_overall: null as number | null,
     rating_quality: null as number | null,
@@ -114,103 +118,151 @@ export const ReviewNew = () => {
   });
 
   useEffect(() => {
-    supabase
-      .from('model_snapshots')
-      .select('aa_slug, aa_name, aa_modality, aa_model_creator_name, aa_release_date, has_aa')
-      .eq('has_aa', true)
-      .then(({ data, error: err }) => {
-        if (err) {
-          setError(`模型列表加载失败：${err.message}`);
-          setLoadingModels(false);
-          return;
-        }
-        const all = (data ?? []) as ModelSnapshot[];
-        setModels(all);
-
-        const q = new URLSearchParams(location.search);
-        const modelFromUrl = q.get('model');
-        const modalityFromUrl = q.get('modality');
-        const matchedModel = modelFromUrl ? all.find((m) => m.aa_slug === modelFromUrl) : null;
-        const matchedModality = matchedModel?.aa_modality ?? (isModalityKey(modalityFromUrl) ? modalityFromUrl : null);
-        const initModality = (matchedModality ?? 'llm') as ModalityKey;
-        const latestInModality = pickLatestModelInModality(all, initModality);
-
-        setForm((prev) => ({
-          ...prev,
-          modality: initModality,
-          model_id: matchedModel?.aa_slug ?? latestInModality?.aa_slug ?? '',
-        }));
+    Promise.all([
+      supabase
+        .from('model_snapshots')
+        .select('aa_slug, aa_name, aa_modality, aa_model_creator_name, aa_release_date, has_aa, series_id')
+        .eq('has_aa', true),
+      supabase
+        .from('model_series')
+        .select('id, slug, display_name, provider, is_visible')
+        .eq('is_visible', true)
+        .order('display_name'),
+    ]).then(([snapResp, seriesResp]) => {
+      const { data: snapData, error: snapErr } = snapResp;
+      const { data: seriesData, error: seriesErr } = seriesResp;
+      if (snapErr || seriesErr) {
+        setError(`模型列表加载失败：${snapErr?.message ?? seriesErr?.message}`);
         setLoadingModels(false);
-      });
+        return;
+      }
+
+      const all = (snapData ?? []) as ModelSnapshot[];
+      const allSeries = (seriesData ?? []) as ModelSeries[];
+      setModels(all);
+      setSeriesOptions(allSeries);
+
+      const q = new URLSearchParams(location.search);
+      const seriesFromUrl = q.get('series');
+      const modelFromUrl = q.get('model');
+      const modalityFromUrl = q.get('modality');
+      const matchedModel = modelFromUrl ? all.find((m) => m.aa_slug === modelFromUrl) : null;
+      const initSeriesId = seriesFromUrl ?? matchedModel?.series_id ?? allSeries[0]?.id ?? '';
+      const matchedModality = matchedModel?.aa_modality ?? (isModalityKey(modalityFromUrl) ? modalityFromUrl : null);
+      const initModality = (matchedModality ?? 'llm') as ModalityKey;
+
+      setForm((prev) => ({
+        ...prev,
+        modality: initModality,
+        series_id: initSeriesId,
+        model_id: matchedModel?.aa_slug ?? '',
+      }));
+      setLoadingModels(false);
+    });
   }, [location.search]);
 
-  const modelsInModality = useMemo(
-    () => models.filter((m) => (m.aa_modality ?? 'llm') === form.modality),
-    [models, form.modality]
+  const modelsInSeries = useMemo(
+    () => models.filter((m) => m.series_id === form.series_id),
+    [models, form.series_id]
   );
 
+  const modelsInSeriesAndModality = useMemo(
+    () => modelsInSeries.filter((m) => (m.aa_modality ?? 'llm') === form.modality),
+    [modelsInSeries, form.modality]
+  );
+
+  const specificModelOptions = useMemo(() => {
+    const dedup = new Map<string, ModelSnapshot>();
+    for (const model of modelsInSeriesAndModality) {
+      const label = cleanName(model.aa_name ?? '').trim();
+      if (!label) continue;
+      const prev = dedup.get(label);
+      if (!prev) {
+        dedup.set(label, model);
+        continue;
+      }
+      const currTs = toTimestamp(model.aa_release_date);
+      const prevTs = toTimestamp(prev.aa_release_date);
+      if (currTs > prevTs) {
+        dedup.set(label, model);
+      }
+    }
+    return Array.from(dedup.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([, model]) => model);
+  }, [modelsInSeriesAndModality]);
+
   useEffect(() => {
-    if (!modelsInModality.length) return;
-    if (modelsInModality.some((m) => m.aa_slug === form.model_id)) return;
-    const latestInModality = pickLatestModelInModality(models, form.modality);
-    setForm((prev) => ({ ...prev, model_id: latestInModality?.aa_slug ?? modelsInModality[0].aa_slug }));
-  }, [modelsInModality, form.model_id, models, form.modality]);
+    if (!form.series_id || !form.model_id) return;
+    if (modelsInSeries.some((m) => m.aa_slug === form.model_id)) return;
+    setForm((prev) => ({ ...prev, model_id: '' }));
+  }, [modelsInSeries, form.series_id, form.model_id]);
+
+  useEffect(() => {
+    if (!form.series_id) return;
+    if (!form.model_id) return;
+    if (specificModelOptions.some((m) => m.aa_slug === form.model_id)) return;
+    setForm((prev) => ({ ...prev, model_id: specificModelOptions[0]?.aa_slug ?? '' }));
+  }, [form.series_id, form.model_id, specificModelOptions]);
 
   const searchMatches = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     if (!q) return [];
-    return models
-      .filter((m) => cleanName(m.aa_name).toLowerCase().includes(q))
+    return seriesOptions
+      .filter((s) => s.display_name.toLowerCase().includes(q))
       .slice(0, 8);
-  }, [models, searchText]);
+  }, [seriesOptions, searchText]);
 
   useEffect(() => {
-    if (!user || !form.model_id) return;
+    if (!user || !form.series_id) return;
     let canceled = false;
     setLoadingExisting(true);
-    supabase
+
+    let query = supabase
       .from('model_review_posts')
-      .select('rating_overall, rating_quality, rating_price, rating_latency, rating_throughput, rating_stability, provider_name, pros, cons, comment')
+      .select('id, rating_overall, rating_quality, rating_price, rating_latency, rating_throughput, rating_stability, provider_name, pros, cons, comment')
       .eq('user_id', user.id)
-      .eq('model_id', form.model_id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (canceled) return;
-        if (data) {
-          setForm((prev) => ({
-            ...prev,
-            rating_overall: data.rating_overall ?? null,
-            rating_quality: data.rating_quality ?? null,
-            rating_price: data.rating_price ?? null,
-            rating_latency: data.rating_latency ?? null,
-            rating_throughput: data.rating_throughput ?? null,
-            rating_stability: data.rating_stability ?? null,
-            provider_name: data.provider_name ?? '',
-            pros: data.pros ?? '',
-            cons: data.cons ?? '',
-            comment: data.comment ?? '',
-          }));
-        } else {
-          setForm((prev) => ({
-            ...prev,
-            rating_overall: null,
-            rating_quality: null,
-            rating_price: null,
-            rating_latency: null,
-            rating_throughput: null,
-            rating_stability: null,
-            provider_name: '',
-            pros: '',
-            cons: '',
-            comment: '',
-          }));
-        }
-        setLoadingExisting(false);
-      });
+      .eq('series_id', form.series_id);
+    query = form.model_id ? query.eq('model_id', form.model_id) : query.is('model_id', null);
+
+    query.maybeSingle().then(({ data }) => {
+      if (canceled) return;
+      if (data) {
+        setForm((prev) => ({
+          ...prev,
+          rating_overall: data.rating_overall ?? null,
+          rating_quality: data.rating_quality ?? null,
+          rating_price: data.rating_price ?? null,
+          rating_latency: data.rating_latency ?? null,
+          rating_throughput: data.rating_throughput ?? null,
+          rating_stability: data.rating_stability ?? null,
+          provider_name: data.provider_name ?? '',
+          pros: data.pros ?? '',
+          cons: data.cons ?? '',
+          comment: data.comment ?? '',
+        }));
+      } else {
+        setForm((prev) => ({
+          ...prev,
+          rating_overall: null,
+          rating_quality: null,
+          rating_price: null,
+          rating_latency: null,
+          rating_throughput: null,
+          rating_stability: null,
+          provider_name: '',
+          pros: '',
+          cons: '',
+          comment: '',
+        }));
+      }
+      setLoadingExisting(false);
+    });
+
     return () => {
       canceled = true;
     };
-  }, [user, form.model_id]);
+  }, [user, form.series_id, form.model_id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,8 +270,8 @@ export const ReviewNew = () => {
       navigate('/login');
       return;
     }
-    if (!form.model_id) {
-      setError('请先选择模型。');
+    if (!form.series_id) {
+      setError('请先选择模型系列。');
       return;
     }
     if (form.rating_overall == null) {
@@ -231,28 +283,39 @@ export const ReviewNew = () => {
     setError('');
     setSuccess('');
 
-    const { error: upsertError } = await supabase.from('model_review_posts').upsert(
-      {
-        user_id: user.id,
-        model_id: form.model_id,
-        rating_overall: form.rating_overall,
-        rating_quality: form.rating_quality,
-        rating_price: form.rating_price,
-        rating_latency: form.rating_latency,
-        rating_throughput: form.rating_throughput,
-        rating_stability: form.rating_stability,
-        provider_name: form.provider_name || null,
-        pros: form.pros.trim().slice(0, 200) || null,
-        cons: form.cons.trim().slice(0, 200) || null,
-        comment: form.comment.trim().slice(0, 800) || null,
-        status: 'published',
-      },
-      { onConflict: 'user_id,model_id' }
-    );
+    let existingQuery = supabase
+      .from('model_review_posts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('series_id', form.series_id);
+    existingQuery = form.model_id ? existingQuery.eq('model_id', form.model_id) : existingQuery.is('model_id', null);
+
+    const { data: existing } = await existingQuery.maybeSingle();
+
+    const payload = {
+      user_id: user.id,
+      series_id: form.series_id,
+      model_id: form.model_id || null,
+      rating_overall: form.rating_overall,
+      rating_quality: form.rating_quality,
+      rating_price: form.rating_price,
+      rating_latency: form.rating_latency,
+      rating_throughput: form.rating_throughput,
+      rating_stability: form.rating_stability,
+      provider_name: form.provider_name || null,
+      pros: form.pros.trim().slice(0, 200) || null,
+      cons: form.cons.trim().slice(0, 200) || null,
+      comment: form.comment.trim().slice(0, 800) || null,
+      status: 'published',
+    };
+
+    const result = existing?.id
+      ? await supabase.from('model_review_posts').update(payload).eq('id', existing.id).eq('user_id', user.id)
+      : await supabase.from('model_review_posts').insert(payload);
 
     setSubmitting(false);
-    if (upsertError) {
-      setError(`发布失败：${upsertError.message}`);
+    if (result.error) {
+      setError(`发布失败：${result.error.message}`);
       return;
     }
 
@@ -265,7 +328,7 @@ export const ReviewNew = () => {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg overflow-hidden">
         <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
           <h1 className="text-2xl font-black">发表模型点评</h1>
-          <p className="text-sm text-slate-500 mt-1">总体评分必填，其他维度与优缺点均可选。</p>
+          <p className="text-sm text-slate-500 mt-1">先选择模型系列，再可选具体型号；总体评分必填。</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-7">
@@ -293,7 +356,7 @@ export const ReviewNew = () => {
               <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">模型类别</label>
               <select
                 value={form.modality}
-                onChange={(e) => setForm((prev) => ({ ...prev, modality: e.target.value as ModalityKey }))}
+                onChange={(e) => setForm((prev) => ({ ...prev, modality: e.target.value as ModalityKey, model_id: '' }))}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
               >
                 {MODALITY_OPTIONS.map((o) => (
@@ -302,20 +365,20 @@ export const ReviewNew = () => {
               </select>
             </section>
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">模型名称</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">模型系列（必选）</label>
               {loadingModels ? (
                 <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-400 flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" /> 加载中...
                 </div>
               ) : (
                 <select
-                  value={form.model_id}
-                  onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
+                  value={form.series_id}
+                  onChange={(e) => setForm((prev) => ({ ...prev, series_id: e.target.value, model_id: '' }))}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
                   required
                 >
-                  {modelsInModality.map((m) => (
-                    <option key={m.aa_slug} value={m.aa_slug}>{cleanName(m.aa_name)}</option>
+                  {seriesOptions.map((s) => (
+                    <option key={s.id} value={s.id}>{s.display_name}</option>
                   ))}
                 </select>
               )}
@@ -327,37 +390,33 @@ export const ReviewNew = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">搜索模型（自动匹配类别）</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">搜索模型系列</label>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="输入模型名称关键词..."
+                  placeholder="输入模型系列关键词..."
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
                 />
               </div>
               {searchText.trim() && (
                 <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden">
                   {searchMatches.length === 0 ? (
-                    <div className="px-4 py-3 text-sm text-slate-400">没有匹配模型</div>
+                    <div className="px-4 py-3 text-sm text-slate-400">没有匹配系列</div>
                   ) : (
-                    searchMatches.map((m) => (
+                    searchMatches.map((s) => (
                       <button
-                        key={m.aa_slug}
+                        key={s.id}
                         type="button"
                         onClick={() => {
-                          const nextModality = (m.aa_modality ?? 'llm') as ModalityKey;
-                          setForm((prev) => ({ ...prev, modality: nextModality, model_id: m.aa_slug }));
-                          setSearchText(cleanName(m.aa_name));
+                          setForm((prev) => ({ ...prev, series_id: s.id, model_id: '' }));
+                          setSearchText(s.display_name);
                         }}
                         className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 border-b last:border-b-0 border-slate-100"
                       >
-                        <span className="font-bold text-slate-800">{cleanName(m.aa_name)}</span>
-                        <span className="ml-2 text-xs text-slate-400">
-                          {MODALITY_OPTIONS.find((x) => x.key === (m.aa_modality ?? 'llm'))?.label ?? (m.aa_modality ?? 'LLM')}
-                        </span>
+                        <span className="font-bold text-slate-800">{s.display_name}</span>
                       </button>
                     ))
                   )}
@@ -365,17 +424,31 @@ export const ReviewNew = () => {
               )}
             </section>
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">具体型号（可选）</label>
               <select
-                value={form.provider_name}
-                onChange={(e) => setForm((prev) => ({ ...prev, provider_name: e.target.value }))}
+                value={form.model_id}
+                onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
               >
-                <option value="">未指定</option>
-                {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+                <option value="">不指定具体型号（系列级评论）</option>
+                {specificModelOptions.map((m) => (
+                  <option key={m.aa_slug} value={m.aa_slug}>{cleanName(m.aa_name)}</option>
+                ))}
               </select>
             </section>
           </div>
+
+          <section>
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
+            <select
+              value={form.provider_name}
+              onChange={(e) => setForm((prev) => ({ ...prev, provider_name: e.target.value }))}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
+            >
+              <option value="">未指定</option>
+              {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </section>
 
           <section>
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">总体评分（必填）</label>
@@ -412,8 +485,6 @@ export const ReviewNew = () => {
             </div>
           </section>
 
-          
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <section>
               <label className="block text-xs font-black uppercase tracking-widest text-emerald-500 mb-2">优点（可选，≤200）</label>
@@ -445,7 +516,7 @@ export const ReviewNew = () => {
           <div className="pt-1">
             <button
               type="submit"
-              disabled={submitting || loadingModels || !form.model_id}
+              disabled={submitting || loadingModels || !form.series_id}
               className="w-full py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> 发布中...</> : '发布点评'}
