@@ -204,12 +204,27 @@ def match_or(aa_slug: str, aa_name: str, or_map):
 
 
 def get_category_elo(categories, style=None, subject=None, fmt=None):
+    def norm(text):
+        if not isinstance(text, str):
+            return ""
+        t = text.strip().lower()
+        t = t.replace("&", "and")
+        t = re.sub(r"\s+", " ", t)
+        return t
+
+    style_norm = norm(style)
+    subject_norm = norm(subject)
+    fmt_norm = norm(fmt)
+
     for item in categories or []:
-        if style and (item.get("style_category") or "") == style:
+        item_style = norm(item.get("style_category") or "")
+        item_subject = norm(item.get("subject_matter_category") or "")
+        item_format = norm(item.get("format_category") or "")
+        if style_norm and item_style == style_norm:
             return item.get("elo")
-        if subject and (item.get("subject_matter_category") or "") == subject:
+        if subject_norm and item_subject == subject_norm:
             return item.get("elo")
-        if fmt and (item.get("format_category") or "") == fmt:
+        if fmt_norm and item_format == fmt_norm:
             return item.get("elo")
     return None
 
@@ -307,6 +322,29 @@ def build_media_rows(records, modality):
         }
         rows.append(row)
     return rows
+
+
+def log_media_coverage(rows, modality):
+    if not rows:
+        print(f"{modality}: no rows for coverage report")
+        return
+    keys = [
+        "aa_elo",
+        "category_format_short_prompt_elo",
+        "category_format_long_prompt_elo",
+        "category_format_moving_camera_elo",
+        "category_format_multi_scene_elo",
+        "category_style_photorealistic_elo",
+        "category_style_cartoon_and_anime_elo",
+        "category_style_3d_animation_elo",
+    ]
+    total = len(rows)
+    stats = []
+    for key in keys:
+        non_null = sum(1 for r in rows if r.get(key) is not None)
+        pct = (non_null / total) * 100 if total else 0.0
+        stats.append(f"{key}={non_null}/{total} ({pct:.1f}%)")
+    print(f"{modality} coverage: " + ", ".join(stats))
 
 
 def upsert_batch(records):
@@ -427,6 +465,10 @@ def main():
     all_rows.extend(build_media_rows(aa_data["text_to_speech"], "text_to_speech"))
     all_rows.extend(build_media_rows(aa_data["text_to_video"], "text_to_video"))
     all_rows.extend(build_media_rows(aa_data["image_to_video"], "image_to_video"))
+
+    # Emit visibility for category coverage to catch upstream schema/category-label drift.
+    log_media_coverage([r for r in all_rows if r.get("aa_modality") == "text_to_video"], "text_to_video")
+    log_media_coverage([r for r in all_rows if r.get("aa_modality") == "image_to_video"], "image_to_video")
 
     # Skip rows without slug; slug is PK.
     all_rows = [r for r in all_rows if r.get("aa_slug")]
