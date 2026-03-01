@@ -240,6 +240,13 @@ def _canonicalize_multimodal(name: str) -> str:
         if m:
             return f"Stable Diffusion {m.group(1)}"
 
+    # Kling family: collapse resolution/omni/tier suffixes to version-level series.
+    if re.search(r"\bkling\b", low):
+        m = re.search(r"\bkling\s*([0-9]+(?:\.[0-9]+)?)\b", low)
+        if m:
+            return f"Kling {m.group(1)}"
+        return "Kling"
+
     return name
 
 
@@ -293,4 +300,3 @@ def infer_provider(series_name: str) -> Optional[str]:
         if low.startswith(prefix):
             return provider
     return None
-

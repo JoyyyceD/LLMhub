@@ -100,6 +100,10 @@ def upsert_series(records: list[dict]) -> None:
         resp.raise_for_status()
 
 
+def slug_exists(slug: str, slug_to_series: dict[str, dict]) -> bool:
+    return slug in slug_to_series
+
+
 def patch_snapshot_series(aa_slug: str, series_id: str) -> None:
     resp = requests.patch(
         f"{SUPABASE_URL}/rest/v1/model_snapshots",
@@ -207,9 +211,8 @@ def main() -> None:
         print(f"Upserted new series rows: {len(upsert_records)}")
 
     # Reload series map to include newly inserted rows.
-    if not args.dry_run:
-        existing_series = load_series()
-        slug_to_series = {row["slug"]: row for row in existing_series}
+    existing_series = load_series()
+    slug_to_series = {row["slug"]: row for row in existing_series}
 
     # Resolve target series_id and patch only changed rows.
     updates_to_apply: list[tuple[str, str, str]] = []  # (aa_slug, target_series_id, modality)

@@ -68,17 +68,17 @@ image_to_video,image_to_video--hunyuanvideo-1.5,HunyuanVideo 1.5,image_to_video:
 image_to_video,image_to_video--i2v-01,I2V 01,image_to_video::i2v-01-director,I2V-01-Director,MiniMax,ad4f96e6-4b9a-452a-96f2-dc430067e436,ad4f96e6-4b9a-452a-96f2-dc430067e436,false
 image_to_video,image_to_video--kling-1.6,Kling 1.6,image_to_video::kling-1-6-pro,Kling 1.6 Pro,KlingAI,da025efa-bd2e-4e70-bf8c-d29a2b8d841d,da025efa-bd2e-4e70-bf8c-d29a2b8d841d,false
 image_to_video,image_to_video--kling-2.0,Kling 2.0,image_to_video::kling-2-0,Kling 2.0,KlingAI,77259c6a-7f02-4312-b1de-75eadac58e0f,77259c6a-7f02-4312-b1de-75eadac58e0f,false
+image_to_video,image_to_video--kling-2.1,Kling 2.1,image_to_video::kling-2-1-master,Kling 2.1 Master,KlingAI,b9360379-0fba-4f5c-a92a-ec18b969cb28,b9360379-0fba-4f5c-a92a-ec18b969cb28,false
 image_to_video,image_to_video--kling-2.1,Kling 2.1,image_to_video::kling-2-1-pro,Kling 2.1 Pro,KlingAI,b9360379-0fba-4f5c-a92a-ec18b969cb28,b9360379-0fba-4f5c-a92a-ec18b969cb28,false
 image_to_video,image_to_video--kling-2.1,Kling 2.1,image_to_video::kling-2-1-standard,Kling 2.1 Standard,KlingAI,b9360379-0fba-4f5c-a92a-ec18b969cb28,b9360379-0fba-4f5c-a92a-ec18b969cb28,false
-image_to_video,image_to_video--kling-2.1-master,Kling 2.1 Master,image_to_video::kling-2-1-master,Kling 2.1 Master,KlingAI,5697884a-d492-4f67-81ac-fdaeb9b192aa,5697884a-d492-4f67-81ac-fdaeb9b192aa,false
-image_to_video,image_to_video--kling-2.5-turbo-1080p,Kling 2.5 Turbo 1080p,image_to_video::kling-25-turbo-1080p,Kling 2.5 Turbo 1080p,KlingAI,68f83f80-9d9c-4859-ae87-368158c9dc54,68f83f80-9d9c-4859-ae87-368158c9dc54,false
+image_to_video,image_to_video--kling-2.5,Kling 2.5,image_to_video::kling-25-turbo-1080p,Kling 2.5 Turbo 1080p,KlingAI,20896544-8ada-4357-a310-a267818ce96f,20896544-8ada-4357-a310-a267818ce96f,false
 image_to_video,image_to_video--kling-2.6,Kling 2.6,image_to_video::kling-2-6-pro,Kling 2.6 Pro (December),KlingAI,d8d17413-4151-48d5-939a-9c62173bc699,d8d17413-4151-48d5-939a-9c62173bc699,false
 image_to_video,image_to_video--kling-2.6,Kling 2.6,image_to_video::kling-2-6-pro-january-no-audio,Kling 2.6 Pro (January),KlingAI,d8d17413-4151-48d5-939a-9c62173bc699,d8d17413-4151-48d5-939a-9c62173bc699,false
 image_to_video,image_to_video--kling-2.6,Kling 2.6,image_to_video::kling-2-6-standard-january-no-audio,Kling 2.6 Standard (January),KlingAI,d8d17413-4151-48d5-939a-9c62173bc699,d8d17413-4151-48d5-939a-9c62173bc699,false
-image_to_video,image_to_video--kling-3.0-1080p,Kling 3.0 1080p,image_to_video::kling-3-0-pro,Kling 3.0 1080p (Pro),KlingAI,b75a6679-35f1-4807-8a28-bf53f045e48e,b75a6679-35f1-4807-8a28-bf53f045e48e,false
-image_to_video,image_to_video--kling-3.0-720p,Kling 3.0 720p,image_to_video::kling-3-0-standard,Kling 3.0 720p (Standard),KlingAI,e547dd0a-81b5-436f-bbb6-a2fae2fdd95e,e547dd0a-81b5-436f-bbb6-a2fae2fdd95e,false
-image_to_video,image_to_video--kling-3.0-omni-1080p,Kling 3.0 Omni 1080p,image_to_video::kling-o3-pro,Kling 3.0 Omni 1080p (Pro),KlingAI,3af86543-0f68-420d-a284-8ba99f0f048a,3af86543-0f68-420d-a284-8ba99f0f048a,false
-image_to_video,image_to_video--kling-3.0-omni-720p,Kling 3.0 Omni 720p,image_to_video::kling-o3-standard,Kling 3.0 Omni 720p (Standard),KlingAI,23ee9895-74cd-47ed-8521-0ea312279525,23ee9895-74cd-47ed-8521-0ea312279525,false
+image_to_video,image_to_video--kling-3.0,Kling 3.0,image_to_video::kling-3-0-pro,Kling 3.0 1080p (Pro),KlingAI,c0a61e61-1c91-4c73-8a8f-91b14c35370f,c0a61e61-1c91-4c73-8a8f-91b14c35370f,false
+image_to_video,image_to_video--kling-3.0,Kling 3.0,image_to_video::kling-3-0-standard,Kling 3.0 720p (Standard),KlingAI,c0a61e61-1c91-4c73-8a8f-91b14c35370f,c0a61e61-1c91-4c73-8a8f-91b14c35370f,false
+image_to_video,image_to_video--kling-3.0,Kling 3.0,image_to_video::kling-o3-pro,Kling 3.0 Omni 1080p (Pro),KlingAI,c0a61e61-1c91-4c73-8a8f-91b14c35370f,c0a61e61-1c91-4c73-8a8f-91b14c35370f,false
+image_to_video,image_to_video--kling-3.0,Kling 3.0,image_to_video::kling-o3-standard,Kling 3.0 Omni 720p (Standard),KlingAI,c0a61e61-1c91-4c73-8a8f-91b14c35370f,c0a61e61-1c91-4c73-8a8f-91b14c35370f,false
 image_to_video,image_to_video--ltx-2,LTX 2,image_to_video::ltx-2-fast,LTX-2 Fast,Lightricks,16a41f61-58c8-45c7-9989-14515d5b4dae,16a41f61-58c8-45c7-9989-14515d5b4dae,false
 image_to_video,image_to_video--ltx-2,LTX 2,image_to_video::ltx-2-pro,LTX-2 Pro,Lightricks,16a41f61-58c8-45c7-9989-14515d5b4dae,16a41f61-58c8-45c7-9989-14515d5b4dae,false
 image_to_video,image_to_video--ltx-video-v0.9.7,LTX Video v0.9.7,image_to_video::ltx-video-v0-9-7-13b,LTX Video v0.9.7 13B,Lightricks,781f6086-aa3e-47fe-a4f0-be940ff46294,781f6086-aa3e-47fe-a4f0-be940ff46294,false
@@ -725,15 +725,15 @@ text_to_video,text_to_video--kling-1.5,Kling 1.5,text_to_video::kling-1-5-pro,Kl
 text_to_video,text_to_video--kling-1.6,Kling 1.6,text_to_video::kling-1-6-pro,Kling 1.6 Pro,KlingAI,33ff8210-5e8d-4356-9b8f-42924bec715a,33ff8210-5e8d-4356-9b8f-42924bec715a,false
 text_to_video,text_to_video--kling-1.6,Kling 1.6,text_to_video::kling-1-6-standard,Kling 1.6 Standard,KlingAI,33ff8210-5e8d-4356-9b8f-42924bec715a,33ff8210-5e8d-4356-9b8f-42924bec715a,false
 text_to_video,text_to_video--kling-2.0,Kling 2.0,text_to_video::kling-2-0,Kling 2.0,KlingAI,da1e7f63-912b-4ff2-a9d3-b3f1b151445b,da1e7f63-912b-4ff2-a9d3-b3f1b151445b,false
-text_to_video,text_to_video--kling-2.1-master,Kling 2.1 Master,text_to_video::kling-2-1-master,Kling 2.1 Master,KlingAI,75d6f784-1c19-4f3d-9415-fc4f15a80f1d,75d6f784-1c19-4f3d-9415-fc4f15a80f1d,false
-text_to_video,text_to_video--kling-2.5-turbo-1080p,Kling 2.5 Turbo 1080p,text_to_video::kling-25-turbo-1080p,Kling 2.5 Turbo 1080p,KlingAI,cf833424-946e-4ff5-931b-6158b1f99cbc,cf833424-946e-4ff5-931b-6158b1f99cbc,false
+text_to_video,text_to_video--kling-2.1,Kling 2.1,text_to_video::kling-2-1-master,Kling 2.1 Master,KlingAI,c1565357-5dcd-4842-bbad-5614c2f7c57c,c1565357-5dcd-4842-bbad-5614c2f7c57c,false
+text_to_video,text_to_video--kling-2.5,Kling 2.5,text_to_video::kling-25-turbo-1080p,Kling 2.5 Turbo 1080p,KlingAI,5b3d6d31-8b78-4e7e-b270-fa5dc7f3aa57,5b3d6d31-8b78-4e7e-b270-fa5dc7f3aa57,false
 text_to_video,text_to_video--kling-2.6,Kling 2.6,text_to_video::kling-2-6-pro,Kling 2.6 Pro (December),KlingAI,c74142d2-f11e-4935-a22e-41870029e61b,c74142d2-f11e-4935-a22e-41870029e61b,false
 text_to_video,text_to_video--kling-2.6,Kling 2.6,text_to_video::kling-2-6-pro-january-no-audio,Kling 2.6 Pro (January),KlingAI,c74142d2-f11e-4935-a22e-41870029e61b,c74142d2-f11e-4935-a22e-41870029e61b,false
 text_to_video,text_to_video--kling-2.6,Kling 2.6,text_to_video::kling-2-6-standard-january-no-audio,Kling 2.6 Standard (January),KlingAI,c74142d2-f11e-4935-a22e-41870029e61b,c74142d2-f11e-4935-a22e-41870029e61b,false
-text_to_video,text_to_video--kling-3.0-1080p,Kling 3.0 1080p,text_to_video::kling-3-0-pro,Kling 3.0 1080p (Pro),KlingAI,01fef53e-0bb1-4552-9832-bb2be35d09ce,01fef53e-0bb1-4552-9832-bb2be35d09ce,false
-text_to_video,text_to_video--kling-3.0-720p,Kling 3.0 720p,text_to_video::kling-3-0-standard,Kling 3.0 720p (Standard),KlingAI,18ca291e-a712-4f48-9ec1-b53a87b1bb98,18ca291e-a712-4f48-9ec1-b53a87b1bb98,false
-text_to_video,text_to_video--kling-3.0-omni-1080p,Kling 3.0 Omni 1080p,text_to_video::kling-o3-pro,Kling 3.0 Omni 1080p (Pro),KlingAI,627944e1-dcd0-49b1-85ca-5b043256246f,627944e1-dcd0-49b1-85ca-5b043256246f,false
-text_to_video,text_to_video--kling-3.0-omni-720p,Kling 3.0 Omni 720p,text_to_video::kling-o3-standard,Kling 3.0 Omni 720p (Standard),KlingAI,37b65ce5-64a0-49f7-9147-9c7dd107372a,37b65ce5-64a0-49f7-9147-9c7dd107372a,false
+text_to_video,text_to_video--kling-3.0,Kling 3.0,text_to_video::kling-3-0-pro,Kling 3.0 1080p (Pro),KlingAI,a38132ad-b3b1-4ccf-8067-496acfe17223,a38132ad-b3b1-4ccf-8067-496acfe17223,false
+text_to_video,text_to_video--kling-3.0,Kling 3.0,text_to_video::kling-3-0-standard,Kling 3.0 720p (Standard),KlingAI,a38132ad-b3b1-4ccf-8067-496acfe17223,a38132ad-b3b1-4ccf-8067-496acfe17223,false
+text_to_video,text_to_video--kling-3.0,Kling 3.0,text_to_video::kling-o3-pro,Kling 3.0 Omni 1080p (Pro),KlingAI,a38132ad-b3b1-4ccf-8067-496acfe17223,a38132ad-b3b1-4ccf-8067-496acfe17223,false
+text_to_video,text_to_video--kling-3.0,Kling 3.0,text_to_video::kling-o3-standard,Kling 3.0 Omni 720p (Standard),KlingAI,a38132ad-b3b1-4ccf-8067-496acfe17223,a38132ad-b3b1-4ccf-8067-496acfe17223,false
 text_to_video,text_to_video--krea-realtime,Krea Realtime,text_to_video::krea-realtime,Krea Realtime,Krea,20f945a0-75e3-48b0-9591-96b202b289bc,20f945a0-75e3-48b0-9591-96b202b289bc,false
 text_to_video,text_to_video--ltx-2,LTX 2,text_to_video::ltx-2-fast,LTX-2 Fast,Lightricks,478afb66-7c7c-4c84-abe6-8d38fd5c6d0b,478afb66-7c7c-4c84-abe6-8d38fd5c6d0b,false
 text_to_video,text_to_video--ltx-2,LTX 2,text_to_video::ltx-2-pro,LTX-2 Pro,Lightricks,478afb66-7c7c-4c84-abe6-8d38fd5c6d0b,478afb66-7c7c-4c84-abe6-8d38fd5c6d0b,false
