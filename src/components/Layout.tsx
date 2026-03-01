@@ -35,7 +35,7 @@ export const Header = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
+    <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div className="flex items-center gap-4 md:gap-12">
@@ -196,15 +196,15 @@ export const Footer = () => {
           <div>
             <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">开发者资源</h4>
             <ul className="space-y-3">
-              <li><Link to="/ecosystem" className="text-sm text-slate-600 hover:text-primary transition-colors">开发者生态入口</Link></li>
+              <li><Link to="/ecosystem" className="text-sm text-slate-500 hover:text-primary transition-colors">开发者生态入口</Link></li>
             </ul>
           </div>
           <div className="hidden md:block">
             <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">社区生态</h4>
             <ul className="space-y-3">
-              <li><Link to="/community" className="text-sm text-slate-600 hover:text-primary transition-colors">模型讨论</Link></li>
-              <li><Link to="/compare" className="text-sm text-slate-600 hover:text-primary transition-colors">评测对比</Link></li>
-              <li><Link to="/community" className="text-sm text-slate-600 hover:text-primary transition-colors">开发者沙龙</Link></li>
+              <li><Link to="/community" className="text-sm text-slate-500 hover:text-primary transition-colors">模型讨论</Link></li>
+              <li><Link to="/compare" className="text-sm text-slate-500 hover:text-primary transition-colors">评测对比</Link></li>
+              <li><Link to="/community" className="text-sm text-slate-500 hover:text-primary transition-colors">开发者沙龙</Link></li>
             </ul>
           </div>
           <div>

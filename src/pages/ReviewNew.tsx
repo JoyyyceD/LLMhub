@@ -29,13 +29,13 @@ const PROVIDERS = [
   'OpenRouter', 'Together AI', 'Other',
 ];
 
-const MODALITY_OPTIONS: Array<{ key: ModalityKey; label: string }> = [
-  { key: 'llm', label: 'LLM模型' },
-  { key: 'text_to_image', label: '文生图模型' },
-  { key: 'text_to_video', label: '文生视频模型' },
-  { key: 'image_editing', label: '图像编辑模型' },
-  { key: 'image_to_video', label: '图生视频模型' },
-  { key: 'text_to_speech', label: '语音合成 / TTS模型' },
+const MODALITY_OPTIONS: Array<{ key: ModalityKey; label: string; shortLabel: string }> = [
+  { key: 'llm', label: 'LLM模型', shortLabel: 'LLM' },
+  { key: 'text_to_image', label: '文生图模型', shortLabel: '文生图' },
+  { key: 'text_to_video', label: '文生视频模型', shortLabel: '文生视频' },
+  { key: 'image_editing', label: '图像编辑模型', shortLabel: '图像编辑' },
+  { key: 'image_to_video', label: '图生视频模型', shortLabel: '图生视频' },
+  { key: 'text_to_speech', label: '语音合成 / TTS模型', shortLabel: 'TTS' },
 ];
 
 function cleanName(name: string): string {
@@ -138,6 +138,7 @@ export const ReviewNew = () => {
   const [models, setModels] = useState<ModelSnapshot[]>([]);
   const [seriesOptions, setSeriesOptions] = useState<ModelSeries[]>([]);
   const [searchText, setSearchText] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(false);
   const [error, setError] = useState('');
@@ -194,9 +195,15 @@ export const ReviewNew = () => {
       const modelFromUrl = q.get('model');
       const modalityFromUrl = q.get('modality');
       const matchedModel = modelFromUrl ? resolvedModels.find((m) => m.aa_slug === modelFromUrl) : null;
-      const initSeriesId = seriesFromUrl ?? matchedModel?.series_id ?? allSeries[0]?.id ?? '';
+      const initSeriesId = seriesFromUrl ?? matchedModel?.series_id ?? '';
       const matchedModality = matchedModel?.aa_modality ?? (isModalityKey(modalityFromUrl) ? modalityFromUrl : null);
       const initModality = (matchedModality ?? 'llm') as ModalityKey;
+
+      // Pre-fill search text if series known
+      if (initSeriesId) {
+        const matchedSeries = allSeries.find(s => s.id === initSeriesId);
+        if (matchedSeries) setSearchText(matchedSeries.display_name);
+      }
 
       setForm((prev) => ({
         ...prev,
@@ -207,6 +214,37 @@ export const ReviewNew = () => {
       setLoadingModels(false);
     });
   }, [location.search]);
+
+  // Map: series_id -> Set of modalities it contains
+  const seriesModalityMap = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const m of models) {
+      const modality = m.aa_modality ?? 'llm';
+      const sid = m.series_id;
+      if (!sid) continue;
+      if (!map.has(sid)) map.set(sid, new Set());
+      map.get(sid)!.add(modality);
+    }
+    return map;
+  }, [models]);
+
+  // When modality changes, reset series if it no longer matches
+  useEffect(() => {
+    if (!form.series_id) return;
+    const mods = seriesModalityMap.get(form.series_id);
+    if (mods && !mods.has(form.modality)) {
+      setForm((prev) => ({ ...prev, series_id: '', model_id: '' }));
+      setSearchText('');
+    }
+  }, [form.modality, seriesModalityMap]);
+
+  // Series filtered to only those containing at least one model of the selected modality
+  const filteredSeriesOptions = useMemo(() => {
+    return seriesOptions.filter((s) => {
+      const mods = seriesModalityMap.get(s.id);
+      return mods?.has(form.modality) ?? false;
+    });
+  }, [seriesOptions, seriesModalityMap, form.modality]);
 
   const modelsInSeries = useMemo(
     () => models.filter((m) => m.series_id === form.series_id),
@@ -252,13 +290,38 @@ export const ReviewNew = () => {
     setForm((prev) => ({ ...prev, model_id: specificModelOptions[0]?.aa_slug ?? '' }));
   }, [form.series_id, form.model_id, specificModelOptions]);
 
+  // Enhanced search: search series names + model names, deduplicate by series_id
   const searchMatches = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     if (!q) return [];
-    return seriesOptions
-      .filter((s) => s.display_name.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [seriesOptions, searchText]);
+
+    const seen = new Set<string>();
+    const results: Array<{ series: ModelSeries; modalities: Set<string> }> = [];
+
+    // Search by series display name first
+    for (const s of seriesOptions) {
+      if (results.length >= 8) break;
+      if (!seen.has(s.id) && s.display_name.toLowerCase().includes(q)) {
+        seen.add(s.id);
+        results.push({ series: s, modalities: seriesModalityMap.get(s.id) ?? new Set() });
+      }
+    }
+
+    // Also search by model name (resolves to series)
+    for (const m of models) {
+      if (results.length >= 8) break;
+      const sid = m.series_id;
+      if (!sid || seen.has(sid)) continue;
+      const series = seriesOptions.find((s) => s.id === sid);
+      if (!series) continue;
+      if (cleanName(m.aa_name ?? '').toLowerCase().includes(q)) {
+        seen.add(sid);
+        results.push({ series, modalities: seriesModalityMap.get(sid) ?? new Set() });
+      }
+    }
+
+    return results;
+  }, [seriesOptions, models, searchText, seriesModalityMap]);
 
   useEffect(() => {
     if (!user || !form.series_id) return;
@@ -306,25 +369,14 @@ export const ReviewNew = () => {
       setLoadingExisting(false);
     });
 
-    return () => {
-      canceled = true;
-    };
+    return () => { canceled = true; };
   }, [user, form.series_id, form.model_id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    if (!form.series_id) {
-      setError('请先选择模型系列。');
-      return;
-    }
-    if (form.rating_overall == null) {
-      setError('总体评分是必填项。');
-      return;
-    }
+    if (!user) { navigate('/login'); return; }
+    if (!form.series_id) { setError('请先选择模型系列。'); return; }
+    if (form.rating_overall == null) { setError('总体评分是必填项。'); return; }
 
     setSubmitting(true);
     setError('');
@@ -350,9 +402,9 @@ export const ReviewNew = () => {
       rating_throughput: form.rating_throughput,
       rating_stability: form.rating_stability,
       provider_name: form.provider_name || null,
-      pros: form.pros.trim().slice(0, 200) || null,
-      cons: form.cons.trim().slice(0, 200) || null,
-      comment: form.comment.trim().slice(0, 800) || null,
+      pros: form.pros.trim().slice(0, 100) || null,
+      cons: form.cons.trim().slice(0, 100) || null,
+      comment: form.comment.trim().slice(0, 200) || null,
       status: 'published',
     };
 
@@ -361,50 +413,94 @@ export const ReviewNew = () => {
       : await supabase.from('model_review_posts').insert(payload);
 
     setSubmitting(false);
-    if (result.error) {
-      setError(`发布失败：${result.error.message}`);
-      return;
-    }
+    if (result.error) { setError(`发布失败：${result.error.message}`); return; }
 
     setSuccess('点评已发布。');
     setTimeout(() => navigate('/community'), 700);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
-          <h1 className="text-2xl font-black">发表模型点评</h1>
-          <p className="text-sm text-slate-500 mt-1">先选择模型系列，再可选具体型号；总体评分必填。</p>
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h1 className="text-xl font-black">发表模型点评</h1>
+          <p className="text-sm text-slate-500 mt-0.5">搜索并选择模型系列，再选具体型号；总体评分必填。</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-7">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 text-rose-600 rounded-2xl text-sm font-medium">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              {error}
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}
             </div>
           )}
           {success && (
             <div className="flex items-start gap-3 px-4 py-3 bg-emerald-50 text-emerald-700 rounded-2xl text-sm font-medium">
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              {success}
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />{success}
             </div>
           )}
-
           {!user && (
             <div className="px-4 py-3 bg-amber-50 text-amber-700 rounded-2xl text-sm font-medium">
               发布点评需要登录。<Link to="/login" className="font-black underline ml-1">去登录</Link>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Step 1: Search */}
+          <section>
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">搜索模型</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => { setSearchText(e.target.value); setShowDropdown(true); }}
+                onFocus={() => setShowDropdown(true)}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                placeholder="输入模型名称关键词，如 Claude、GPT、Gemini..."
+                className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
+              />
+              {showDropdown && searchText.trim() && (
+                <div className="absolute z-20 top-full mt-1 w-full border border-slate-200 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-slate-900">
+                  {searchMatches.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-slate-400">没有匹配的模型系列</div>
+                  ) : (
+                    searchMatches.map(({ series: s, modalities }) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onMouseDown={() => {
+                          const autoModality = modalities.size === 1
+                            ? ([...modalities][0] as ModalityKey)
+                            : form.modality;
+                          setForm((prev) => ({ ...prev, series_id: s.id, model_id: '', modality: autoModality }));
+                          setSearchText(s.display_name);
+                          setShowDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 border-b last:border-b-0 border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3"
+                      >
+                        <span className="font-semibold text-slate-500">{s.display_name}</span>
+                        <div className="flex gap-1 shrink-0">
+                          {[...modalities].map((mod) => (
+                            <span key={mod} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 font-semibold">
+                              {MODALITY_OPTIONS.find(o => o.key === mod)?.shortLabel ?? mod}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Step 2: Modality + Series (linked) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <section>
               <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">模型类别</label>
               <select
                 value={form.modality}
                 onChange={(e) => setForm((prev) => ({ ...prev, modality: e.target.value as ModalityKey, model_id: '' }))}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 focus:ring-2 ring-primary/20"
               >
                 {MODALITY_OPTIONS.map((o) => (
                   <option key={o.key} value={o.key}>{o.label}</option>
@@ -412,7 +508,10 @@ export const ReviewNew = () => {
               </select>
             </section>
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">模型系列（必选）</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                模型系列（必选）
+                {loadingExisting && <span className="ml-2 text-[11px] text-slate-400 font-bold normal-case tracking-normal">加载历史点评...</span>}
+              </label>
               {loadingModels ? (
                 <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-400 flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" /> 加载中...
@@ -420,82 +519,57 @@ export const ReviewNew = () => {
               ) : (
                 <select
                   value={form.series_id}
-                  onChange={(e) => setForm((prev) => ({ ...prev, series_id: e.target.value, model_id: '' }))}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
+                  onChange={(e) => {
+                    const sid = e.target.value;
+                    const series = seriesOptions.find(s => s.id === sid);
+                    const mods = sid ? seriesModalityMap.get(sid) : undefined;
+                    const autoModality = mods?.size === 1 ? ([...mods][0] as ModalityKey) : form.modality;
+                    if (series) setSearchText(series.display_name);
+                    setForm((prev) => ({ ...prev, series_id: sid, model_id: '', modality: autoModality }));
+                  }}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 focus:ring-2 ring-primary/20"
                   required
                 >
-                  {seriesOptions.map((s) => (
+                  <option value="">— 请选择模型系列 —</option>
+                  {filteredSeriesOptions.map((s) => (
                     <option key={s.id} value={s.id}>{s.display_name}</option>
                   ))}
                 </select>
               )}
-              {loadingExisting && (
-                <p className="mt-2 text-[11px] text-slate-400 font-bold">正在加载你之前的点评...</p>
-              )}
             </section>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Step 3: Specific model + Provider (same row) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">搜索模型系列</label>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="输入模型系列关键词..."
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 ring-primary/20"
-                />
-              </div>
-              {searchText.trim() && (
-                <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden">
-                  {searchMatches.length === 0 ? (
-                    <div className="px-4 py-3 text-sm text-slate-400">没有匹配系列</div>
-                  ) : (
-                    searchMatches.map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => {
-                          setForm((prev) => ({ ...prev, series_id: s.id, model_id: '' }));
-                          setSearchText(s.display_name);
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 border-b last:border-b-0 border-slate-100"
-                      >
-                        <span className="font-bold text-slate-800">{s.display_name}</span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </section>
-            <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">具体型号（可选）</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                具体型号（可选）
+                {!form.series_id && <span className="ml-2 text-[11px] text-slate-300 font-bold normal-case tracking-normal">请先选择系列</span>}
+              </label>
               <select
                 value={form.model_id}
                 onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
+                disabled={!form.series_id}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 focus:ring-2 ring-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <option value="">不指定具体型号（系列级评论）</option>
+                <option value="">不指定（系列级评论）</option>
                 {specificModelOptions.map((m) => (
                   <option key={m.aa_slug} value={m.aa_slug}>{cleanName(m.aa_name)}</option>
                 ))}
               </select>
             </section>
+            <section>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
+              <select
+                value={form.provider_name}
+                onChange={(e) => setForm((prev) => ({ ...prev, provider_name: e.target.value }))}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 focus:ring-2 ring-primary/20"
+              >
+                <option value="">未指定</option>
+                {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </section>
           </div>
-
-          <section>
-            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">使用的 Provider（可选）</label>
-            <select
-              value={form.provider_name}
-              onChange={(e) => setForm((prev) => ({ ...prev, provider_name: e.target.value }))}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 ring-primary/20"
-            >
-              <option value="">未指定</option>
-              {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </section>
 
           <section>
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">总体评分（必填）</label>
@@ -506,8 +580,8 @@ export const ReviewNew = () => {
           </section>
 
           <section>
-            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-4">维度评分（可选，独立）</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">维度评分（可选，独立）</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { key: 'rating_quality', label: '质量' },
                 { key: 'rating_price', label: '性价比' },
@@ -517,7 +591,7 @@ export const ReviewNew = () => {
               ].map(({ key, label }) => (
                 <div key={key} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-600">{label}</span>
+                    <span className="text-xs font-bold text-slate-500">{label}</span>
                     <span className="text-xs font-black text-primary">
                       {form[key as keyof typeof form] == null ? '未评分' : String(form[key as keyof typeof form])}
                     </span>
@@ -532,31 +606,31 @@ export const ReviewNew = () => {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-emerald-500 mb-2">优点（可选，≤200）</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-emerald-500 mb-2">优点（可选，≤100）</label>
               <textarea
                 value={form.pros}
-                onChange={(e) => setForm((prev) => ({ ...prev, pros: e.target.value.slice(0, 200) }))}
-                className="w-full h-28 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-slate-900 resize-none"
+                onChange={(e) => setForm((prev) => ({ ...prev, pros: e.target.value.slice(0, 100) }))}
+                className="w-full h-20 px-4 py-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-slate-500 resize-none"
               />
             </section>
             <section>
-              <label className="block text-xs font-black uppercase tracking-widest text-rose-500 mb-2">缺点（可选，≤200）</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-rose-500 mb-2">缺点（可选，≤100）</label>
               <textarea
                 value={form.cons}
-                onChange={(e) => setForm((prev) => ({ ...prev, cons: e.target.value.slice(0, 200) }))}
-                className="w-full h-28 px-4 py-3 bg-rose-50 border border-rose-100 rounded-xl text-sm text-slate-900 resize-none"
+                onChange={(e) => setForm((prev) => ({ ...prev, cons: e.target.value.slice(0, 100) }))}
+                className="w-full h-20 px-4 py-2.5 bg-rose-50 border border-rose-100 rounded-xl text-sm text-slate-500 resize-none"
               />
             </section>
           </div>
 
           <section>
-            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">详细评价（可选，≤800）</label>
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">详细评价（可选，≤200）</label>
             <textarea
               value={form.comment}
-              onChange={(e) => setForm((prev) => ({ ...prev, comment: e.target.value.slice(0, 800) }))}
-              className="w-full h-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 resize-none"
+              onChange={(e) => setForm((prev) => ({ ...prev, comment: e.target.value.slice(0, 200) }))}
+              className="w-full h-24 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 resize-none"
             />
           </section>
 

@@ -1,0 +1,42 @@
+User-agent: *
+Allow: /
+
+# Google
+User-agent: Googlebot
+Allow: /
+
+# Baidu
+User-agent: Baiduspider
+Allow: /
+User-agent: Baiduspider-image
+Allow: /
+User-agent: Baiduspider-video
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /
+
+# ByteDance (豆包 / 抖音)
+User-agent: Bytespider
+Allow: /
+
+# 360 Search
+User-agent: 360Spider
+Allow: /
+User-agent: HaoSouSpider
+Allow: /
+
+# Sogou (搜狗)
+User-agent: Sogou web spider
+Allow: /
+
+# AI crawlers
+User-agent: GPTBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://www.tokengalaxy.cn/sitemap.xml

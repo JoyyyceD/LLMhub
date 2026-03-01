@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -25,6 +25,89 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { ModelSnapshot } from '../types';
 import { ProviderLogo } from '../components/ProviderLogo';
+import { getProviderDescription } from '../lib/providerLogos';
+
+const sponsoredAds = [
+  {
+    slug: 'claude-sonnet-4-6',
+    logo: '/provider-logos/anthropic.svg',
+    name: 'Claude Sonnet 4.6',
+    tagline: '智力指数领跑全球，代码推理全面升级',
+  },
+  {
+    slug: 'gpt-5-2',
+    logo: '/provider-logos/openai.svg',
+    name: 'GPT-5.2',
+    tagline: '综合性能大幅跃升，多任务处理卓越',
+  },
+  {
+    slug: 'gemini-3-1-pro-preview',
+    logo: '/provider-logos/google.svg',
+    name: 'Gemini 3.1 Pro Preview',
+    tagline: '多模态旗舰，长文本理解与推理强化',
+  },
+];
+
+function SponsoredBanner() {
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (paused) return;
+    timerRef.current = setInterval(() => {
+      setCurrent((c) => (c + 1) % sponsoredAds.length);
+    }, 4500);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [paused]);
+
+  const ad = sponsoredAds[current];
+
+  return (
+    <div
+      className="bg-primary text-white p-6 rounded-xl border border-white/10 shadow-lg"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 bg-white/15 rounded-lg">
+            <Zap className="w-5 h-5 text-white/80" />
+          </div>
+          <span className="font-bold text-sm">近期热门模型</span>
+        </div>
+        <span className="text-[10px] font-semibold text-white/40 uppercase tracking-widest">赞助</span>
+      </div>
+
+      {/* Ad content */}
+      <div className="flex items-center gap-2 mb-2">
+        <img src={ad.logo} alt="" className="w-4 h-4 rounded object-contain bg-white p-0.5 shrink-0" />
+        <span className="text-sm font-bold">{ad.name}</span>
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/15 text-white/80 border border-white/20">新发布</span>
+      </div>
+      <p className="text-[12px] text-white/70 leading-relaxed mb-5 h-[2.5rem]">{ad.tagline}</p>
+
+      <Link
+        to={`/model/${ad.slug}`}
+        className="w-full flex items-center justify-center gap-2 text-xs bg-white/15 hover:bg-white/25 text-white py-2.5 rounded-lg transition-all font-semibold"
+      >
+        查看性能详情
+      </Link>
+
+      {/* 轮播点 */}
+      <div className="flex gap-1.5 mt-4 justify-center">
+        {sponsoredAds.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-1.5 h-1.5 rounded-full transition-opacity ${i === current ? 'bg-white opacity-100' : 'bg-white opacity-30 hover:opacity-50'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const USD_TO_CNY = 7.25;
 const ANON_MODEL_DETAIL_VISITED_KEY = 'llmhub_anon_model_detail_visited_slugs';
@@ -37,7 +120,7 @@ function fmtCny(usd: number | null | undefined): string {
 
 function fmtUsd(usd: number | null | undefined): string {
   if (usd == null) return 'N/A';
-  return `$${usd.toFixed(1)}`;
+  return `$${usd.toFixed(2)}`;
 }
 
 function fmtNum(n: number | null | undefined, decimals = 2): string {
@@ -625,6 +708,11 @@ export const ModelDetail = () => {
                 </span>
               )}
             </div>
+            {getProviderDescription(creatorLogoMatchName) && (
+              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1.5">
+                {getProviderDescription(creatorLogoMatchName)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -957,6 +1045,9 @@ export const ModelDetail = () => {
               </div>
             </div>
           )}
+
+          {/* Sponsored Banner */}
+          <SponsoredBanner />
 
           {/* CTA */}
           <div className="bg-indigo-950 dark:bg-indigo-900/40 text-white p-6 rounded-xl border border-indigo-900/50 shadow-lg">

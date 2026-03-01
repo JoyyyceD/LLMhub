@@ -81,6 +81,42 @@ export function getProviderLogoUrl(providerName: string | null | undefined): str
   return `/provider-logos/${hit.file}`;
 }
 
+const PROVIDER_DESCRIPTIONS: Array<{ patterns: string[]; desc: string }> = [
+  { patterns: ['google', 'gemini'], desc: '全球顶尖科技公司，深耕AI、搜索与云计算' },
+  { patterns: ['openai'], desc: '引领生成式AI浪潮的美国人工智能研究公司' },
+  { patterns: ['anthropic'], desc: '专注AI安全的研究公司，Claude系列模型开发者' },
+  { patterns: ['meta', 'llama'], desc: '社交媒体巨头，推动开源大模型生态发展' },
+  { patterns: ['xai', 'x ai'], desc: '马斯克创立的AI公司，致力于理解宇宙本质' },
+  { patterns: ['microsoft'], desc: '全球最大软件公司，深度投资OpenAI并布局AI' },
+  { patterns: ['amazon web services', 'aws'], desc: '全球最大云计算平台，提供完整AI基础设施' },
+  { patterns: ['nvidia'], desc: 'AI芯片领导者，GPU生态赋能大模型训练与推理' },
+  { patterns: ['mistral', 'mistralai'], desc: '欧洲领先AI公司，专注高效开源大语言模型' },
+  { patterns: ['alibaba', 'qwen'], desc: '阿里巴巴旗下AI团队，通义千问系列模型开发者' },
+  { patterns: ['deepseek'], desc: '深度求索，低成本高性能推理模型的中国黑马' },
+  { patterns: ['bytedance'], desc: '字节跳动旗下AI团队，豆包大模型开发者' },
+  { patterns: ['baidu', 'ernie'], desc: '中国最大搜索公司，文心一言大模型开发者' },
+  { patterns: ['moonshot', 'kimi'], desc: '月之暗面，长上下文理解能力领先的中国AI公司' },
+  { patterns: ['zhipu', 'chatglm'], desc: '智谱AI，清华系公司，GLM系列大模型开发者' },
+  { patterns: ['minimax'], desc: 'MiniMax，多模态AIGC领域的中国明星创业公司' },
+  { patterns: ['tencent'], desc: '腾讯混元大模型，中国互联网巨头旗下AI研究团队' },
+  { patterns: ['cohere'], desc: '专注企业级NLP应用的加拿大AI公司' },
+  { patterns: ['perplexity'], desc: '基于AI的新一代搜索引擎，实时联网问答' },
+  { patterns: ['databricks'], desc: '数据+AI平台公司，开源大模型生态重要贡献者' },
+];
+
+export function getProviderDescription(providerName: string | null | undefined): string | null {
+  const normalized = normalize(providerName ?? '');
+  if (!normalized) return null;
+  const normalizedCompact = compact(normalized);
+  const hit = PROVIDER_DESCRIPTIONS.find((entry) =>
+    entry.patterns.some((pattern) => {
+      const p = normalize(pattern);
+      return normalized.includes(p) || normalizedCompact.includes(compact(p));
+    })
+  );
+  return hit?.desc ?? null;
+}
+
 export function getProviderInitials(providerName: string | null | undefined): string {
   const value = (providerName ?? '').trim();
   if (!value) return 'AI';

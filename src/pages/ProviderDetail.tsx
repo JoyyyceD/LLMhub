@@ -4,6 +4,7 @@ import { ChevronRight, Home as HomeIcon, Loader2, PackageSearch } from 'lucide-r
 import { supabase } from '../lib/supabase';
 import type { ModelSnapshot } from '../types';
 import { ProviderLogo } from '../components/ProviderLogo';
+import { getProviderDescription } from '../lib/providerLogos';
 
 const MODALITY_LABEL: Record<string, string> = {
   llm: 'LLM模型',
@@ -171,6 +172,11 @@ export const ProviderDetail = () => {
             />
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white">{providerDisplayName}</h1>
+              {getProviderDescription(models[0]?.aa_model_creator_name ?? providerName) && (
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 mb-1">
+                  {getProviderDescription(models[0]?.aa_model_creator_name ?? providerName)}
+                </p>
+              )}
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 模型总数: {models.length} · 系列数: {groupedModels.length}
               </p>

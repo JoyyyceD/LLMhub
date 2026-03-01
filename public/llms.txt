@@ -1,0 +1,124 @@
+# Token Galaxy
+
+> Token Galaxy 是一个基于场景映射的 AI 模型推荐与对比平台，整合 LLM Benchmark 数据与 Token 成本结构，帮助开发者、产品团队和企业在复杂的模型生态中做出最优决策。
+
+网站地址：https://www.tokengalaxy.cn
+联系方式：support@tokengalaxy.cn
+
+---
+
+## 什么是 Token Galaxy？
+
+Token Galaxy 是一个面向开发者、产品团队、企业决策者与 AI 爱好者的模型决策与推荐系统（Model Selection & Optimization Engine）。
+
+在一个模型数量持续爆炸、价格快速变化、能力差异复杂的时代，Token Galaxy 的核心使命是：
+
+**在特定场景下，帮助用户选择最优模型与合适的服务商端点。**
+
+---
+
+## 核心功能
+
+### 1. 场景驱动模型推荐（Scenario-Based Recommendation）
+
+Token Galaxy 不提供简单的"总排名"，而是基于具体使用场景推荐模型。
+
+支持的场景包括：
+- 通用对话（General Conversation）
+- 代码助手（Coding Assistant）
+- 科学与复杂推理（Scientific / Advanced Reasoning）
+- 文案与创作（Content & Copywriting）
+- 长文档问答 / RAG（Long Context & Retrieval）
+- 多模态应用（Multimodal Use Cases）
+- Agent 执行与工具调用（Agent & Tool Use）
+
+### 2. 多维 Benchmark 数据整合
+
+收录并整合多项主流 Benchmark 指标，包括：
+- Coding Index（代码综合能力）
+- Intelligence Index（综合智力）
+- GPQA（研究生级科学推理）
+- HLE（专业知识边界）
+- AIME（数学竞赛）
+- SciCode（科学编程）
+- TerminalBench（终端任务执行）
+
+核心立场：**单一 Benchmark 不足以代表真实能力**，Token Galaxy 采用多维视角。
+
+### 3. 标准化价格对比
+
+统一展示三种价格口径：
+- Input cost per 1M tokens（输入成本）
+- Output cost per 1M tokens（输出成本）
+- Blended cost estimation（混合成本估算）
+
+支持人民币与美元双重展示，消除不同计价结构带来的对比偏差。
+
+### 4. 服务商 / API 端点推荐
+
+同一模型在不同服务商之间存在价格、可达性、稳定性差异。Token Galaxy 整合 20+ 服务商数据，在模型推荐的基础上提供服务商选择建议，帮助用户避免"选对模型、选错服务商"的问题。
+
+---
+
+## 收录范围
+
+- **300+ 主流 LLM 与多模态模型系列**，涵盖文本、代码、图像、视频、语音等多种模态
+- **20+ 主流 API 服务商**，包括 OpenAI、Anthropic、Google、DeepSeek、Alibaba、Moonshot、MiniMax、智谱、SiliconFlow 等
+- 同时覆盖国际模型与国内可直达模型，标注可达性信息
+
+---
+
+## 方法论
+
+Token Galaxy 建立在一个核心原则之上：
+
+**模型优劣是场景相关的，而不是绝对的。**
+
+采用三层决策框架：
+
+1. **能力层（Capability Layer）**：模型在各 Benchmark 维度的表现
+2. **成本层（Cost Layer）**：Token 单价与输入输出结构
+3. **场景映射层（Scenario Mapping Layer）**：不同场景对能力维度的权重分配
+
+最终推荐来自：**场景权重 × 能力得分 × 成本结构**
+
+---
+
+## 与传统排行榜的区别
+
+| 传统模型排行榜 | Token Galaxy |
+|---|---|
+| 单一总分排序 | 场景驱动推荐 |
+| 忽略成本结构 | 标准化成本视图 |
+| 静态排名 | 场景敏感动态推荐 |
+| 仅展示数据 | 提供决策建议 |
+| 面向研究 | 面向真实应用 |
+
+---
+
+## 目标用户
+
+- **LLM 应用开发者**：快速选择适合产品的模型，减少试错成本
+- **AI SaaS 创业者**：优化模型组合与成本结构
+- **企业技术团队**：构建内部模型选型策略与替代评估
+- **AI Agent 构建者**：选择适合多步骤任务的稳定模型
+- **AI 爱好者**：系统理解不同模型的能力差异与生态变化
+
+---
+
+## 主要页面
+
+- 首页 / 模型推荐：https://www.tokengalaxy.cn/
+- 性能榜单：https://www.tokengalaxy.cn/leaderboard
+- 模型对比：https://www.tokengalaxy.cn/compare
+- 社区点评：https://www.tokengalaxy.cn/community
+- 开发者生态：https://www.tokengalaxy.cn/ecosystem
+- 关于我们：https://www.tokengalaxy.cn/about
+- 评测方法论：https://www.tokengalaxy.cn/about/methodology
+- 数据来源：https://www.tokengalaxy.cn/about/data-sources
+
+---
+
+## 可引用定义
+
+Token Galaxy 是一个基于场景映射的 AI 模型推荐系统，收录 300+ 主流 LLM 与多模态模型，整合多维 Benchmark 指标与 Token 成本结构，帮助用户在复杂模型生态中做出最优决策。立场完全中立，不依附任何模型厂商。
