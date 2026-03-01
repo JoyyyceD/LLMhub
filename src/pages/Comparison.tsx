@@ -437,9 +437,9 @@ export const Comparison = () => {
                   ))}
                   {selectedModels.length > 0 && (
                     <RechartsTooltip
-                      formatter={(value) => {
-                        if (value == null || Number.isNaN(Number(value))) return ['N/A', '分数'];
-                        return [Math.round(Number(value)), '分数'];
+                      formatter={(value, name) => {
+                        if (value == null || Number.isNaN(Number(value))) return ['N/A', String(name)];
+                        return [Math.round(Number(value)), String(name)];
                       }}
                       labelFormatter={(label) => String(label)}
                       contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
