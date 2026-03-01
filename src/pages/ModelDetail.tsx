@@ -131,6 +131,38 @@ type BenchmarkRankStat = {
   topPct: number;
 };
 
+type MultimodalMetricDef = {
+  key: keyof ModelSnapshot;
+  name: string;
+  desc: string;
+};
+
+function getMultimodalMetricDefs(modality: string | null | undefined): MultimodalMetricDef[] {
+  const rows: MultimodalMetricDef[] = [{ key: 'aa_elo', name: 'ELO', desc: '综合 ELO评分' }];
+  if (modality === 'text_to_image') {
+    rows.push(
+      { key: 'category_style_anime_elo', name: 'Anime', desc: '动漫风评分' },
+      { key: 'category_style_cartoon_illustration_elo', name: 'Cartoon/Illustration', desc: '卡通/插画评分' },
+      { key: 'category_style_general_photorealistic_elo', name: 'General & Photorealistic', desc: '通用 & 写实评分' },
+      { key: 'category_style_graphic_design_digital_rendering_elo', name: 'Graphic Design', desc: '平面设计评分' },
+      { key: 'category_style_traditional_art_elo', name: 'Traditional Art', desc: '传统艺术评分' },
+      { key: 'category_subject_commercial_elo', name: 'Commercial', desc: '商业视觉评分' }
+    );
+  }
+  if (modality === 'text_to_video' || modality === 'image_to_video') {
+    rows.push(
+      { key: 'category_format_short_prompt_elo', name: 'Short Prompt', desc: '短提示词评分' },
+      { key: 'category_format_long_prompt_elo', name: 'Long Prompt', desc: '长提示词评分' },
+      { key: 'category_format_moving_camera_elo', name: 'Moving Camera', desc: '运镜评分' },
+      { key: 'category_format_multi_scene_elo', name: 'Multi-Scene', desc: '多场景评分' },
+      { key: 'category_style_photorealistic_elo', name: 'Photorealistic', desc: '写实/照片级真实评分' },
+      { key: 'category_style_cartoon_and_anime_elo', name: 'Cartoon & Anime', desc: '卡通/动漫评分' },
+      { key: 'category_style_3d_animation_elo', name: '3D Animation', desc: '3D 动画/CG 风评分' }
+    );
+  }
+  return rows;
+}
+
 const CN_VENDOR_DISPLAY_MAP: Record<string, string> = {
   'Z.ai': '智谱',
   'Z.ai (GLM)': '智谱',
@@ -188,6 +220,7 @@ export const ModelDetail = () => {
   const [providersLoading, setProvidersLoading] = useState(false);
   const [providersError, setProvidersError] = useState('');
   const [benchmarkRankMap, setBenchmarkRankMap] = useState<Partial<Record<BenchmarkMetricKey, BenchmarkRankStat | null>>>({});
+  const [multimodalRankMap, setMultimodalRankMap] = useState<Partial<Record<keyof ModelSnapshot, BenchmarkRankStat | null>>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -393,6 +426,72 @@ export const ModelDetail = () => {
       });
   }, [model]);
 
+  useEffect(() => {
+    if (!model || (model.aa_modality ?? 'llm') === 'llm') {
+      setMultimodalRankMap({});
+      return;
+    }
+
+    const metricDefs = getMultimodalMetricDefs(model.aa_modality);
+    const metricKeys = metricDefs.map((m) => m.key);
+    if (!metricKeys.length) {
+      setMultimodalRankMap({});
+      return;
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
+    const cutoff = cutoffDate.toISOString().slice(0, 10);
+    const selectCols = metricKeys.join(',');
+
+    let query = supabase
+      .from('model_snapshots')
+      .select(selectCols)
+      .eq('aa_modality', model.aa_modality);
+
+    // TTS rows often have no aa_release_date, so "recent 1 year" filter can empty the cohort.
+    if (model.aa_modality !== 'text_to_speech') {
+      query = query.gte('aa_release_date', cutoff);
+    }
+
+    query.then(({ data, error: queryError }) => {
+        if (queryError || !data) {
+          setMultimodalRankMap({});
+          return;
+        }
+
+        const rows = data as Array<Partial<Record<keyof ModelSnapshot, number | null>>>;
+        const next: Partial<Record<keyof ModelSnapshot, BenchmarkRankStat | null>> = {};
+
+        metricKeys.forEach((key) => {
+          const current = model[key] as number | null | undefined;
+          if (current == null) {
+            next[key] = null;
+            return;
+          }
+
+          const values = rows
+            .map((r) => r[key])
+            .filter((v): v is number => typeof v === 'number');
+
+          if (!values.length) {
+            next[key] = null;
+            return;
+          }
+
+          const rank = values.filter((v) => v > current).length + 1;
+          const total = values.length;
+          next[key] = {
+            rank,
+            total,
+            topPct: (rank / total) * 100,
+          };
+        });
+
+        setMultimodalRankMap(next);
+      });
+  }, [model]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -455,31 +554,17 @@ export const ModelDetail = () => {
     })
     .filter(({ value }) => value !== 'N/A');
 
-  const multimodalMetrics: Array<{ name: string; desc: string; value: string }> = (() => {
-    const rows: Array<{ key: keyof ModelSnapshot; name: string; desc: string }> = [{ key: 'aa_elo', name: 'ELO', desc: '综合 ELO评分' }];
-    if (model.aa_modality === 'text_to_image') {
-      rows.push(
-        { key: 'category_style_anime_elo', name: 'Anime', desc: '动漫风评分' },
-        { key: 'category_style_cartoon_illustration_elo', name: 'Cartoon/Illustration', desc: '卡通/插画评分' },
-        { key: 'category_style_general_photorealistic_elo', name: 'General & Photorealistic', desc: '通用 & 写实评分' },
-        { key: 'category_style_graphic_design_digital_rendering_elo', name: 'Graphic Design', desc: '平面设计评分' },
-        { key: 'category_style_traditional_art_elo', name: 'Traditional Art', desc: '传统艺术评分' },
-        { key: 'category_subject_commercial_elo', name: 'Commercial', desc: '商业视觉评分' }
-      );
-    }
-    if (model.aa_modality === 'text_to_video' || model.aa_modality === 'image_to_video') {
-      rows.push(
-        { key: 'category_format_short_prompt_elo', name: 'Short Prompt', desc: '短提示词评分' },
-        { key: 'category_format_long_prompt_elo', name: 'Long Prompt', desc: '长提示词评分' },
-        { key: 'category_format_moving_camera_elo', name: 'Moving Camera', desc: '运镜评分' },
-        { key: 'category_format_multi_scene_elo', name: 'Multi-Scene', desc: '多场景评分' },
-        { key: 'category_style_photorealistic_elo', name: 'Photorealistic', desc: '写实/照片级真实评分' },
-        { key: 'category_style_cartoon_and_anime_elo', name: 'Cartoon & Anime', desc: '卡通/动漫评分' },
-        { key: 'category_style_3d_animation_elo', name: '3D Animation', desc: '3D 动画/CG 风评分' }
-      );
-    }
-    return rows
-      .map((r) => ({ name: r.name, desc: r.desc, value: fmtNum(model[r.key] as number | null | undefined) }))
+  const multimodalRankNote = '仅在近一年发布的同模态模型中计算';
+
+  const multimodalMetrics: Array<{ key: keyof ModelSnapshot; name: string; desc: string; value: string; rankDisplay: string; topPctDisplay: string }> = (() => {
+    return getMultimodalMetricDefs(model.aa_modality)
+      .map((r) => {
+        const value = fmtNum(model[r.key] as number | null | undefined, 0);
+        const rankStat = multimodalRankMap[r.key];
+        const rankDisplay = rankStat ? `${rankStat.rank} / ${rankStat.total}` : 'N/A';
+        const topPctDisplay = rankStat ? `前${rankStat.topPct.toFixed(1)}%` : '';
+        return { key: r.key, name: r.name, desc: r.desc, value, rankDisplay, topPctDisplay };
+      })
       .filter((r) => r.value !== 'N/A');
   })();
 
@@ -713,10 +798,14 @@ export const ModelDetail = () => {
                         <tr>
                           <th className="px-8 py-4 font-semibold">指标</th>
                           <th className="px-8 py-4 font-bold text-primary">{model.aa_name.replace(/\s*\(.*?\)\s*/g, '')}</th>
+                          <th className="px-8 py-4 font-semibold">
+                            <div>排名</div>
+                            <div className="text-[10px] font-normal text-slate-400 dark:text-slate-500">{multimodalRankNote}</div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {multimodalMetrics.map(({ name, desc, value }) => (
+                        {multimodalMetrics.map(({ key, name, desc, value, rankDisplay, topPctDisplay }) => (
                           <tr key={name}>
                             <td className="px-8 py-5">
                               <div className="flex flex-col">
@@ -725,6 +814,12 @@ export const ModelDetail = () => {
                               </div>
                             </td>
                             <td className="px-8 py-5 font-bold text-primary">{value}</td>
+                            <td className="px-8 py-5 font-bold text-slate-700 dark:text-slate-200" data-benchmark-key={String(key)}>
+                              <div>{rankDisplay}</div>
+                              {topPctDisplay ? (
+                                <div className="text-xs font-semibold text-slate-400 dark:text-slate-500">{topPctDisplay}</div>
+                              ) : null}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
