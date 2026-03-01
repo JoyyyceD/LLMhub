@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Blocks, Code2, TerminalSquare, PlugZap, ArrowRight, Copy } from 'lucide-react';
+import { Blocks, Code2, TerminalSquare, PlugZap, ArrowRight, Copy, BookOpen, TrendingUp } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
   const onCopy = async () => {
@@ -42,6 +42,50 @@ export const DeveloperEcosystem = () => {
         <p className="text-lg text-slate-500 max-w-3xl">
           给定预算、延迟和质量目标，输出可执行的模型推荐与验证计划。
         </p>
+      </motion.div>
+
+      {/* 白皮书入口 */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-10"
+      >
+        <Link
+          to="/whitepaper/2026-02"
+          className="group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-primary to-indigo-500 rounded-3xl px-8 py-6 hover:opacity-95 transition-opacity mb-3"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/15 rounded-2xl shrink-0">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">行业白皮书</span>
+                <span className="text-[10px] font-black text-white bg-white/20 px-2 py-0.5 rounded-full">最新</span>
+              </div>
+              <p className="text-lg font-black text-white">2026年2月 大模型行业月报</p>
+              <p className="text-sm text-white/70 mt-0.5">16个重点LLM发布 · 视频生成爆发 · 中美格局对比 · 开发者选型指南</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-white font-black text-sm shrink-0 group-hover:gap-3 transition-all">
+            <TrendingUp className="w-4 h-4" /> 阅读白皮书 <ArrowRight className="w-4 h-4" />
+          </div>
+        </Link>
+        <Link
+          to="/whitepaper/2026-01"
+          className="group flex items-center justify-between gap-4 bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 hover:border-primary/30 hover:bg-white transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
+            <div>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">往期</span>
+              <p className="text-sm font-black text-slate-700 group-hover:text-primary transition-colors">2026年1月 大模型行业月报</p>
+              <p className="text-xs text-slate-400 mt-0.5">9个LLM发布 · xAI视频夺冠 · 多模态23款新品 · Kimi K2.5领跑</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors shrink-0" />
+        </Link>
       </motion.div>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">

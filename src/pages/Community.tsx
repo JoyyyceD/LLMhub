@@ -29,7 +29,7 @@ import type { ModelSnapshot } from '../types';
 
 interface DbPost {
   id: string;
-  user_id: string;
+  user_id: string | null;
   series_id: string;
   model_id: string | null;
   rating_overall: number;
@@ -44,6 +44,9 @@ interface DbPost {
   comment: string | null;
   status: string;
   created_at: string;
+  source_platform: string | null;
+  display_name: string | null;
+  post_date: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -72,7 +75,7 @@ interface DbReply {
 
 interface UIPost {
   id: string;
-  userId: string;
+  userId: string | null;
   user: string;
   avatar: string;
   level: string;
@@ -95,6 +98,7 @@ interface UIPost {
   downCount: number;
   myReaction: 'up' | 'down' | null;
   replies: DbReply[];
+  sourcePlatform: string | null;
 }
 
 function timeAgo(dateStr: string): string {
@@ -104,6 +108,18 @@ function timeAgo(dateStr: string): string {
   if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
   return `${Math.floor(diff / 86400)}天前`;
 }
+
+function formatPostDate(dateStr: string): string {
+  const [, month, day] = dateStr.split('-');
+  return `${parseInt(month)}月${parseInt(day)}日`;
+}
+
+const SOURCE_PLATFORM_LABELS: Record<string, string> = {
+  xhs: '小红书',
+  zhihu: '知乎',
+  weibo: '微博',
+  bilibili: 'B站',
+};
 
 const PROVIDERS = [
   'OpenAI', 'Anthropic', 'Google', 'Meta', 'Mistral',
@@ -342,13 +358,16 @@ export const Community = () => {
       // Try to find model name from options (may not be loaded yet)
       const matchedModel = p.model_id ? modelOptions.find((m) => m.aa_slug === p.model_id) : null;
       const seriesName = seriesMap[p.series_id] ?? '未命名系列';
+      const displayName = p.display_name ?? p.profiles?.username ?? '匿名用户';
+      const avatarSeed = p.display_name ?? p.user_id ?? p.id;
+      const isImported = !!p.source_platform;
       return {
         id: p.id,
         userId: p.user_id,
-        user: p.profiles?.username ?? '匿名用户',
-        avatar: p.profiles?.avatar_url ?? `https://picsum.photos/seed/${p.user_id}/100/100`,
-        level: `LV.${p.profiles?.level ?? 1}`,
-        time: timeAgo(p.created_at),
+        user: displayName,
+        avatar: p.profiles?.avatar_url ?? `https://picsum.photos/seed/${encodeURIComponent(avatarSeed)}/100/100`,
+        level: isImported ? '' : `LV.${p.profiles?.level ?? 1}`,
+        time: p.post_date ? formatPostDate(p.post_date) : timeAgo(p.created_at),
         seriesId: p.series_id,
         seriesName,
         modelId: p.model_id,
@@ -369,6 +388,7 @@ export const Community = () => {
         downCount: downCounts[p.id] ?? 0,
         myReaction: myReactions[p.id] ?? null,
         replies: [],
+        sourcePlatform: p.source_platform,
       };
     });
 
@@ -822,11 +842,18 @@ export const Community = () => {
                       className="w-14 h-14 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"
                     />
                     <div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-lg font-black text-slate-900 dark:text-white">{post.user}</span>
-                        <span className="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-black rounded-lg uppercase tracking-tighter">
-                          {post.level}
-                        </span>
+                        {post.level && (
+                          <span className="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-black rounded-lg uppercase tracking-tighter">
+                            {post.level}
+                          </span>
+                        )}
+                        {post.sourcePlatform && (
+                          <span className="px-2.5 py-1 bg-rose-50 text-rose-500 dark:bg-rose-900/20 dark:text-rose-400 text-[10px] font-black rounded-lg">
+                            来自{SOURCE_PLATFORM_LABELS[post.sourcePlatform] ?? post.sourcePlatform}
+                          </span>
+                        )}
                         {post.providerName && (
                           <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-black rounded-lg">
                             via {post.providerName}

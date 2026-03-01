@@ -22,6 +22,7 @@ Usage:
 
 import csv
 import os
+import random
 import re
 import sys
 from difflib import get_close_matches
@@ -35,6 +36,157 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 BATCH_SIZE = 50
 COMMENT_DIR = Path(__file__).parent.parent / "Comment"
+
+# ── Query overrides (raw CSV query → series slug) ─────────────────────────────
+# These bypass the fuzzy-match logic for queries that canonicalize incorrectly.
+# Keys are matched case-insensitively. Add new entries here for future batches.
+QUERY_SLUG_OVERRIDES: dict[str, str] = {
+    # No-space concatenated versions that trip up the parser
+    "glm5":        "glm-5",
+    "glm4.7":      "glm-4.7",
+    "kimi2.5":     "kimi-k2.5",
+    "minimax2.5":  "minimax-m2.5",
+    "minimax2.1":  "minimax-m2.1",
+    # Space variant that could ambiguously hit base Kimi series
+    "kimi 2.5":    "kimi-k2.5",
+    # Platform-specific brand names
+    "mimo v2":     "mimo-v2-flash",
+    "seed 2.0":    "doubao-2.0",
+    "seed2.0":     "doubao-2.0",
+    "step3":       "step3-vl",
+}
+
+# ── Display name pools ────────────────────────────────────────────────────────
+
+_TECH_PREFIXES = [
+    "Nova", "Byte", "Pixel", "Cipher", "Echo", "Flux", "Neon", "Apex",
+    "Orion", "Zeta", "Arc", "Volt", "Hex", "Core", "Sync", "Kilo",
+    "Quad", "Meta", "Dash", "Lyra",
+]
+
+_CHINESE_NAMES = [
+    "小熊不睡觉", "咖啡加糖", "晚风很温柔", "云淡风轻呀", "明天再说吧",
+    "还没睡呢", "今天也努力", "太困了啊", "随便逛逛", "再刷一会儿",
+    "不想上班", "周五快到来", "摸鱼成功", "搞完了睡", "又到周一",
+    "睡前刷一下", "喝茶聊天", "学海无涯", "有点懒", "努力搬砖",
+    "生活不易", "凌晨三点", "想躺平", "慢慢来吧", "今天很好",
+    "好好休息", "该睡了", "刚喝完咖啡", "一直在线", "不知道叫啥",
+    "佛系青年", "随缘就好", "快乐很简单", "每天都努力", "认真生活",
+    "专注当下", "一个路人", "低调行事", "平平无奇", "普通用户",
+    "无名小卒", "随手点评", "路过留个言", "有感而发", "随便说说",
+    "凑个热闹", "说说而已", "不太懂AI", "试了一下", "用了挺久了",
+]
+
+_CITY_NAMES = [
+    "沪上打工人", "深V创业者", "京圈程序猿", "蓉城码农", "杭州独角兽",
+    "广深两地跑", "北漂回来了", "西安前端仔", "厦门远程客", "成都副业人",
+    "苏州研发狗", "武汉大学生", "南京产品汪", "重庆测试仔", "天津运营喵",
+    "青岛独立开发", "郑州外包人", "长沙AI爱好者", "合肥应届生", "宁波创业ing",
+    "东北程序员", "珠三角打工", "长三角创业", "海归回国了", "江浙沪独生子",
+    "深圳码农", "北京产品经理", "上海运营人", "广州设计师", "杭州工程师",
+    "成都研究员", "西安算法仔", "武汉在读生", "南京前端er", "重庆后端仔",
+    "厦门全栈er", "苏州安卓仔", "天津iOS仔", "青岛数据人", "郑州架构师",
+    "合肥创业者", "长沙独立站", "宁波外贸人", "大连技术人", "沈阳IT人",
+    "哈尔滨开发者", "济南技术流", "石家庄程序员", "太原互联网", "昆明AI圈",
+]
+
+_ENGLISH_NAMES = [
+    "Kevin", "Sophie", "Jason", "Eric", "Lily", "Michael", "Sarah", "David",
+    "Amy", "Tom", "Chloe", "Ryan", "Emma", "Alex", "Chris", "Mia", "Jake",
+    "Hannah", "Ben", "Grace", "Leo", "Zoe", "Tyler", "Nina", "Sam", "Olivia",
+    "Jack", "Ava", "Owen", "Claire", "Ethan", "Iris", "Noah", "Fiona",
+    "Lucas", "Ella", "Marcus", "Cora", "Felix", "Nora", "Ivan", "Luna",
+    "Sean", "Vera", "Cole", "Jade", "Reid", "Maya", "Dean", "Rosa",
+]
+
+_ENGLISH_SUFFIXES = list("ABCDEFGHJKLMNPQRSTUVWXYZ")
+
+SOURCE_PLATFORM_LABELS: dict[str, str] = {
+    "xhs": "小红书",
+    "zhihu": "知乎",
+    "weibo": "微博",
+    "bilibili": "B站",
+}
+
+
+def generate_display_name() -> str:
+    """Return a random display name drawn from 4 mixed styles."""
+    style = random.choice(["tech", "chinese", "city", "english"])
+    if style == "tech":
+        prefix = random.choice(_TECH_PREFIXES)
+        num = random.randint(1, 99)
+        return f"{prefix}_{num:02d}"
+    if style == "chinese":
+        return random.choice(_CHINESE_NAMES)
+    if style == "city":
+        return random.choice(_CITY_NAMES)
+    # english
+    name = random.choice(_ENGLISH_NAMES)
+    if random.random() < 0.5:
+        suffix = random.choice(_ENGLISH_SUFFIXES)
+        return f"{name}_{suffix}"
+    return name
+
+
+# ── Score helpers ─────────────────────────────────────────────────────────────
+
+
+def parse_score_nonzero(val: str) -> int | None:
+    """Parse integer score 1-5; treat 0 or missing as None."""
+    try:
+        v = int(val)
+        return v if 1 <= v <= 5 else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _best_comment_text(row: dict) -> str:
+    """Pick the best available text snippet for the comment field."""
+    for field in ("overall_summary", "evidence", "pros_summary"):
+        val = (row.get(field) or "").strip()
+        if val:
+            return val
+    return ""
+
+
+def build_review_post_row(row: dict, series_id: str | None) -> dict | None:
+    """
+    Map one CSV row to a model_review_posts record.
+    Returns None if the row should be skipped (no series or no overall score).
+    """
+    if not series_id:
+        return None
+    overall = parse_score_nonzero(row.get("overall_score", ""))
+    if overall is None:
+        return None
+    uid = (row.get("uid") or "").strip()
+    if not uid:
+        return None
+
+    pros_raw = (row.get("pros_summary") or "").strip()
+    cons_raw = (row.get("cons_summary") or "").strip()
+    comment_raw = _best_comment_text(row)
+
+    return {
+        "source_uid": uid,
+        "series_id": series_id,
+        "model_id": None,
+        "user_id": None,
+        "rating_overall": overall,
+        "rating_quality": parse_score_nonzero(row.get("score_quality", "")),
+        "rating_price": parse_score_nonzero(row.get("score_value", "")),
+        "rating_latency": parse_score_nonzero(row.get("score_latency", "")),
+        "rating_throughput": parse_score_nonzero(row.get("score_throughput", "")),
+        "rating_stability": parse_score_nonzero(row.get("score_stability", "")),
+        "pros": pros_raw[:100] or None,
+        "cons": cons_raw[:100] or None,
+        "comment": comment_raw[:200] or None,
+        "source_platform": (row.get("platform") or "").strip() or None,
+        "display_name": generate_display_name(),
+        "post_date": parse_date(row.get("post_date", "")),
+        "status": "published",
+    }
+
 
 PROVIDER_PREFIXES = {
     "qwen": "alibaba",
@@ -455,6 +607,18 @@ def build_series_lookup(all_series: list[dict]) -> dict[str, dict]:
     return lookup
 
 
+def _resolve_override(query: str, all_series: list[dict]) -> dict | None:
+    """Check QUERY_SLUG_OVERRIDES first. Returns series record or None."""
+    slug = QUERY_SLUG_OVERRIDES.get(query.lower().strip())
+    if not slug:
+        return None
+    for s in all_series:
+        if s["slug"] == slug:
+            return s
+    print(f"    ⚠ Override slug '{slug}' for query '{query}' not found in DB — skipping override")
+    return None
+
+
 def match_query_to_series(
     query: str,
     lookup: dict[str, dict],
@@ -462,10 +626,16 @@ def match_query_to_series(
 ) -> dict | None:
     """
     Try to find a matching model_series for a raw CSV query string.
+    0. Check QUERY_SLUG_OVERRIDES (explicit slug mapping)
     1. Exact normalized match
     2. difflib fuzzy match (cutoff=0.80)
     Returns the series record or None.
     """
+    # 0. Override table
+    override = _resolve_override(query, all_series)
+    if override:
+        return override
+
     canonical_query = extract_series_name(query)
     norm = normalize_for_match(canonical_query or query)
     if not norm:
@@ -650,6 +820,7 @@ def import_csv(
         resp = requests.post(
             f"{SUPABASE_URL}/rest/v1/social_posts",
             headers=api_headers("resolution=ignore-duplicates,return=minimal"),
+            params={"on_conflict": "uid"},
             json=batch,
         )
         if resp.status_code not in (200, 201):
@@ -664,6 +835,57 @@ def import_csv(
     return inserted, 0  # actual skips counted server-side via ignore-duplicates
 
 
+# ── Phase 3: Publish to model_review_posts ───────────────────────────────────
+
+def import_csv_to_review_posts(
+    csv_path: Path,
+    lookup: dict[str, dict],
+    all_series: list[dict],
+) -> tuple[int, int]:
+    """
+    Read one CSV and upsert rows into model_review_posts.
+    Dedup is handled server-side via unique index on source_uid.
+    Returns (sent, skipped_no_score).
+    """
+    rows_to_insert: list[dict] = []
+    query_cache: dict[str, str | None] = {}
+    skipped = 0
+
+    with open(csv_path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            query = (row.get("query") or "").strip()
+            if query not in query_cache:
+                series = match_query_to_series(query, lookup, all_series)
+                query_cache[query] = series["id"] if series else None
+            series_id = query_cache[query]
+
+            record = build_review_post_row(row, series_id)
+            if record is None:
+                skipped += 1
+                continue
+            rows_to_insert.append(record)
+
+    if not rows_to_insert:
+        return 0, skipped
+
+    sent = 0
+    for i in range(0, len(rows_to_insert), BATCH_SIZE):
+        batch = rows_to_insert[i : i + BATCH_SIZE]
+        resp = requests.post(
+            f"{SUPABASE_URL}/rest/v1/model_review_posts",
+            headers=api_headers("resolution=ignore-duplicates,return=minimal"),
+            params={"on_conflict": "source_uid"},
+            json=batch,
+        )
+        if resp.status_code not in (200, 201):
+            print(f"  ERROR batch {i // BATCH_SIZE + 1}: {resp.status_code} {resp.text[:300]}")
+            resp.raise_for_status()
+        sent += len(batch)
+
+    return sent, skipped
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -671,9 +893,19 @@ def main() -> None:
         print("ERROR: Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY", file=sys.stderr)
         sys.exit(1)
 
-    csv_files = sorted(COMMENT_DIR.glob("*.csv"))
+    # Only process files that look like scraped review data (contain a "uid" column)
+    all_csvs = sorted(COMMENT_DIR.glob("*.csv"))
+    csv_files = []
+    for f in all_csvs:
+        with open(f, newline="", encoding="utf-8-sig") as fh:
+            first_line = fh.readline()
+        if "uid" in first_line and "platform" in first_line and "query" in first_line:
+            csv_files.append(f)
+        else:
+            print(f"  Skipping non-review CSV: {f.name}")
+
     if not csv_files:
-        print(f"No CSV files found in {COMMENT_DIR}")
+        print(f"No review CSV files found in {COMMENT_DIR}")
         sys.exit(0)
 
     print(f"Found {len(csv_files)} CSV file(s): {[f.name for f in csv_files]}")
@@ -708,7 +940,24 @@ def main() -> None:
         print(f"    → {sent} rows sent (duplicates silently skipped by DB)")
         total_sent += sent
 
-    print(f"\n✓ Done — {total_sent} rows sent across {len(csv_files)} file(s)")
+    print(f"\n✓ Phase 2 done — {total_sent} rows sent across {len(csv_files)} file(s)")
+
+    # ── Phase 3 ──────────────────────────────────────────────────────────────
+    print("\n── Phase 3: Publishing to model_review_posts ────────────────────")
+
+    total_review_sent = 0
+    total_review_skipped = 0
+    for csv_path in csv_files:
+        print(f"\n  {csv_path.name}")
+        sent, skipped = import_csv_to_review_posts(csv_path, lookup, all_series)
+        print(f"    → {sent} rows sent, {skipped} skipped (missing overall score)")
+        total_review_sent += sent
+        total_review_skipped += skipped
+
+    print(
+        f"\n✓ Done — Phase 3: {total_review_sent} review rows sent, "
+        f"{total_review_skipped} skipped"
+    )
 
 
 if __name__ == "__main__":

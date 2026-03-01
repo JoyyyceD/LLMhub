@@ -18,6 +18,8 @@ import { AboutDataSources } from './pages/AboutDataSources';
 import { AboutIntelligenceBenchmarkingDoc } from './pages/AboutIntelligenceBenchmarkingDoc';
 import { Resources } from './pages/Resources';
 import { DeveloperEcosystem } from './pages/DeveloperEcosystem';
+import { Whitepaper202601 } from './pages/Whitepaper202601';
+import { Whitepaper202602 } from './pages/Whitepaper202602';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ProviderDetail } from './pages/ProviderDetail';
@@ -36,6 +38,8 @@ export default function App() {
             <Route path="/model/:id" element={<ModelDetail />} />
             <Route path="/community" element={<Community />} />
             <Route path="/ecosystem" element={<DeveloperEcosystem />} />
+            <Route path="/whitepaper/2026-01" element={<Whitepaper202601 />} />
+            <Route path="/whitepaper/2026-02" element={<Whitepaper202602 />} />
             <Route path="/about" element={<About />} />
             <Route path="/about/methodology" element={<AboutMethodology />} />
             <Route path="/about/data-sources" element={<AboutDataSources />} />
