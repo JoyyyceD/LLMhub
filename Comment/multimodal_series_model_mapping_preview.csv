@@ -1,0 +1,361 @@
+modality,series_slug,series_name,model_name,model_slug,snapshot_aa_slug,model_creator_name
+image_editing,bagel,Bagel,Bagel,bagel,image_editing::bagel,Bytedance
+image_editing,eigen-image,Eigen Image,Eigen Image,eigenai_eigen-image,image_editing::eigenai_eigen-image,Eigen AI
+image_editing,fibo-edit,FIBO Edit,FIBO Edit,bria_fibo-edit,image_editing::bria_fibo-edit,Bria
+image_editing,firefly-image-5,Firefly Image 5,Firefly Image 5 Preview,adobe-firefly_firefly-image-5--preview,image_editing::adobe-firefly_firefly-image-5--preview,Adobe
+image_editing,flux.1-kontext-dev,FLUX.1 Kontext [dev],FLUX.1 Kontext [dev],flux-1-kontext-dev,image_editing::flux-1-kontext-dev,Black Forest Labs
+image_editing,flux.1-kontext-max,FLUX.1 Kontext [max],FLUX.1 Kontext [max],flux-1-kontext-max,image_editing::flux-1-kontext-max,Black Forest Labs
+image_editing,flux.1-kontext-pro,FLUX.1 Kontext [pro],FLUX.1 Kontext [pro],flux-1-kontext-pro,image_editing::flux-1-kontext-pro,Black Forest Labs
+image_editing,flux.2-dev,FLUX.2 [dev],FLUX.2 [dev],flux_flux-2--dev,image_editing::flux_flux-2--dev,Black Forest Labs
+image_editing,flux.2-dev-flash,FLUX.2 [dev] Flash,FLUX.2 [dev] Flash,fal_flux-2-dev-flash,image_editing::fal_flux-2-dev-flash,Fal
+image_editing,flux.2-dev-turbo,FLUX.2 [dev] Turbo,FLUX.2 [dev] Turbo,fal_flux-2-dev-turbo,image_editing::fal_flux-2-dev-turbo,Fal
+image_editing,flux.2-flex,FLUX.2 [flex],FLUX.2 [flex],flux_flux-2--flex,image_editing::flux_flux-2--flex,Black Forest Labs
+image_editing,flux.2-klein,FLUX.2 [klein],FLUX.2 [klein] 4B,flux_flux-2-klein-4b,image_editing::flux_flux-2-klein-4b,Black Forest Labs
+image_editing,flux.2-klein,FLUX.2 [klein],FLUX.2 [klein] 9B,flux_flux-2-klein-9b,image_editing::flux_flux-2-klein-9b,Black Forest Labs
+image_editing,flux.2-klein-base,FLUX.2 [klein] Base,FLUX.2 [klein] Base 4B,flux_flux-2-klein-base-4b,image_editing::flux_flux-2-klein-base-4b,Black Forest Labs
+image_editing,flux.2-klein-base,FLUX.2 [klein] Base,FLUX.2 [klein] Base 9B,flux_flux-2-klein-base-9b,image_editing::flux_flux-2-klein-base-9b,Black Forest Labs
+image_editing,flux.2-max,FLUX.2 [max],FLUX.2 [max],black_forest_labs_flux-2-max,image_editing::black_forest_labs_flux-2-max,Black Forest Labs
+image_editing,flux.2-pro,FLUX.2 [pro],FLUX.2 [pro],flux_flux-2--pro,image_editing::flux_flux-2--pro,Black Forest Labs
+image_editing,gemini-2.0,Gemini 2.0,Gemini 2.0 Flash Preview,gemini-2-0-flash-preview,image_editing::gemini-2-0-flash-preview,Google
+image_editing,gemini-2.5,Gemini 2.5,Nano Banana (Gemini 2.5 Flash Image),google_gemini-2-5-flash,image_editing::google_gemini-2-5-flash,Google
+image_editing,gemini-3,Gemini 3,Nano Banana Pro (Gemini 3 Pro Image),gemini_nano-banana-pro,image_editing::gemini_nano-banana-pro,Google
+image_editing,glm,GLM,GLM-Image,glm_glm-image,image_editing::glm_glm-image,Z AI
+image_editing,gpt-1,GPT 1,GPT Image 1 (high),openai-gpt_gpt-image-1--high,image_editing::openai-gpt_gpt-image-1--high,OpenAI
+image_editing,gpt-1,GPT 1,GPT Image 1 Mini (medium),openai-gpt_gpt-image-1-mini--medium,image_editing::openai-gpt_gpt-image-1-mini--medium,OpenAI
+image_editing,gpt-1.5,GPT 1.5,GPT Image 1.5 (high),openai-gpt_image-1-5,image_editing::openai-gpt_image-1-5,OpenAI
+image_editing,grok,Grok,grok-imagine-image,grok-imagine-image,image_editing::grok-imagine-image,xAI
+image_editing,grok,Grok,grok-imagine-image-pro,grok-imagine-image-pro,image_editing::grok-imagine-image-pro,xAI
+image_editing,hidream-e1-full,HiDream E1 Full,HiDream-E1-Full,hidream-e1-full,image_editing::hidream-e1-full,HiDream
+image_editing,hidream-e1.1,HiDream E1.1,HiDream-E1.1,hidream-e1-1,image_editing::hidream-e1-1,HiDream
+image_editing,hunyuanimage-3.0-instruct-fal,HunyuanImage 3.0 Instruct (Fal),HunyuanImage 3.0 Instruct (Fal),tencent_hunyuanimage-3-0-instruct--fal,image_editing::tencent_hunyuanimage-3-0-instruct--fal,Tencent
+image_editing,longcat-image,LongCat Image,LongCat Image,longcat_longcat-image,image_editing::longcat_longcat-image,Meituan
+image_editing,omnigen-v2,OmniGen V2,OmniGen V2,omnigen-v2,image_editing::omnigen-v2,VectorSpaceLab
+image_editing,p-image-edit,P Image Edit,P-Image-Edit,pruna_p-image-edit,image_editing::pruna_p-image-edit,Pruna AI
+image_editing,qwen,Qwen,Qwen Image Edit,qwen-image-edit,image_editing::qwen-image-edit,Alibaba
+image_editing,qwen,Qwen,Qwen Image Edit Max 2601,qwen-image-edit-max-2601,image_editing::qwen-image-edit-max-2601,Alibaba
+image_editing,qwen,Qwen,Qwen Image Edit Plus 2509,qwen_qwen-image-edit-2509,image_editing::qwen_qwen-image-edit-2509,Alibaba
+image_editing,qwen,Qwen,Qwen Image Edit Plus 2511,qwen_qwen-image-edit-2511,image_editing::qwen_qwen-image-edit-2511,Alibaba
+image_editing,reve-v1-december,Reve V1 (December),Reve V1 (December),reve_reve-v1--december,image_editing::reve_reve-v1--december,Reve
+image_editing,reve-v1-october,Reve V1 (October),Reve V1 (October),reve-edit,image_editing::reve-edit,Reve
+image_editing,riverflow-1,Riverflow 1,Riverflow 1,sourceful_riverflow,image_editing::sourceful_riverflow,Sourceful
+image_editing,riverflow-2.0,Riverflow 2.0,Riverflow 2.0,sourceful_riverflow-2,image_editing::sourceful_riverflow-2,Sourceful
+image_editing,seededit-3.0,SeedEdit 3.0,SeedEdit 3.0,Seedream_seededit-3-0,image_editing::Seedream_seededit-3-0,ByteDance Seed
+image_editing,seedream-4.0,Seedream 4.0,Seedream 4.0,bytedance-seed_seedream-4-0,image_editing::bytedance-seed_seedream-4-0,ByteDance Seed
+image_editing,seedream-4.5,Seedream 4.5,Seedream 4.5,seedream-4-5,image_editing::seedream-4-5,ByteDance Seed
+image_editing,step1x-edit,Step1X Edit,Step1X-Edit,step1x-edit,image_editing::step1x-edit,StepFun
+image_editing,step1x-edit-v1p2,Step1X Edit v1p2,Step1X-Edit-v1p2,step1x-edit-v1p2,image_editing::step1x-edit-v1p2,StepFun
+image_editing,step1x-edit-v1p2-preview,step1x edit v1p2 preview,step1x-edit-v1p2-preview,step_ladder,image_editing::step_ladder,StepFun
+image_editing,vidu-q2,Vidu Q2,Vidu Q2,vidu_vidu_q2,image_editing::vidu_vidu_q2,Vidu
+image_editing,wan-2.5,Wan 2.5,Wan 2.5 Preview,wan_wan-2-5-preview,image_editing::wan_wan-2-5-preview,Alibaba
+image_editing,wan-2.6-image,Wan 2.6 Image,Wan 2.6 Image,wan_wan-2-6,image_editing::wan_wan-2-6,Alibaba
+image_to_video,avenger-0.5,Avenger 0.5,Avenger 0.5,avenger-0-5,image_to_video::avenger-0-5,Video Rebirth
+image_to_video,avenger-0.5-pro,Avenger 0.5 Pro,Avenger 0.5 Pro,avenger-05-pro,image_to_video::avenger-05-pro,Video Rebirth
+image_to_video,genflare,GenFlare,GenFlare,genflare,image_to_video::genflare,Baidu
+image_to_video,genflare-2.0,GenFlare 2.0,GenFlare 2.0,genflare-2-0,image_to_video::genflare-2-0,Baidu
+image_to_video,grok,Grok,grok-imagine-video,grok-imagine-video,image_to_video::grok-imagine-video,xAI
+image_to_video,hailuo-02,Hailuo 02,Hailuo 02 0616,hailuo-02-0616,image_to_video::hailuo-02-0616,MiniMax
+image_to_video,hailuo-02-fast,Hailuo 02 Fast,Hailuo 02 Fast,hailuo-02-fast,image_to_video::hailuo-02-fast,MiniMax
+image_to_video,hailuo-02-pro,Hailuo 02 Pro,Hailuo 02 Pro,hailuo-02-pro,image_to_video::hailuo-02-pro,MiniMax
+image_to_video,hailuo-02-standard,Hailuo 02 Standard,Hailuo 02 Standard,hailuo-02-standard,image_to_video::hailuo-02-standard,MiniMax
+image_to_video,hailuo-2.3,Hailuo 2.3,Hailuo 2.3,hailuo-2-3-prompt-enhancement,image_to_video::hailuo-2-3-prompt-enhancement,MiniMax
+image_to_video,hailuo-2.3-fast,Hailuo 2.3 Fast,Hailuo 2.3 Fast,hailuo-2-3-fast-prompt-enhancement,image_to_video::hailuo-2-3-fast-prompt-enhancement,MiniMax
+image_to_video,hunyuan-video-open-source,Hunyuan Video (Open Source),Hunyuan Video (Open Source),hunyuan-video-open-source-,image_to_video::hunyuan-video-open-source-,Tencent
+image_to_video,hunyuanvideo-1.5-fal,HunyuanVideo 1.5 (Fal),HunyuanVideo-1.5 (Fal),hunyuanvideo-1-5-fal,image_to_video::hunyuanvideo-1-5-fal,Tencent
+image_to_video,i2v-01-director,I2V 01 Director,I2V-01-Director,i2v-01-director,image_to_video::i2v-01-director,MiniMax
+image_to_video,ling-1.6,Ling 1.6,Kling 1.6 Pro,kling-1-6-pro,image_to_video::kling-1-6-pro,KlingAI
+image_to_video,ling-2.0,Ling 2.0,Kling 2.0,kling-2-0,image_to_video::kling-2-0,KlingAI
+image_to_video,ling-2.1,Ling 2.1,Kling 2.1 Master,kling-2-1-master,image_to_video::kling-2-1-master,KlingAI
+image_to_video,ling-2.1,Ling 2.1,Kling 2.1 Pro,kling-2-1-pro,image_to_video::kling-2-1-pro,KlingAI
+image_to_video,ling-2.1,Ling 2.1,Kling 2.1 Standard,kling-2-1-standard,image_to_video::kling-2-1-standard,KlingAI
+image_to_video,ling-2.5,Ling 2.5,Kling 2.5 Turbo 1080p,kling-25-turbo-1080p,image_to_video::kling-25-turbo-1080p,KlingAI
+image_to_video,ling-2.6,Ling 2.6,Kling 2.6 Pro (December),kling-2-6-pro,image_to_video::kling-2-6-pro,KlingAI
+image_to_video,ling-2.6,Ling 2.6,Kling 2.6 Pro (January),kling-2-6-pro-january-no-audio,image_to_video::kling-2-6-pro-january-no-audio,KlingAI
+image_to_video,ling-2.6,Ling 2.6,Kling 2.6 Standard (January),kling-2-6-standard-january-no-audio,image_to_video::kling-2-6-standard-january-no-audio,KlingAI
+image_to_video,ling-3.0,Ling 3.0,Kling 3.0 Pro,kling-3-0-pro,image_to_video::kling-3-0-pro,KlingAI
+image_to_video,ling-3.0,Ling 3.0,Kling 3.0 Standard,kling-3-0-standard,image_to_video::kling-3-0-standard,KlingAI
+image_to_video,ltx-2-fast,LTX 2 Fast,LTX-2 Fast,ltx-2-fast,image_to_video::ltx-2-fast,Lightricks
+image_to_video,ltx-2-pro,LTX 2 Pro,LTX-2 Pro,ltx-2-pro,image_to_video::ltx-2-pro,Lightricks
+image_to_video,ltx-video-v0.9.7,LTX Video v0.9.7,LTX Video v0.9.7 13B,ltx-video-v0-9-7-13b,image_to_video::ltx-video-v0-9-7-13b,Lightricks
+image_to_video,marey,Marey,Marey,marey,image_to_video::marey,Moonvalley
+image_to_video,midjourney-v1,Midjourney V1,Midjourney V1,midjourney-v1,image_to_video::midjourney-v1,Midjourney
+image_to_video,motion-2.0,Motion 2.0,Motion 2.0,motion-2-0,image_to_video::motion-2-0,Leonardo.Ai
+image_to_video,pika-2.2,Pika 2.2,Pika 2.2,pika-2-2,image_to_video::pika-2-2,Pika Art
+image_to_video,pika-2.5,Pika 2.5,Pika 2.5,pika-2-5,image_to_video::pika-2-5,Pika Art
+image_to_video,pixverse-v4.5,PixVerse V4.5,PixVerse V4.5,pixverse-v4-5,image_to_video::pixverse-v4-5,PixVerse
+image_to_video,pixverse-v5,PixVerse V5,PixVerse V5,pixverse-v5,image_to_video::pixverse-v5,PixVerse
+image_to_video,pixverse-v5.5,PixVerse V5.5,PixVerse V5.5,pixverse-v5-5,image_to_video::pixverse-v5-5,PixVerse
+image_to_video,pixverse-v5.6,PixVerse V5.6,PixVerse V5.6,pixverse-v5-6,image_to_video::pixverse-v5-6,PixVerse
+image_to_video,ray-3,Ray 3,Ray 3,ray-3,image_to_video::ray-3,Luma Labs
+image_to_video,runway-gen-3-alpha,Runway Gen 3 Alpha,Runway Gen 3 Alpha,runway-gen-3-alpha,image_to_video::runway-gen-3-alpha,Runway
+image_to_video,runway-gen-3-alpha-turbo,Runway Gen 3 Alpha Turbo,Runway Gen 3 Alpha Turbo,runway-gen-3-alpha-turbo,image_to_video::runway-gen-3-alpha-turbo,Runway
+image_to_video,runway-gen-4,Runway Gen 4,Runway Gen 4,runway-gen-4,image_to_video::runway-gen-4,Runway
+image_to_video,runway-gen-4.5,Runway Gen 4.5,Runway Gen-4.5,runway-gen-4-5,image_to_video::runway-gen-4-5,Runway
+image_to_video,seedance-1.0,Seedance 1.0,Seedance 1.0,seedance-10,image_to_video::seedance-10,ByteDance Seed
+image_to_video,seedance-1.0-mini,Seedance 1.0 Mini,Seedance 1.0 Mini,seedance-1-0-mini,image_to_video::seedance-1-0-mini,ByteDance Seed
+image_to_video,seedance-1.5-pro,Seedance 1.5 pro,Seedance 1.5 pro,seedance-1-5-pro,image_to_video::seedance-1-5-pro,ByteDance Seed
+image_to_video,sora,Sora,Sora,sora,image_to_video::sora,OpenAI
+image_to_video,televideo-2.0,TeleVideo 2.0,TeleVideo 2.0,tele-video,image_to_video::tele-video,TeleAI
+image_to_video,veo-2,Veo 2,Veo 2,veo-2,image_to_video::veo-2,Google
+image_to_video,veo-3,Veo 3,Veo 3,veo-3-no-audio,image_to_video::veo-3-no-audio,Google
+image_to_video,veo-3,Veo 3,Veo 3 Preview,veo-3-preview,image_to_video::veo-3-preview,Google
+image_to_video,veo-3.1,Veo 3.1,Veo 3.1,veo-3-1,image_to_video::veo-3-1,Google
+image_to_video,veo-3.1,Veo 3.1,Veo 3.1 Preview,veo-3-1-preview,image_to_video::veo-3-1-preview,Google
+image_to_video,veo-3.1-fast,Veo 3.1 Fast,Veo 3.1 Fast,veo-3-1-fast,image_to_video::veo-3-1-fast,Google
+image_to_video,veo-3.1-fast,Veo 3.1 Fast,Veo 3.1 Fast Preview,veo-3-1-fast-preview,image_to_video::veo-3-1-fast-preview,Google
+image_to_video,vidu-q1,Vidu Q1,Vidu Q1,vidu-q1,image_to_video::vidu-q1,Vidu
+image_to_video,vidu-q2-pro,Vidu Q2 Pro,Vidu Q2 Pro,vidu-q2-pro,image_to_video::vidu-q2-pro,Vidu
+image_to_video,vidu-q2-turbo,Vidu Q2 Turbo,Vidu Q2 Turbo,vidu-q2-turbo,image_to_video::vidu-q2-turbo,Vidu
+image_to_video,vidu-q3-pro,Vidu Q3 Pro,Vidu Q3 Pro,vidu-q3-pro,image_to_video::vidu-q3-pro,Vidu
+image_to_video,vivago-2.0,Vivago 2.0,Vivago 2.0,vivago-2-0,image_to_video::vivago-2-0,HiDream
+image_to_video,wan-2.1,Wan 2.1,Wan 2.1 14B,wan-2-1-14b,image_to_video::wan-2-1-14b,Alibaba
+image_to_video,wan-2.2,Wan 2.2,Wan 2.2 5B,wan-2-2-5b,image_to_video::wan-2-2-5b,Alibaba
+image_to_video,wan-2.2,Wan 2.2,Wan 2.2 A14B,wan-2-2-a14b,image_to_video::wan-2-2-a14b,Alibaba
+image_to_video,wan-2.5,Wan 2.5,Wan 2.5 Preview,wan-2-5-preview,image_to_video::wan-2-5-preview,Alibaba
+image_to_video,wan-2.6,Wan 2.6,Wan 2.6,wan-2-6,image_to_video::wan-2-6,Alibaba
+text_to_image,amazon-titan-g1-standard,Amazon Titan G1 (Standard),Amazon Titan G1 (Standard),amazon-titan-g1-standard,text_to_image::amazon-titan-g1-standard,Amazon
+text_to_image,amazon-titan-g1-v2-standard,Amazon Titan G1 v2 (Standard),Amazon Titan G1 v2 (Standard),amazon-titan-g1-v2-standard,text_to_image::amazon-titan-g1-v2-standard,Amazon
+text_to_image,bagel,Bagel,Bagel,bagel,text_to_image::bagel,Bytedance
+text_to_image,bria-3.2,Bria 3.2,Bria 3.2,bria-3-2,text_to_image::bria-3-2,Bria
+text_to_image,dalle-2,DALLE 2,DALLE 2,dalle-2,text_to_image::dalle-2,OpenAI
+text_to_image,dalle-3,DALLE 3,DALLE 3,dalle-3,text_to_image::dalle-3,OpenAI
+text_to_image,dalle-3-hd,DALLE 3 HD,DALLE 3 HD,dalle-3-hd,text_to_image::dalle-3-hd,OpenAI
+text_to_image,dreamina-3.1,Dreamina 3.1,Dreamina 3.1,dreamina-3-1,text_to_image::dreamina-3-1,Bytedance
+text_to_image,eigen-image,Eigen Image,Eigen Image,eigenai_eigen-image,text_to_image::eigenai_eigen-image,Eigen AI
+text_to_image,fibo,FIBO,FIBO,bria_fibo,text_to_image::bria_fibo,Bria
+text_to_image,firefly-image-3,Firefly Image 3,Firefly Image 3,firefly-image-3,text_to_image::firefly-image-3,Adobe
+text_to_image,firefly-image-4,Firefly Image 4,Firefly Image 4,firefly-image-4,text_to_image::firefly-image-4,Adobe
+text_to_image,firefly-image-5,Firefly Image 5,Firefly Image 5 Preview,adobe-firefly_firefly-image-5--preview,text_to_image::adobe-firefly_firefly-image-5--preview,Adobe
+text_to_image,flux.1-dev,FLUX.1 [dev],FLUX.1 [dev],flux-1-dev,text_to_image::flux-1-dev,Black Forest Labs
+text_to_image,flux.1-pro,FLUX.1 [pro],FLUX.1 [pro],flux-1-pro,text_to_image::flux-1-pro,Black Forest Labs
+text_to_image,flux.1-schnell,FLUX.1 [schnell],FLUX.1 [schnell],flux-1-schnell,text_to_image::flux-1-schnell,Black Forest Labs
+text_to_image,flux.1-kontext-max,FLUX.1 Kontext [max],FLUX.1 Kontext [max],flux-1-kontext-max,text_to_image::flux-1-kontext-max,Black Forest Labs
+text_to_image,flux.1-kontext-pro,FLUX.1 Kontext [pro],FLUX.1 Kontext [pro],flux-1-kontext-pro,text_to_image::flux-1-kontext-pro,Black Forest Labs
+text_to_image,flux.1-krea-dev,FLUX.1 Krea [dev],FLUX.1 Krea [dev],flux-1-krea-dev,text_to_image::flux-1-krea-dev,Black Forest Labs
+text_to_image,flux.2-dev,FLUX.2 [dev],FLUX.2 [dev],flux_flux-2--dev,text_to_image::flux_flux-2--dev,Black Forest Labs
+text_to_image,flux.2-dev-flash,FLUX.2 [dev] Flash,FLUX.2 [dev] Flash,fal_flux-2-dev-flash,text_to_image::fal_flux-2-dev-flash,Fal
+text_to_image,flux.2-dev-turbo,FLUX.2 [dev] Turbo,FLUX.2 [dev] Turbo,fal_flux-2-dev-turbo,text_to_image::fal_flux-2-dev-turbo,Fal
+text_to_image,flux.2-flex,FLUX.2 [flex],FLUX.2 [flex],flux_flux-2--flex,text_to_image::flux_flux-2--flex,Black Forest Labs
+text_to_image,flux.2-klein,FLUX.2 [klein],FLUX.2 [klein] 4B,flux_flux-2-klein-4b,text_to_image::flux_flux-2-klein-4b,Black Forest Labs
+text_to_image,flux.2-klein,FLUX.2 [klein],FLUX.2 [klein] 9B,flux_flux-2-klein-9b,text_to_image::flux_flux-2-klein-9b,Black Forest Labs
+text_to_image,flux.2-klein-base,FLUX.2 [klein] Base,FLUX.2 [klein] Base 4B,flux_flux-2-klein-base-4b,text_to_image::flux_flux-2-klein-base-4b,Black Forest Labs
+text_to_image,flux.2-klein-base,FLUX.2 [klein] Base,FLUX.2 [klein] Base 9B,flux_flux-2-klein-base-9b,text_to_image::flux_flux-2-klein-base-9b,Black Forest Labs
+text_to_image,flux.2-max,FLUX.2 [max],FLUX.2 [max],black_forest_labs_flux-2-max,text_to_image::black_forest_labs_flux-2-max,Black Forest Labs
+text_to_image,flux.2-pro,FLUX.2 [pro],FLUX.2 [pro],flux_flux-2--pro,text_to_image::flux_flux-2--pro,Black Forest Labs
+text_to_image,flux1.1-pro,FLUX1.1 [pro],FLUX1.1 [pro],flux1-1-pro,text_to_image::flux1-1-pro,Black Forest Labs
+text_to_image,flux1.1-pro-ultra,FLUX1.1 [pro] Ultra,FLUX1.1 [pro] Ultra,flux1-1-pro-ultra,text_to_image::flux1-1-pro-ultra,Black Forest Labs
+text_to_image,gemini-2.0,Gemini 2.0,Gemini 2.0 Flash Experimental,gemini-2-0-flash-experimental,text_to_image::gemini-2-0-flash-experimental,Google
+text_to_image,gemini-2.0,Gemini 2.0,Gemini 2.0 Flash Preview,gemini-2-0-flash-preview,text_to_image::gemini-2-0-flash-preview,Google
+text_to_image,gemini-2.5,Gemini 2.5,Nano Banana (Gemini 2.5 Flash Image),google_gemini-2-5-flash,text_to_image::google_gemini-2-5-flash,Google
+text_to_image,gemini-3,Gemini 3,Nano Banana Pro (Gemini 3 Pro Image),gemini_nano-banana-pro,text_to_image::gemini_nano-banana-pro,Google
+text_to_image,glm,GLM,GLM-Image,glm_glm-image,text_to_image::glm_glm-image,Z AI
+text_to_image,gpt-1,GPT 1,GPT Image 1 (high),openai-gpt_gpt-image-1--high,text_to_image::openai-gpt_gpt-image-1--high,OpenAI
+text_to_image,gpt-1,GPT 1,GPT Image 1 Mini (medium),openai-gpt_gpt-image-1-mini--medium,text_to_image::openai-gpt_gpt-image-1-mini--medium,OpenAI
+text_to_image,gpt-1.5,GPT 1.5,GPT Image 1.5 (high),openai-gpt_image-1-5,text_to_image::openai-gpt_image-1-5,OpenAI
+text_to_image,grok,Grok,grok-imagine-image,grok-imagine-image,text_to_image::grok-imagine-image,xAI
+text_to_image,grok,Grok,grok-imagine-image-pro,grok-imagine-image-pro,text_to_image::grok-imagine-image-pro,xAI
+text_to_image,grok-2,Grok 2,Grok 2,grok-2,text_to_image::grok-2,xAI
+text_to_image,hidream-i1-dev,HiDream I1 Dev,HiDream-I1-Dev,hidream-i1-dev,text_to_image::hidream-i1-dev,HiDream
+text_to_image,hidream-i1-fast,HiDream I1 Fast,HiDream-I1-Fast,hidream-i1-fast,text_to_image::hidream-i1-fast,HiDream
+text_to_image,hunyuanimage-2.1,HunyuanImage 2.1,HunyuanImage 2.1,hunyuanimage-2-1,text_to_image::hunyuanimage-2-1,Tencent
+text_to_image,hunyuanimage-3.0-fal,HunyuanImage 3.0 (Fal),HunyuanImage 3.0 (Fal),tencent_hunyuanimage-3-0-fal,text_to_image::tencent_hunyuanimage-3-0-fal,Tencent
+text_to_image,hunyuanimage-3.0-instruct-fal,HunyuanImage 3.0 Instruct (Fal),HunyuanImage 3.0 Instruct (Fal),tencent_hunyuanimage-3-0-instruct--fal,text_to_image::tencent_hunyuanimage-3-0-instruct--fal,Tencent
+text_to_image,ideogram-3.0,Ideogram 3.0,Ideogram 3.0,ideogram-3-0,text_to_image::ideogram-3-0,Ideogram
+text_to_image,ideogram-v1,Ideogram v1,Ideogram v1,ideogram-v1,text_to_image::ideogram-v1,Ideogram
+text_to_image,ideogram-v2,Ideogram v2,Ideogram v2,ideogram-v2,text_to_image::ideogram-v2,Ideogram
+text_to_image,ideogram-v2-turbo,Ideogram v2 Turbo,Ideogram v2 Turbo,ideogram-v2-turbo,text_to_image::ideogram-v2-turbo,Ideogram
+text_to_image,ideogram-v2a,Ideogram v2a,Ideogram v2a,ideogram-v2a,text_to_image::ideogram-v2a,Ideogram
+text_to_image,ideogram-v2a-turbo,Ideogram v2a Turbo,Ideogram v2a Turbo,ideogram-v2a-turbo,text_to_image::ideogram-v2a-turbo,Ideogram
+text_to_image,image-01,Image 01,Image-01,image-01,text_to_image::image-01,MiniMax
+text_to_image,imagen-3-v002,Imagen 3 (v002),Imagen 3 (v002),imagen-3-v002,text_to_image::imagen-3-v002,Google
+text_to_image,imagen-4-fast,Imagen 4 Fast,Imagen 4 Fast,google-imagen_imagen-4-fast,text_to_image::google-imagen_imagen-4-fast,Google
+text_to_image,imagen-4-fast-preview,Imagen 4 Fast Preview,Imagen 4 Fast Preview 0606,imagen-4-fast-preview-0606,text_to_image::imagen-4-fast-preview-0606,Google
+text_to_image,imagen-4-preview,Imagen 4 Preview,Imagen 4 Preview 0606,imagen-4-preview-0606,text_to_image::imagen-4-preview-0606,Google
+text_to_image,imagen-4-standard,Imagen 4 Standard,Imagen 4 Standard,google-imagen_imagen-4-standard,text_to_image::google-imagen_imagen-4-standard,Google
+text_to_image,imagen-4-ultra,Imagen 4 Ultra,Imagen 4 Ultra,google-imagen_imagen-4-ultra,text_to_image::google-imagen_imagen-4-ultra,Google
+text_to_image,imagen-4-ultra-preview,Imagen 4 Ultra Preview,Imagen 4 Ultra Preview 0606,imagen-4-ultra-preview-0606,text_to_image::imagen-4-ultra-preview-0606,Google
+text_to_image,imagineart-1.5,ImagineArt 1.5,ImagineArt 1.5 Preview,imagineart-1-5-preview,text_to_image::imagineart-1-5-preview,ImagineArt
+text_to_image,infinity,Infinity,Infinity 8B,infinity-8b,text_to_image::infinity-8b,Bytedance
+text_to_image,janus-pro,Janus Pro,Janus Pro,janus-pro,text_to_image::janus-pro,DeepSeek
+text_to_image,kolors-2.1,Kolors 2.1,Kolors 2.1,kolors-2-1,text_to_image::kolors-2-1,KlingAI
+text_to_image,krea-1,Krea 1,Krea 1,krea-1,text_to_image::krea-1,Krea
+text_to_image,lfm,LFM,Reve Image (Halfmoon),reve-image-halfmoon,text_to_image::reve-image-halfmoon,Reve
+text_to_image,longcat-image,LongCat Image,LongCat Image,longcat_longcat-image,text_to_image::longcat_longcat-image,Meituan
+text_to_image,lucid-origin-fast,Lucid Origin Fast,Lucid Origin Fast,lucid-origin-fast,text_to_image::lucid-origin-fast,Leonardo.Ai
+text_to_image,lucid-origin-ultra,Lucid Origin Ultra,Lucid Origin Ultra,lucid-origin-ultra,text_to_image::lucid-origin-ultra,Leonardo.Ai
+text_to_image,luma-photon,Luma Photon,Luma Photon,luma-photon,text_to_image::luma-photon,Luma Labs
+text_to_image,luma-photon-flash,Luma Photon Flash,Luma Photon Flash,luma-photon-flash,text_to_image::luma-photon-flash,Luma Labs
+text_to_image,lumina-image-v2,Lumina Image v2,Lumina Image v2,lumina-image-v2,text_to_image::lumina-image-v2,OpenGVLab
+text_to_image,mai-image-1,MAI Image 1,MAI Image 1,microsoft_mai-image-1,text_to_image::microsoft_mai-image-1,Microsoft Azure
+text_to_image,midjourney-v6,Midjourney v6,Midjourney v6,midjourney-v6,text_to_image::midjourney-v6,Midjourney
+text_to_image,midjourney-v6.1,Midjourney v6.1,Midjourney v6.1,midjourney-v6-1,text_to_image::midjourney-v6-1,Midjourney
+text_to_image,midjourney-v7-alpha,Midjourney v7 Alpha,Midjourney v7 Alpha,midjourney-v7-alpha,text_to_image::midjourney-v7-alpha,Midjourney
+text_to_image,omnigen-v2,OmniGen V2,OmniGen V2,omnigen-v2,text_to_image::omnigen-v2,VectorSpaceLab
+text_to_image,p-image,P Image,P-Image,pruna_p-image,text_to_image::pruna_p-image,Pruna AI
+text_to_image,phoenix-0.9-ultra,Phoenix 0.9 Ultra,Phoenix 0.9 Ultra,phoenix-0-9-ultra,text_to_image::phoenix-0-9-ultra,Leonardo.Ai
+text_to_image,phoenix-1.0-fast,Phoenix 1.0 Fast,Phoenix 1.0 Fast,phoenix-1-0-fast,text_to_image::phoenix-1-0-fast,Leonardo.Ai
+text_to_image,phoenix-1.0-ultra,Phoenix 1.0 Ultra,Phoenix 1.0 Ultra,phoenix-1-0-ultra,text_to_image::phoenix-1-0-ultra,Leonardo.Ai
+text_to_image,playground-v2.5,Playground v2.5,Playground v2.5,playground-v2-5,text_to_image::playground-v2-5,Playground AI
+text_to_image,playground-v3-beta,Playground v3 (beta),Playground v3 (beta),playground-v3-beta,text_to_image::playground-v3-beta,Playground AI
+text_to_image,qwen,Qwen,Qwen Image,qwen-image,text_to_image::qwen-image,Alibaba
+text_to_image,qwen,Qwen,Qwen Image Max 2512,qwen_qwen-image-2512,text_to_image::qwen_qwen-image-2512,Alibaba
+text_to_image,qwen,Qwen,Qwen Image Plus 2601,qwen_qwen-image-plus-2601,text_to_image::qwen_qwen-image-plus-2601,Alibaba
+text_to_image,recraft,Recraft,Recraft 20B,recraft-20b,text_to_image::recraft-20b,Recraft
+text_to_image,recraft-v3,Recraft V3,Recraft V3,recraft-v3,text_to_image::recraft-v3,Recraft
+text_to_image,riverflow-2.0,Riverflow 2.0,Riverflow 2.0,sourceful_riverflow-2,text_to_image::sourceful_riverflow-2,Sourceful
+text_to_image,runway-gen-4-image,Runway Gen 4 Image,Runway Gen-4 Image,runway-gen-4-image,text_to_image::runway-gen-4-image,Runway
+text_to_image,sana-sprint,Sana Sprint,Sana Sprint 1.6B,sana-sprint-1-6b,text_to_image::sana-sprint-1-6b,NVIDIA
+text_to_image,sdxl-lightning,SDXL Lightning,SDXL Lightning,sdxl-lightning,text_to_image::sdxl-lightning,Bytedance
+text_to_image,seedream-3.0,Seedream 3.0,Seedream 3.0,seedream-3-0-byteplus,text_to_image::seedream-3-0-byteplus,ByteDance Seed
+text_to_image,seedream-4.0,Seedream 4.0,Seedream 4.0,bytedance-seed_seedream-4-0,text_to_image::bytedance-seed_seedream-4-0,ByteDance Seed
+text_to_image,seedream-4.5,Seedream 4.5,Seedream 4.5,seedream-4-5,text_to_image::seedream-4-5,ByteDance Seed
+text_to_image,srpo,SRPO,SRPO,flux_srpo,text_to_image::flux_srpo,Tencent
+text_to_image,stable-diffusion-1.5,Stable Diffusion 1.5,Stable Diffusion 1.5,stable-diffusion-1-5,text_to_image::stable-diffusion-1-5,Stability.ai
+text_to_image,stable-diffusion-1.6,Stable Diffusion 1.6,Stable Diffusion 1.6,stable-diffusion-1-6,text_to_image::stable-diffusion-1-6,Stability.ai
+text_to_image,stable-diffusion-2.1,Stable Diffusion 2.1,Stable Diffusion 2.1,stable-diffusion-2-1,text_to_image::stable-diffusion-2-1,Stability.ai
+text_to_image,stable-diffusion-3-large,Stable Diffusion 3 Large,Stable Diffusion 3 Large,stable-diffusion-3-large,text_to_image::stable-diffusion-3-large,Stability.ai
+text_to_image,stable-diffusion-3-large-turbo,Stable Diffusion 3 Large Turbo,Stable Diffusion 3 Large Turbo,stable-diffusion-3-large-turbo,text_to_image::stable-diffusion-3-large-turbo,Stability.ai
+text_to_image,stable-diffusion-3-medium,Stable Diffusion 3 Medium,Stable Diffusion 3 Medium,stable-diffusion-3-medium,text_to_image::stable-diffusion-3-medium,Stability.ai
+text_to_image,stable-diffusion-3.5-large,Stable Diffusion 3.5 Large,Stable Diffusion 3.5 Large,stable-diffusion-3-5-large,text_to_image::stable-diffusion-3-5-large,Stability.ai
+text_to_image,stable-diffusion-3.5-large-turbo,Stable Diffusion 3.5 Large Turbo,Stable Diffusion 3.5 Large Turbo,stable-diffusion-3-5-large-turbo,text_to_image::stable-diffusion-3-5-large-turbo,Stability.ai
+text_to_image,stable-diffusion-3.5-medium,Stable Diffusion 3.5 Medium,Stable Diffusion 3.5 Medium,stable-diffusion-3-5-medium,text_to_image::stable-diffusion-3-5-medium,Stability.ai
+text_to_image,stable-diffusion-xl-1.0,Stable Diffusion XL 1.0,Stable Diffusion XL 1.0,stable-diffusion-xl-1-0,text_to_image::stable-diffusion-xl-1-0,Stability.ai
+text_to_image,vidu-q2,Vidu Q2,Vidu Q2,vidu_vidu_q2,text_to_image::vidu_vidu_q2,Vidu
+text_to_image,vivago-2.0,Vivago 2.0,Vivago 2.0,vivago-2-0,text_to_image::vivago-2-0,HiDream
+text_to_image,vivago-2.1,Vivago 2.1,Vivago 2.1,vivago_vivago-2-1,text_to_image::vivago_vivago-2-1,HiDream
+text_to_image,wan-2.5,Wan 2.5,Wan 2.5 Preview,wan_wan-2-5-preview,text_to_image::wan_wan-2-5-preview,Alibaba
+text_to_image,wan-2.6-image,Wan 2.6 Image,Wan 2.6 Image,wan_wan-2-6,text_to_image::wan_wan-2-6,Alibaba
+text_to_image,wan2.6-text-to-image,Wan2.6 Text to Image,Wan2.6 Text to Image,wan_wan-2-6-text-to-image-v2,text_to_image::wan_wan-2-6-text-to-image-v2,Alibaba
+text_to_image,z-image-base,Z Image Base,Z-Image Base,alibaba_z-image-base,text_to_image::alibaba_z-image-base,Alibaba
+text_to_image,z-image-turbo,Z Image Turbo,Z-Image Turbo,alibaba_z-image-turbo,text_to_image::alibaba_z-image-turbo,Alibaba
+text_to_speech,async-flash-v1.0,Async Flash v1.0,Async Flash v1.0,asyncflow-v2,text_to_speech::asyncflow-v2,async
+text_to_speech,azure-neural,Azure Neural,Azure Neural,azure-neural,text_to_speech::azure-neural,Microsoft Azure
+text_to_speech,chatterbox,Chatterbox,Chatterbox,chatterbox,text_to_speech::chatterbox,Resemble AI
+text_to_speech,chatterbox-hd,Chatterbox HD,Chatterbox HD,chatterbox-hd,text_to_speech::chatterbox-hd,Resemble AI
+text_to_speech,chirp-3-hd,Chirp 3: HD,Chirp 3: HD,chirp3-hd,text_to_speech::chirp3-hd,Google
+text_to_speech,elevenlabs-v3-alpha,ElevenLabs v3 Alpha,ElevenLabs v3 - Alpha,elevenlabs-v3,text_to_speech::elevenlabs-v3,ElevenLabs
+text_to_speech,falcon-beta,Falcon (Beta),Falcon (Beta),falcon-beta,text_to_speech::falcon-beta,Murf AI
+text_to_speech,fish-speech-1.5,Fish Speech 1.5,Fish Speech 1.5,fish-speech-1-5,text_to_speech::fish-speech-1-5,Fish Audio
+text_to_speech,flash-v2.5,Flash v2.5,Flash v2.5,flash-v2-5,text_to_speech::flash-v2-5,ElevenLabs
+text_to_speech,gemini-2.5,Gemini 2.5,Gemini 2.5 Flash Lite TTS,gemini-2-5-flash-lite,text_to_speech::gemini-2-5-flash-lite,Google
+text_to_speech,gemini-2.5,Gemini 2.5,Gemini 2.5 Flash TTS,gemini-2-5-flash-tts,text_to_speech::gemini-2-5-flash-tts,Google
+text_to_speech,gemini-2.5,Gemini 2.5,Gemini 2.5 Flash TTS (Dec 2025),gemini-2-5-flash-dec-2025,text_to_speech::gemini-2-5-flash-dec-2025,Google
+text_to_speech,gemini-2.5,Gemini 2.5,Gemini 2.5 Pro (Dec 2025),gemini-2-5-pro-dec-2025,text_to_speech::gemini-2-5-pro-dec-2025,Google
+text_to_speech,gemini-2.5,Gemini 2.5,Gemini 2.5 Pro TTS,gemini-2-5-pro-tts,text_to_speech::gemini-2-5-pro-tts,Google
+text_to_speech,gpt,GPT,GPT-4o mini TTS,gpt-4o-mini-tts,text_to_speech::gpt-4o-mini-tts,OpenAI
+text_to_speech,inworld-tts-1,Inworld TTS 1,Inworld TTS 1,inworld-tts,text_to_speech::inworld-tts,Inworld
+text_to_speech,inworld-tts-1-max,Inworld TTS 1 Max,Inworld TTS 1 Max,inworld-tts-1-max,text_to_speech::inworld-tts-1-max,Inworld
+text_to_speech,inworld-tts-1.5-max,Inworld TTS 1.5 Max,Inworld TTS 1.5 Max,tts-1-5-max,text_to_speech::tts-1-5-max,Inworld
+text_to_speech,journey,Journey,Journey,journey,text_to_speech::journey,Google
+text_to_speech,kokoro-82m-v1.0,Kokoro 82M v1.0,Kokoro 82M v1.0,kokoro-82m-v1-0,text_to_speech::kokoro-82m-v1-0,Kokoro
+text_to_speech,ling,Ling,Magpie Multilingual,magpie-mutlilingual,text_to_speech::magpie-mutlilingual,NVIDIA
+text_to_speech,ling,Ling,Magpie-Multilingual 357M,magpie-multilingual-357m,text_to_speech::magpie-multilingual-357m,NVIDIA
+text_to_speech,ling,Ling,Multilingual v2,multilingual-v2,text_to_speech::multilingual-v2,ElevenLabs
+text_to_speech,lmnt,LMNT,LMNT,lmnt,text_to_speech::lmnt,LMNT
+text_to_speech,maya1,Maya1,Maya1,maya-1,text_to_speech::maya-1,Maya Research
+text_to_speech,metavoice-v1,MetaVoice v1,MetaVoice v1,metavoice-v1,text_to_speech::metavoice-v1,MetaVoice
+text_to_speech,murf-speech-gen-2,Murf Speech Gen 2,Murf Speech Gen 2,murf-speech-gen-2,text_to_speech::murf-speech-gen-2,Murf AI
+text_to_speech,neuphonic-tts,Neuphonic TTS,Neuphonic TTS,neuphonic,text_to_speech::neuphonic,Neuphonic
+text_to_speech,neural2,Neural2,Neural2,neural2,text_to_speech::neural2,Google
+text_to_speech,octave-2,Octave 2,Octave 2,ocateve-2,text_to_speech::ocateve-2,Hume AI
+text_to_speech,octave-tts,Octave TTS,Octave TTS,octave-tts,text_to_speech::octave-tts,Hume AI
+text_to_speech,openaudio-s1,OpenAudio S1,OpenAudio S1,openaudio-s1,text_to_speech::openaudio-s1,Fish Audio
+text_to_speech,openaudio-s1-mini,OpenAudio S1 Mini,OpenAudio S1 Mini,openaudio-s1-mini,text_to_speech::openaudio-s1-mini,Fish Audio
+text_to_speech,openvoice-v2,OpenVoice v2,OpenVoice v2,openvoice-v2,text_to_speech::openvoice-v2,OpenVoice
+text_to_speech,polly-generative,Polly Generative,Polly Generative,polly-generative,text_to_speech::polly-generative,Amazon
+text_to_speech,polly-long-form,Polly Long Form,Polly Long-Form,polly-long-form,text_to_speech::polly-long-form,Amazon
+text_to_speech,polly-neural,Polly Neural,Polly Neural,polly-neural,text_to_speech::polly-neural,Amazon
+text_to_speech,polly-standard,Polly Standard,Polly Standard,polly-standard,text_to_speech::polly-standard,Amazon
+text_to_speech,qwen-3,Qwen 3,Qwen3 TTS Flash,qwen3-tts-flash,text_to_speech::qwen3-tts-flash,Alibaba
+text_to_speech,simba,Simba,Simba,simba,text_to_speech::simba,Speechify
+text_to_speech,sonic-3,Sonic 3,Sonic 3,sonic3,text_to_speech::sonic3,Cartesia
+text_to_speech,sonic-english,Sonic English,Sonic English (Oct '24),sonic-english-oct-24-,text_to_speech::sonic-english-oct-24-,Cartesia
+text_to_speech,speech-02-hd,Speech 02 HD,Speech-02-HD,speech-02-hd,text_to_speech::speech-02-hd,MiniMax
+text_to_speech,speech-02-turbo,Speech 02 Turbo,Speech-02-Turbo,speech-02-turbo,text_to_speech::speech-02-turbo,MiniMax
+text_to_speech,speech-2.6-hd,Speech 2.6 HD,Speech 2.6 HD,speech-2.6-hd,text_to_speech::speech-2.6-hd,MiniMax
+text_to_speech,speech-2.6-turbo,Speech 2.6 Turbo,Speech 2.6 Turbo,speech-2.6-turbo,text_to_speech::speech-2.6-turbo,MiniMax
+text_to_speech,standard,Standard,Standard,standard,text_to_speech::standard,Google
+text_to_speech,step-audio-editx,Step Audio EditX,Step Audio EditX,step-audio-editx,text_to_speech::step-audio-editx,StepFun
+text_to_speech,step-tts-2,Step TTS 2,Step TTS 2,step-tts-2,text_to_speech::step-tts-2,StepFun
+text_to_speech,step-tts-mini,Step TTS Mini,Step TTS Mini,step-tts-mini,text_to_speech::step-tts-mini,StepFun
+text_to_speech,studio,Studio,Studio,studio,text_to_speech::studio,Google
+text_to_speech,styletts-2,StyleTTS 2,StyleTTS 2,styletts-2,text_to_speech::styletts-2,StyleTTS
+text_to_speech,t2a-01-hd,T2A 01 HD,T2A-01-HD,t2a-01-hd,text_to_speech::t2a-01-hd,MiniMax
+text_to_speech,t2a-01-turbo,T2A 01 Turbo,T2A-01-Turbo,t2a-01-turbo,text_to_speech::t2a-01-turbo,MiniMax
+text_to_speech,tts-1,TTS 1,TTS-1,tts-1,text_to_speech::tts-1,OpenAI
+text_to_speech,tts-1-hd,TTS 1 HD,TTS-1 HD,tts-1-hd,text_to_speech::tts-1-hd,OpenAI
+text_to_speech,turbo-v2.5,Turbo v2.5,Turbo v2.5,turbo-v2-5,text_to_speech::turbo-v2-5,ElevenLabs
+text_to_speech,vibevoice,VibeVoice,VibeVoice 1.5B,vibe-voice-1-5b,text_to_speech::vibe-voice-1-5b,Microsoft Azure
+text_to_speech,vibevoice,VibeVoice,VibeVoice 7B,vibe-voice-7b,text_to_speech::vibe-voice-7b,Microsoft Azure
+text_to_speech,wavenet,WaveNet,WaveNet,wavenet,text_to_speech::wavenet,Google
+text_to_speech,xtts-v2,XTTS v2,XTTS v2,xtts-v2,text_to_speech::xtts-v2,Coqui
+text_to_speech,zonos-v0.1,Zonos v0.1,Zonos-v0.1,zonos-v0-1,text_to_speech::zonos-v0-1,Zyphra
+text_to_video,cogvideox-5b,CogVideoX 5B,CogVideoX-5B,cogvideox-5b,text_to_video::cogvideox-5b,Z AI
+text_to_video,grok,Grok,grok-imagine-video,grok-imagine-video,text_to_video::grok-imagine-video,xAI
+text_to_video,hailuo-02-pro,Hailuo 02 Pro,Hailuo 02 Pro,hailuo-02-pro,text_to_video::hailuo-02-pro,MiniMax
+text_to_video,hailuo-02-standard,Hailuo 02 Standard,Hailuo 02 Standard,hailuo-02-standard,text_to_video::hailuo-02-standard,MiniMax
+text_to_video,hailuo-2.3,Hailuo 2.3,Hailuo 2.3,hailuo-2-3-prompt-enhancement,text_to_video::hailuo-2-3-prompt-enhancement,MiniMax
+text_to_video,haiper-2.0,Haiper 2.0,Haiper 2.0,haiper-2-0,text_to_video::haiper-2-0,Haiper
+text_to_video,hunyuan-video-open-source,Hunyuan Video (Open Source),Hunyuan Video (Open Source),hunyuan-video-open-source-,text_to_video::hunyuan-video-open-source-,Tencent
+text_to_video,hunyuanvideo-1.5-fal,HunyuanVideo 1.5 (Fal),HunyuanVideo-1.5 (Fal),hunyuanvideo-1-5-fal,text_to_video::hunyuanvideo-1-5-fal,Tencent
+text_to_video,krea-realtime,Krea Realtime,Krea Realtime,krea-realtime,text_to_video::krea-realtime,Krea
+text_to_video,ling-1.0,Ling 1.0,Kling 1.0,kling-1-0,text_to_video::kling-1-0,KlingAI
+text_to_video,ling-1.5,Ling 1.5,Kling 1.5 Pro,kling-1-5-pro,text_to_video::kling-1-5-pro,KlingAI
+text_to_video,ling-1.6,Ling 1.6,Kling 1.6 Pro,kling-1-6-pro,text_to_video::kling-1-6-pro,KlingAI
+text_to_video,ling-1.6,Ling 1.6,Kling 1.6 Standard,kling-1-6-standard,text_to_video::kling-1-6-standard,KlingAI
+text_to_video,ling-2.0,Ling 2.0,Kling 2.0,kling-2-0,text_to_video::kling-2-0,KlingAI
+text_to_video,ling-2.1,Ling 2.1,Kling 2.1 Master,kling-2-1-master,text_to_video::kling-2-1-master,KlingAI
+text_to_video,ling-2.5,Ling 2.5,Kling 2.5 Turbo 1080p,kling-25-turbo-1080p,text_to_video::kling-25-turbo-1080p,KlingAI
+text_to_video,ling-2.6,Ling 2.6,Kling 2.6 Pro (December),kling-2-6-pro,text_to_video::kling-2-6-pro,KlingAI
+text_to_video,ling-2.6,Ling 2.6,Kling 2.6 Pro (January),kling-2-6-pro-january-no-audio,text_to_video::kling-2-6-pro-january-no-audio,KlingAI
+text_to_video,ling-2.6,Ling 2.6,Kling 2.6 Standard (January),kling-2-6-standard-january-no-audio,text_to_video::kling-2-6-standard-january-no-audio,KlingAI
+text_to_video,ling-3.0,Ling 3.0,Kling 3.0 Pro,kling-3-0-pro,text_to_video::kling-3-0-pro,KlingAI
+text_to_video,ling-3.0,Ling 3.0,Kling 3.0 Standard,kling-3-0-standard,text_to_video::kling-3-0-standard,KlingAI
+text_to_video,ltx-2-fast,LTX 2 Fast,LTX-2 Fast,ltx-2-fast,text_to_video::ltx-2-fast,Lightricks
+text_to_video,ltx-2-pro,LTX 2 Pro,LTX-2 Pro,ltx-2-pro,text_to_video::ltx-2-pro,Lightricks
+text_to_video,marey,Marey,Marey,marey,text_to_video::marey,Moonvalley
+text_to_video,mochi-1,Mochi 1,Mochi 1,mochi-1,text_to_video::mochi-1,Genmo
+text_to_video,motion-2.0,Motion 2.0,Motion 2.0,motion-2-0,text_to_video::motion-2-0,Leonardo.Ai
+text_to_video,o1,O1,Kling O1 Pro (December),kling-o1-pro,text_to_video::kling-o1-pro,KlingAI
+text_to_video,o1,O1,Kling O1 Pro (January),kling-o1-pro-january,text_to_video::kling-o1-pro-january,KlingAI
+text_to_video,o1,O1,Kling O1 Standard (December),kling-o1-standard,text_to_video::kling-o1-standard,KlingAI
+text_to_video,o1,O1,Kling O1 Standard (January),kling-o1-standard-january,text_to_video::kling-o1-standard-january,KlingAI
+text_to_video,pika-1.5,Pika 1.5,Pika 1.5,pika-1-5,text_to_video::pika-1-5,Pika Art
+text_to_video,pika-2.0,Pika 2.0,Pika 2.0,pika-2-0,text_to_video::pika-2-0,Pika Art
+text_to_video,pika-2.2,Pika 2.2,Pika 2.2,pika-2-2,text_to_video::pika-2-2,Pika Art
+text_to_video,pika-2.5,Pika 2.5,Pika 2.5,pika-2-5,text_to_video::pika-2-5,Pika Art
+text_to_video,pixverse-v4.5,PixVerse V4.5,PixVerse V4.5,pixverse-v4-5,text_to_video::pixverse-v4-5,PixVerse
+text_to_video,pixverse-v5,PixVerse V5,PixVerse V5,pixverse-v5,text_to_video::pixverse-v5,PixVerse
+text_to_video,pixverse-v5.5,PixVerse V5.5,PixVerse V5.5,pixverse-v5-5,text_to_video::pixverse-v5-5,PixVerse
+text_to_video,pixverse-v5.6,PixVerse V5.6,PixVerse V5.6,pixverse-v5-6,text_to_video::pixverse-v5-6,PixVerse
+text_to_video,pyramid-flow,Pyramid Flow,Pyramid Flow,pyramid-flow,text_to_video::pyramid-flow,Open Source
+text_to_video,ray-1,Ray 1,Ray 1,ray-1,text_to_video::ray-1,Luma Labs
+text_to_video,ray-2,Ray 2,Ray 2,ray-2,text_to_video::ray-2,Luma Labs
+text_to_video,ray-3,Ray 3,Ray 3,ray-3,text_to_video::ray-3,Luma Labs
+text_to_video,runway-gen-3-alpha,Runway Gen 3 Alpha,Runway Gen 3 Alpha,runway-gen-3-alpha,text_to_video::runway-gen-3-alpha,Runway
+text_to_video,runway-gen-4.5,Runway Gen 4.5,Runway Gen-4.5,runway-gen-4-5,text_to_video::runway-gen-4-5,Runway
+text_to_video,seedance-1.0,Seedance 1.0,Seedance 1.0,seedance-10,text_to_video::seedance-10,ByteDance Seed
+text_to_video,seedance-1.0-mini,Seedance 1.0 Mini,Seedance 1.0 Mini,seedance-1-0-mini,text_to_video::seedance-1-0-mini,ByteDance Seed
+text_to_video,seedance-1.5-pro,Seedance 1.5 pro,Seedance 1.5 pro,seedance-1-5-pro,text_to_video::seedance-1-5-pro,ByteDance Seed
+text_to_video,sora,Sora,Sora,sora,text_to_video::sora,OpenAI
+text_to_video,sora-2-december,Sora 2 (December),Sora 2 (December),sora-2-december-no-audio,text_to_video::sora-2-december-no-audio,OpenAI
+text_to_video,sora-2-october,Sora 2 (October),Sora 2 (October),sora-2-no-audio-october,text_to_video::sora-2-no-audio-october,OpenAI
+text_to_video,sora-2-pro,Sora 2 Pro,Sora 2 Pro,sora-2-pro,text_to_video::sora-2-pro,OpenAI
+text_to_video,step-video-t2v,Step Video T2V,Step-Video-T2V,step-video-t2v,text_to_video::step-video-t2v,StepFun
+text_to_video,t2v-01,T2V 01,T2V-01,t2v-01,text_to_video::t2v-01,MiniMax
+text_to_video,t2v-01-director,T2V 01 Director,T2V-01-Director,t2v-01-director,text_to_video::t2v-01-director,MiniMax
+text_to_video,veo-2,Veo 2,Veo 2,veo-2,text_to_video::veo-2,Google
+text_to_video,veo-3,Veo 3,Veo 3,veo-3-no-audio,text_to_video::veo-3-no-audio,Google
+text_to_video,veo-3,Veo 3,Veo 3 Preview,veo-3-preview,text_to_video::veo-3-preview,Google
+text_to_video,veo-3-fast,Veo 3 Fast,Veo 3 Fast Preview,veo-3-fast-preview-no-audio,text_to_video::veo-3-fast-preview-no-audio,Google
+text_to_video,veo-3.1,Veo 3.1,Veo 3.1,veo-3-1,text_to_video::veo-3-1,Google
+text_to_video,veo-3.1,Veo 3.1,Veo 3.1 Preview,veo-3-1-preview,text_to_video::veo-3-1-preview,Google
+text_to_video,veo-3.1-fast,Veo 3.1 Fast,Veo 3.1 Fast,veo-3-1-fast,text_to_video::veo-3-1-fast,Google
+text_to_video,veo-3.1-fast,Veo 3.1 Fast,Veo 3.1 Fast Preview,veo-3-1-fast-preview,text_to_video::veo-3-1-fast-preview,Google
+text_to_video,vidu-q1,Vidu Q1,Vidu Q1,vidu-q1,text_to_video::vidu-q1,Vidu
+text_to_video,vidu-q2,Vidu Q2,Vidu Q2,vidu-q2,text_to_video::vidu-q2,Vidu
+text_to_video,vidu-q3-pro,Vidu Q3 Pro,Vidu Q3 Pro,vidu-q3-pro,text_to_video::vidu-q3-pro,Vidu
+text_to_video,wan-2.1,Wan 2.1,Wan 2.1 14B,wan-2-1-14b,text_to_video::wan-2-1-14b,Alibaba
+text_to_video,wan-2.2,Wan 2.2,Wan 2.2 5B,wan-2-2-5b,text_to_video::wan-2-2-5b,Alibaba
+text_to_video,wan-2.2,Wan 2.2,Wan 2.2 A14B,wan-2-2-a14b,text_to_video::wan-2-2-a14b,Alibaba
+text_to_video,wan-2.5,Wan 2.5,Wan 2.5 Preview,wan-2-5-preview,text_to_video::wan-2-5-preview,Alibaba
+text_to_video,wan-2.6,Wan 2.6,Wan 2.6,wan-2-6,text_to_video::wan-2-6,Alibaba

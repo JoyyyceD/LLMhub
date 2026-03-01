@@ -23,7 +23,7 @@ const PROVIDER_LOGO_MAP: Array<{ patterns: string[]; file: string }> = [
   { patterns: ['siliconflow', 'silicon flow', '硅基流动'], file: 'siliconflow.ico' },
   { patterns: ['moonshot', 'kimi'], file: 'moonshot.ico' },
   { patterns: ['zhipu', 'chatglm', 'z ai', 'z.ai'], file: 'zhipu.ico' },
-  { patterns: ['deepseek', 'deep seek'], file: 'deepseek.svg' },
+  { patterns: ['deepseek', 'deep seek'], file: 'deepseek.jpeg' },
   { patterns: ['xiaomi', 'mimo'], file: 'xiaomi.svg' },
   { patterns: ['kuaishou', 'kwai', 'kling', 'klingai', 'kwaikat'], file: 'kuaishou.svg' },
   { patterns: ['black forest labs', 'blackforestlabs'], file: 'stabilityai.ico' },

@@ -53,7 +53,9 @@ interface DbPost {
 
 interface SeriesRow {
   id: string;
+  slug: string;
   display_name: string;
+  query_aliases?: string[] | null;
 }
 
 interface DbReply {
@@ -127,6 +129,46 @@ function formatModelIdDisplay(modelId: string): string {
     text_to_speech: '语音合成 / TTS模型',
   };
   return `${labelMap[modality] ?? modality}：${slug}`;
+}
+
+function normalizeForMatch(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function deriveSeriesName(rawName: string): string {
+  let name = rawName;
+  name = name.replace(
+    /\s*\((Non-reasoning|Reasoning|Adaptive Reasoning|high|low|medium|minimal|xhigh|ChatGPT|experimental|preview|high effort|low effort)\)/gi,
+    ''
+  );
+  name = name.replace(/\s+\d+(\.\d+)?[Bb]\s+[Aa]\d+(\.\d+)?[Bb]/g, '');
+  name = name.replace(/\s+[Aa]\d+(\.\d+)?[Bb]/g, '');
+  name = name.replace(/\s+\d+(\.\d+)?[Bb]/g, '');
+  name = name.replace(/\s+(Instruct|Preview|Experimental|Thinking|Exp)\s*$/i, '');
+  name = name.replace(/\s+\d{4}\s*$/g, '');
+  name = name.replace(/\s*-\s*/g, ' ');
+  return name.replace(/\s+/g, ' ').trim();
+}
+
+function buildSeriesMatchMap(seriesRows: SeriesRow[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const row of seriesRows) {
+    const candidates = [row.display_name, row.slug, ...(row.query_aliases ?? [])];
+    for (const candidate of candidates) {
+      const norm = normalizeForMatch(deriveSeriesName(candidate));
+      if (norm) map.set(norm, row.id);
+    }
+  }
+  return map;
+}
+
+function resolveModelSeriesId(
+  model: ModelSnapshot,
+  seriesMap: Map<string, string>
+): string | null {
+  if (model.series_id) return model.series_id;
+  const norm = normalizeForMatch(deriveSeriesName(model.aa_name ?? ''));
+  return norm ? (seriesMap.get(norm) ?? null) : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -234,13 +276,18 @@ export const Community = () => {
         .order('aa_name'),
       supabase
         .from('model_series')
-        .select('id, display_name')
-        .eq('is_visible', true)
+        .select('id, slug, display_name, query_aliases')
         .order('display_name'),
     ]).then(([modelResp, seriesResp]) => {
       const modelsData = (modelResp.data ?? []) as ModelSnapshot[];
       const seriesData = (seriesResp.data ?? []) as SeriesRow[];
-      setModelOptions(modelsData);
+      const matchMap = buildSeriesMatchMap(seriesData);
+      const resolvedModels = modelsData.map((m) => ({
+        ...m,
+        series_id: resolveModelSeriesId(m, matchMap),
+      }));
+
+      setModelOptions(resolvedModels);
       setSeriesOptions(seriesData);
       const nextSeriesMap: Record<string, string> = {};
       seriesData.forEach((s) => {
@@ -249,7 +296,7 @@ export const Community = () => {
       setSeriesMap(nextSeriesMap);
       if (seriesData.length > 0) {
         const firstSeriesId = seriesData[0].id;
-        const firstModel = modelsData.find((m) => m.series_id === firstSeriesId);
+        const firstModel = resolvedModels.find((m) => m.series_id === firstSeriesId);
         setPostForm((prev) => ({ ...prev, series_id: firstSeriesId, model_id: firstModel?.aa_slug ?? '' }));
       }
     });

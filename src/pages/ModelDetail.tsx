@@ -431,7 +431,14 @@ export const ModelDetail = () => {
   const providerLink = model.aa_model_creator_name
     ? `/provider/${encodeURIComponent(model.aa_model_creator_name)}`
     : null;
-  const reviewLink = `/review/new?model=${encodeURIComponent(model.aa_slug)}&modality=${encodeURIComponent(model.aa_modality ?? 'llm')}`;
+  const reviewQuery = new URLSearchParams({
+    model: model.aa_slug,
+    modality: model.aa_modality ?? 'llm',
+  });
+  if (model.series_id) {
+    reviewQuery.set('series', model.series_id);
+  }
+  const reviewLink = `/review/new?${reviewQuery.toString()}`;
   const hasPricing =
     model.aa_price_input_usd != null ||
     model.aa_price_output_usd != null ||

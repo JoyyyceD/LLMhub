@@ -16,10 +16,11 @@ export function ProviderLogo({
 }: ProviderLogoProps) {
   const logoUrl = getProviderLogoUrl(name);
   const [failed, setFailed] = React.useState(false);
+  const frameClassName = `${sizeClassName} ${roundedClassName} bg-white border border-slate-300 shadow-sm overflow-hidden flex items-center justify-center`;
 
   if (logoUrl && !failed) {
     return (
-      <div className={`${sizeClassName} ${roundedClassName} bg-white border border-slate-200 p-1 overflow-hidden flex items-center justify-center`}>
+      <div className={`${frameClassName} p-1.5`}>
         <img
           src={logoUrl}
           alt={`${name ?? 'provider'} logo`}
@@ -32,7 +33,7 @@ export function ProviderLogo({
   }
 
   return (
-    <div className={`${sizeClassName} ${roundedClassName} bg-slate-100 text-slate-600 flex items-center justify-center ${textClassName}`}>
+    <div className={`${frameClassName} text-slate-700 ${textClassName}`}>
       {getProviderInitials(name)}
     </div>
   );

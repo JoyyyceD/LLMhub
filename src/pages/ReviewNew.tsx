@@ -19,6 +19,7 @@ interface ModelSeries {
   display_name: string;
   provider: string | null;
   is_visible: boolean;
+  query_aliases?: string[] | null;
 }
 
 const PROVIDERS = [
@@ -49,6 +50,47 @@ function toTimestamp(dateStr: string | null | undefined): number {
 
 function isModalityKey(v: string | null): v is ModalityKey {
   return !!v && MODALITY_OPTIONS.some((m) => m.key === v);
+}
+
+function normalizeForMatch(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function deriveSeriesName(rawName: string): string {
+  let name = rawName;
+  name = name.replace(
+    /\s*\((Non-reasoning|Reasoning|Adaptive Reasoning|high|low|medium|minimal|xhigh|ChatGPT|experimental|preview|high effort|low effort)\)/gi,
+    ''
+  );
+  name = name.replace(/\s+\d+(\.\d+)?[Bb]\s+[Aa]\d+(\.\d+)?[Bb]/g, '');
+  name = name.replace(/\s+[Aa]\d+(\.\d+)?[Bb]/g, '');
+  name = name.replace(/\s+\d+(\.\d+)?[Bb]/g, '');
+  name = name.replace(/\s+(Instruct|Preview|Experimental|Thinking|Exp)\s*$/i, '');
+  name = name.replace(/\s+\d{4}\s*$/g, '');
+  name = name.replace(/\s*-\s*/g, ' ');
+  return name.replace(/\s+/g, ' ').trim();
+}
+
+function buildSeriesMatchMap(seriesRows: ModelSeries[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const row of seriesRows) {
+    const candidates = [row.display_name, row.slug, ...(row.query_aliases ?? [])];
+    for (const candidate of candidates) {
+      const norm = normalizeForMatch(deriveSeriesName(candidate));
+      if (norm) map.set(norm, row.id);
+    }
+  }
+  return map;
+}
+
+function resolveModelSeriesId(
+  model: ModelSnapshot,
+  seriesMap: Map<string, string>
+): string | null {
+  if (model.series_id) return model.series_id;
+  const derived = deriveSeriesName(model.aa_name ?? '');
+  const norm = normalizeForMatch(derived);
+  return norm ? (seriesMap.get(norm) ?? null) : null;
 }
 
 const StarSelector = ({
@@ -125,8 +167,7 @@ export const ReviewNew = () => {
         .eq('has_aa', true),
       supabase
         .from('model_series')
-        .select('id, slug, display_name, provider, is_visible')
-        .eq('is_visible', true)
+        .select('id, slug, display_name, provider, is_visible, query_aliases')
         .order('display_name'),
     ]).then(([snapResp, seriesResp]) => {
       const { data: snapData, error: snapErr } = snapResp;
@@ -139,14 +180,20 @@ export const ReviewNew = () => {
 
       const all = (snapData ?? []) as ModelSnapshot[];
       const allSeries = (seriesData ?? []) as ModelSeries[];
-      setModels(all);
+      const matchMap = buildSeriesMatchMap(allSeries);
+      const resolvedModels = all.map((m) => ({
+        ...m,
+        series_id: resolveModelSeriesId(m, matchMap),
+      }));
+
+      setModels(resolvedModels);
       setSeriesOptions(allSeries);
 
       const q = new URLSearchParams(location.search);
       const seriesFromUrl = q.get('series');
       const modelFromUrl = q.get('model');
       const modalityFromUrl = q.get('modality');
-      const matchedModel = modelFromUrl ? all.find((m) => m.aa_slug === modelFromUrl) : null;
+      const matchedModel = modelFromUrl ? resolvedModels.find((m) => m.aa_slug === modelFromUrl) : null;
       const initSeriesId = seriesFromUrl ?? matchedModel?.series_id ?? allSeries[0]?.id ?? '';
       const matchedModality = matchedModel?.aa_modality ?? (isModalityKey(modalityFromUrl) ? modalityFromUrl : null);
       const initModality = (matchedModality ?? 'llm') as ModalityKey;

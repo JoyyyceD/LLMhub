@@ -15,6 +15,7 @@
 - `docs/data/fx-rate-policy.md`：汇率快照策略（USD->CNY）
 - `docs/data/provider-enum.md`：服务商枚举单一来源
 - `docs/data/pipeline.md`：每日更新与增量策略
+- `docs/data/model-series-sync.md`：模型系列同步（LLM 旧规则 + 多模态新规则）
 - `docs/recommendation/requirements.md`：推荐功能需求（Top4）
 - `docs/recommendation/use-case-taxonomy.md`：8x6 场景信息架构
 - `docs/recommendation/quality-config-8x6.md`：8x6 的 Q 权重配置初稿

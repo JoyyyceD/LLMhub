@@ -15,7 +15,9 @@ import json
 import os
 import re
 import sys
+import subprocess
 from collections import defaultdict
+from pathlib import Path
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -488,6 +490,20 @@ def main():
             file=sys.stderr,
         )
         refresh_resp.raise_for_status()
+
+    run_series_sync = os.environ.get("RUN_MODEL_SERIES_SYNC", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    series_sync_dry_run = os.environ.get("RUN_MODEL_SERIES_SYNC_DRY_RUN", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    if run_series_sync:
+        sync_script = Path(__file__).with_name("sync_model_series_all_modalities.py")
+        cmd = [sys.executable, str(sync_script)]
+        if series_sync_dry_run:
+            cmd.append("--dry-run")
+        print(f"Running model series sync: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":
