@@ -162,24 +162,28 @@ export const ProviderDetail = () => {
       </nav>
 
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <ProviderLogo
-              name={models[0]?.aa_model_creator_name ?? providerName ?? providerDisplayName}
-              sizeClassName="w-10 h-10"
-              textClassName="text-sm font-semibold"
-              roundedClassName="rounded-xl"
-            />
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white">{providerDisplayName}</h1>
-              {getProviderDescription(models[0]?.aa_model_creator_name ?? providerName) && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 mb-1">
-                  {getProviderDescription(models[0]?.aa_model_creator_name ?? providerName)}
+        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <ProviderLogo
+                name={models[0]?.aa_model_creator_name ?? providerName ?? providerDisplayName}
+                sizeClassName="w-20 h-20"
+                textClassName="text-2xl font-semibold"
+                roundedClassName="rounded-2xl"
+              />
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
+                  {providerDisplayName}
+                </h1>
+                {getProviderDescription(models[0]?.aa_model_creator_name ?? providerName) && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1.5 max-w-xl">
+                    {getProviderDescription(models[0]?.aa_model_creator_name ?? providerName)}
+                  </p>
+                )}
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  模型总数: {models.length} · 系列数: {groupedModels.length}
                 </p>
-              )}
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                模型总数: {models.length} · 系列数: {groupedModels.length}
-              </p>
+              </div>
             </div>
           </div>
         </div>

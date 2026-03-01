@@ -39,4 +39,4 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-Sitemap: https://www.tokengalaxy.cn/sitemap.xml
+Sitemap: https://tokengalaxy.cn/sitemap.xml

@@ -2,7 +2,7 @@
 
 > Token Galaxy 是一个基于场景映射的 AI 模型推荐与对比平台，整合 LLM Benchmark 数据与 Token 成本结构，帮助开发者、产品团队和企业在复杂的模型生态中做出最优决策。
 
-网站地址：https://www.tokengalaxy.cn
+网站地址：https://tokengalaxy.cn
 联系方式：support@tokengalaxy.cn
 
 ---
@@ -108,14 +108,14 @@ Token Galaxy 建立在一个核心原则之上：
 
 ## 主要页面
 
-- 首页 / 模型推荐：https://www.tokengalaxy.cn/
-- 性能榜单：https://www.tokengalaxy.cn/leaderboard
-- 模型对比：https://www.tokengalaxy.cn/compare
-- 社区点评：https://www.tokengalaxy.cn/community
-- 开发者生态：https://www.tokengalaxy.cn/ecosystem
-- 关于我们：https://www.tokengalaxy.cn/about
-- 评测方法论：https://www.tokengalaxy.cn/about/methodology
-- 数据来源：https://www.tokengalaxy.cn/about/data-sources
+- 首页 / 模型推荐：https://tokengalaxy.cn/
+- 性能榜单：https://tokengalaxy.cn/leaderboard
+- 模型对比：https://tokengalaxy.cn/compare
+- 社区点评：https://tokengalaxy.cn/community
+- 开发者生态：https://tokengalaxy.cn/ecosystem
+- 关于我们：https://tokengalaxy.cn/about
+- 评测方法论：https://tokengalaxy.cn/about/methodology
+- 数据来源：https://tokengalaxy.cn/about/data-sources
 
 ---
 
