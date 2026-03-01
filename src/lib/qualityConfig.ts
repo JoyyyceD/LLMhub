@@ -122,7 +122,7 @@ export const PROFILE_WEIGHTS: Record<ProfileKey, DimensionWeights> = {
 export const CN_PROVIDERS = new Set([
   'deepseek', 'alibaba', 'baidu', 'bytedance', 'zhipu',
   'moonshot', 'minimax', 'tencent', '01ai',
-  'qwen', 'kimi', 'doubao', 'baichuan', 'sensenova', 'spark',
+  'qwen', 'kimi', 'doubao', 'baichuan', 'sensenova', 'spark', 'stepfun',
 ]);
 
 // ---------------------------------------------------------------------------

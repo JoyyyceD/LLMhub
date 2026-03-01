@@ -37,7 +37,7 @@ MEDIA_FILES = {
 CN_PROVIDERS = {
     "deepseek", "alibaba", "baidu", "bytedance", "zhipu",
     "moonshot", "minimax", "tencent", "01ai", "kimi", "z ai", "xiaomi",
-    "seed", "vidu", "klingai", "pixverse",
+    "seed", "vidu", "klingai", "pixverse", "stepfun",
 }
 
 CN_NAME_MAP = {
@@ -55,6 +55,8 @@ CN_NAME_MAP = {
     "Vidu": "生数Vidu",
     "KlingAI": "快手可灵",
     "PixVerse": "爱诗PixVerse",
+    "StepFun": "阶跃星辰Stepfun",
+    "Stepfun": "阶跃星辰Stepfun",
 }
 
 
